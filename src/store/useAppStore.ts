@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { supabase } from '@/integrations/supabase/client';
-import type { Intern, Worksite } from '@/types/intern';
+import type { Intern, Worksite, Assignment } from '@/types/intern';
 import { DEFAULT_WORKSITES } from '@/types/intern';
 import type { Tables } from '@/integrations/supabase/types';
 
