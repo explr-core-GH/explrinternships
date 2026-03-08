@@ -55,18 +55,24 @@ export function parseExcelFile(data: ArrayBuffer): Intern[] {
     // Find header row by looking for name-like columns
     let headerIdx = -1;
     for (let i = 0; i < Math.min(rows.length, 20); i++) {
-      const cells = (rows[i] || []).map((c: any) => String(c ?? '').toLowerCase());
+      const cells = (rows[i] || []).map((c: any) => String(c ?? '').toLowerCase().trim());
       const rowStr = cells.join(' ');
+      // Must have at least 2 non-empty cells to be a header row
+      const nonEmpty = cells.filter(c => c.length > 0).length;
+      if (nonEmpty < 2) continue;
+      
       // Check for common header patterns
       if (
         rowStr.includes('first name') || 
         rowStr.includes('last name') || 
         rowStr.includes('email address') ||
         (rowStr.includes('first') && rowStr.includes('last')) ||
-        (rowStr.includes('name') && (rowStr.includes('grade') || rowStr.includes('school') || rowStr.includes('email')))
+        (rowStr.includes('name') && (rowStr.includes('grade') || rowStr.includes('school') || rowStr.includes('email') || rowStr.includes('phone') || rowStr.includes('status'))) ||
+        // Fallback: row with 3+ short header-like cells (no spaces in most cells)
+        (nonEmpty >= 3 && cells.filter(c => c.length > 0 && c.length < 40).length >= 3)
       ) {
         headerIdx = i;
-        console.log(`  Found header row at index ${i}:`, cells.slice(0, 6));
+        console.log(`  Found header row at index ${i}:`, cells.slice(0, 8));
         break;
       }
     }
