@@ -204,7 +204,7 @@ export const useAppStore = create<AppState>()((set, get) => ({
       parentPhone: 'parent_phone', dob: 'dob', studentEmail: 'student_email',
       school: 'school', otherSchool: 'other_school', grade: 'grade',
       adminNotes: 'admin_notes', specificInterests: 'specific_interests',
-      emailSubmission: 'email_submission',
+      emailSubmission: 'email_submission', status: 'status',
     };
     for (const [key, val] of Object.entries(updates)) {
       const dbKey = fieldMap[key] || key;

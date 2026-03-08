@@ -1,8 +1,8 @@
 import { useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronDown, Mail, Phone, School, Calendar, AlertTriangle, Star, Copy, Edit2, Save, X, StickyNote, CheckCircle2 } from 'lucide-react';
-import type { Intern, Placement, Worksite } from '@/types/intern';
-import { INTEREST_LABELS, type InterestField } from '@/types/intern';
+import { ChevronDown, Mail, Phone, School, Calendar, AlertTriangle, Star, Copy, Edit2, Save, X, StickyNote, CheckCircle2, Square, CheckSquare } from 'lucide-react';
+import type { Intern, Placement, Worksite, InternStatus } from '@/types/intern';
+import { INTEREST_LABELS, type InterestField, INTERN_STATUSES, STATUS_CONFIG } from '@/types/intern';
 import { generatePlacements } from '@/lib/placementEngine';
 import { useAppStore } from '@/store/useAppStore';
 import { Badge } from '@/components/ui/badge';
@@ -14,6 +14,9 @@ import { toast } from 'sonner';
 interface InternCardProps {
   intern: Intern;
   worksites: Worksite[];
+  bulkMode?: boolean;
+  selected?: boolean;
+  onToggleSelect?: () => void;
 }
 
 const interestFields: InterestField[] = [
@@ -47,6 +50,29 @@ function PlacementCard({ placement, priority }: { placement: Placement; priority
   );
 }
 
+function StatusDropdown({ intern }: { intern: Intern }) {
+  const { updateIntern } = useAppStore();
+  const config = STATUS_CONFIG[intern.status];
+
+  const handleChange = async (newStatus: InternStatus) => {
+    await updateIntern(intern.id, { status: newStatus });
+    toast.success(`Status → ${STATUS_CONFIG[newStatus].label}`);
+  };
+
+  return (
+    <select
+      value={intern.status}
+      onChange={(e) => handleChange(e.target.value as InternStatus)}
+      onClick={(e) => e.stopPropagation()}
+      className={`h-7 px-2 rounded-md border text-xs font-medium cursor-pointer ${config.bgClass} ${config.textClass} ${config.borderClass}`}
+    >
+      {INTERN_STATUSES.map(s => (
+        <option key={s} value={s}>{STATUS_CONFIG[s].label}</option>
+      ))}
+    </select>
+  );
+}
+
 function AssignmentSection({ intern, worksites }: { intern: Intern; worksites: Worksite[] }) {
   const { assignments, assignIntern, unassignIntern } = useAppStore();
   const currentAssignment = assignments.find(a => a.internId === intern.id);
@@ -72,7 +98,7 @@ function AssignmentSection({ intern, worksites }: { intern: Intern; worksites: W
         <select
           value={currentAssignment?.worksiteId || ''}
           onChange={e => handleAssign(e.target.value)}
-          className="flex-1 h-8 rounded-md border bg-card px-2 text-sm text-foreground"
+          className="flex-1 h-8 rounded-md border border-input bg-background px-2 text-sm text-foreground"
         >
           <option value="">— Unassigned —</option>
           {worksites.map(ws => (
@@ -91,7 +117,7 @@ function AssignmentSection({ intern, worksites }: { intern: Intern; worksites: W
   );
 }
 
-export default function InternCard({ intern, worksites }: InternCardProps) {
+export default function InternCard({ intern, worksites, bulkMode, selected, onToggleSelect }: InternCardProps) {
   const [expanded, setExpanded] = useState(false);
   const [editing, setEditing] = useState(false);
   const [editForm, setEditForm] = useState({
@@ -109,6 +135,7 @@ export default function InternCard({ intern, worksites }: InternCardProps) {
   const displaySchool = intern.otherSchool || intern.school;
   const initials = `${intern.firstName[0] || ''}${intern.lastName[0] || ''}`.toUpperCase();
   const isAssigned = assignments.some(a => a.internId === intern.id);
+  const statusConfig = STATUS_CONFIG[intern.status];
 
   const handleSaveEdit = async () => {
     await updateIntern(intern.id, editForm);
@@ -122,12 +149,20 @@ export default function InternCard({ intern, worksites }: InternCardProps) {
     toast.success('Notes saved');
   };
 
+  // Card border color based on status
+  const borderColor = intern.status !== 'pending' ? `border-l-4 ${statusConfig.borderClass}` : '';
+
   return (
-    <motion.div layout className="rounded-lg border bg-card shadow-card hover:shadow-card-hover transition-shadow duration-200 overflow-hidden">
+    <motion.div layout className={`rounded-lg border bg-card shadow-card hover:shadow-card-hover transition-shadow duration-200 overflow-hidden ${borderColor}`}>
       <button
-        onClick={() => setExpanded(!expanded)}
+        onClick={() => bulkMode ? onToggleSelect?.() : setExpanded(!expanded)}
         className="w-full flex items-center gap-4 p-4 text-left hover:bg-accent/30 transition-colors"
       >
+        {bulkMode && (
+          <div className="shrink-0" onClick={(e) => { e.stopPropagation(); onToggleSelect?.(); }}>
+            {selected ? <CheckSquare className="h-5 w-5 text-primary" /> : <Square className="h-5 w-5 text-muted-foreground" />}
+          </div>
+        )}
         <div className="h-10 w-10 rounded-full gradient-primary flex items-center justify-center text-primary-foreground font-semibold text-sm shrink-0">
           {initials}
         </div>
@@ -136,21 +171,21 @@ export default function InternCard({ intern, worksites }: InternCardProps) {
             <h3 className="font-semibold text-card-foreground truncate">{intern.firstName} {intern.lastName}</h3>
             {intern.isDuplicate && <Copy className="h-3.5 w-3.5 text-warning shrink-0" />}
             {intern.adminNotes && <StickyNote className="h-3.5 w-3.5 text-primary shrink-0" />}
-            {isAssigned && <CheckCircle2 className="h-3.5 w-3.5 text-success shrink-0" />}
           </div>
           <p className="text-xs text-muted-foreground truncate">{displaySchool} · {intern.grade} grade</p>
         </div>
         <div className="flex items-center gap-2 shrink-0">
-          <Badge variant="outline" className="text-xs hidden sm:inline-flex">{intern.itInterests.length} IT interests</Badge>
-          {isAssigned && <Badge variant="default" className="text-xs bg-success hidden sm:inline-flex">Assigned</Badge>}
-          <motion.div animate={{ rotate: expanded ? 180 : 0 }} transition={{ duration: 0.2 }}>
-            <ChevronDown className="h-4 w-4 text-muted-foreground" />
-          </motion.div>
+          <StatusDropdown intern={intern} />
+          {!bulkMode && (
+            <motion.div animate={{ rotate: expanded ? 180 : 0 }} transition={{ duration: 0.2 }}>
+              <ChevronDown className="h-4 w-4 text-muted-foreground" />
+            </motion.div>
+          )}
         </div>
       </button>
 
       <AnimatePresence>
-        {expanded && (
+        {expanded && !bulkMode && (
           <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.25 }} className="overflow-hidden">
             <div className="px-4 pb-4 space-y-4 border-t pt-4">
               {intern.isDuplicate && (
@@ -160,10 +195,8 @@ export default function InternCard({ intern, worksites }: InternCardProps) {
                 </div>
               )}
 
-              {/* Manual Assignment */}
               <AssignmentSection intern={intern} worksites={worksites} />
 
-              {/* Edit toggle */}
               <div className="flex justify-end">
                 {!editing ? (
                   <Button variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); setEditing(true); }} className="gap-1.5 text-xs">
@@ -177,7 +210,6 @@ export default function InternCard({ intern, worksites }: InternCardProps) {
                 )}
               </div>
 
-              {/* Contact info */}
               {editing ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div><label className="text-[10px] text-muted-foreground uppercase">First Name</label><Input value={editForm.firstName} onChange={e => setEditForm({...editForm, firstName: e.target.value})} className="h-8 text-sm" /></div>
@@ -202,7 +234,6 @@ export default function InternCard({ intern, worksites }: InternCardProps) {
                 </>
               )}
 
-              {/* Admin Notes */}
               <div className="rounded-md border border-border p-3 bg-muted/30">
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-1.5">
@@ -225,7 +256,6 @@ export default function InternCard({ intern, worksites }: InternCardProps) {
                 )}
               </div>
 
-              {/* Programs */}
               {intern.programs.length > 0 && intern.programs[0] !== 'Not Applicable/None' && (
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-1.5">Programs</p>
@@ -233,7 +263,6 @@ export default function InternCard({ intern, worksites }: InternCardProps) {
                 </div>
               )}
 
-              {/* IT Interests */}
               {intern.itInterests.length > 0 && (
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-1.5">IT Interests</p>
@@ -241,7 +270,6 @@ export default function InternCard({ intern, worksites }: InternCardProps) {
                 </div>
               )}
 
-              {/* Internship Interests */}
               <div>
                 <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">Internship Interests</p>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1.5">
@@ -264,7 +292,6 @@ export default function InternCard({ intern, worksites }: InternCardProps) {
                 <div className="text-xs"><span className="font-semibold text-muted-foreground">Student Questions: </span><span className="text-foreground italic">{intern.additionalQuestions}</span></div>
               )}
 
-              {/* Suggested Placements */}
               <div>
                 <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">Suggested Placements</p>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
