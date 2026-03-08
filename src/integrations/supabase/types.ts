@@ -46,6 +46,7 @@ export type Database = {
           school: string | null
           source_sheet_url: string | null
           specific_interests: string | null
+          status: string
           student_email: string | null
           timestamp: string | null
           updated_at: string
@@ -82,6 +83,7 @@ export type Database = {
           school?: string | null
           source_sheet_url?: string | null
           specific_interests?: string | null
+          status?: string
           student_email?: string | null
           timestamp?: string | null
           updated_at?: string
@@ -118,6 +120,7 @@ export type Database = {
           school?: string | null
           source_sheet_url?: string | null
           specific_interests?: string | null
+          status?: string
           student_email?: string | null
           timestamp?: string | null
           updated_at?: string

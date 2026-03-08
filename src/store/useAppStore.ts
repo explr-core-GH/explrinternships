@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { supabase } from '@/integrations/supabase/client';
-import type { Intern, Worksite, Assignment } from '@/types/intern';
+import type { Intern, Worksite, Assignment, InternStatus } from '@/types/intern';
 import { DEFAULT_WORKSITES } from '@/types/intern';
 import type { Tables } from '@/integrations/supabase/types';
 
@@ -40,6 +40,7 @@ function dbToIntern(row: DbIntern): Intern {
     isDuplicate: row.is_duplicate || false,
     isNewest: row.is_newest ?? true,
     adminNotes: (row as any).admin_notes || '',
+    status: ((row as any).status || 'pending') as InternStatus,
   };
 }
 
@@ -203,7 +204,7 @@ export const useAppStore = create<AppState>()((set, get) => ({
       parentPhone: 'parent_phone', dob: 'dob', studentEmail: 'student_email',
       school: 'school', otherSchool: 'other_school', grade: 'grade',
       adminNotes: 'admin_notes', specificInterests: 'specific_interests',
-      emailSubmission: 'email_submission',
+      emailSubmission: 'email_submission', status: 'status',
     };
     for (const [key, val] of Object.entries(updates)) {
       const dbKey = fieldMap[key] || key;

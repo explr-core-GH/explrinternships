@@ -95,6 +95,7 @@ export function parseExcelFile(data: ArrayBuffer): Intern[] {
       isDuplicate: false,
       isNewest: true,
       adminNotes: '',
+      status: 'pending',
     };
     
     interns.push(intern);
