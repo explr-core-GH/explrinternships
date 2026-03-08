@@ -92,7 +92,7 @@ export const WORKSITE_CATEGORIES = [
   'Design / Creative',
   'Business / Management',
   'Other',
-] as const;
+];
 
 export const DEFAULT_WORKSITES: Worksite[] = [
   {
