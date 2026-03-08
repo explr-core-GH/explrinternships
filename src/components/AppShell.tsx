@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
-import { Users, Building2, BarChart3, Upload, Settings } from 'lucide-react';
+import { LayoutDashboard, Users, Building2, BarChart3, Upload, Settings } from 'lucide-react';
 import { useAppStore } from '@/store/useAppStore';
 
 const navItems = [
