@@ -166,6 +166,15 @@ serve(async (req) => {
         return null;
       }
 
+      // Skip non-student rows: must have both first AND last name, and a valid grade or school
+      const grade = getField(row, 'What grade are you currently');
+      const school = getField(row, 'Which CMSD school');
+      const email = getField(row, 'Email Address');
+      if (!lastName || (!grade && !school && !email)) {
+        console.log(`Skipping non-student row: "${firstName} ${lastName}" (no grade/school/email)`);
+        return null;
+      }
+
       return {
         first_name: firstName,
         last_name: lastName,
