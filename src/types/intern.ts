@@ -30,6 +30,7 @@ export interface Intern {
   isDuplicate: boolean;
   duplicateOf?: string;
   isNewest: boolean;
+  adminNotes: string;
 }
 
 export interface Worksite {
