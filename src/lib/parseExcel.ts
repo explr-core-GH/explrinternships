@@ -94,6 +94,7 @@ export function parseExcelFile(data: ArrayBuffer): Intern[] {
       additionalQuestions: getVal(row, headers, 'additional questions'),
       isDuplicate: false,
       isNewest: true,
+      adminNotes: '',
     };
     
     interns.push(intern);
