@@ -35,10 +35,22 @@ function parseCSV(text: string): Record<string, string>[] {
   const lines = text.split('\n').filter(l => l.trim());
   if (lines.length < 2) return [];
   
-  const headers = parseCSVLine(lines[0]);
+  // Find the actual header row by looking for a row that contains name-like columns
+  let headerIdx = 0;
+  for (let i = 0; i < Math.min(lines.length, 10); i++) {
+    const cells = parseCSVLine(lines[i]);
+    const lower = cells.map(c => c.toLowerCase()).join(' ');
+    if (lower.includes('first') || lower.includes('name') || lower.includes('email') || lower.includes('timestamp')) {
+      headerIdx = i;
+      break;
+    }
+  }
+  
+  const headers = parseCSVLine(lines[headerIdx]);
+  console.log('Using header row index:', headerIdx, 'Headers:', JSON.stringify(headers.slice(0, 5)));
   const rows: Record<string, string>[] = [];
   
-  for (let i = 1; i < lines.length; i++) {
+  for (let i = headerIdx + 1; i < lines.length; i++) {
     const values = parseCSVLine(lines[i]);
     const row: Record<string, string> = {};
     for (let j = 0; j < headers.length; j++) {
