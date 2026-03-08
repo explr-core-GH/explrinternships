@@ -1,19 +1,24 @@
 import { useState, useMemo } from 'react';
-import { Search, Copy } from 'lucide-react';
+import { Search, Copy, Download } from 'lucide-react';
 import { useAppStore } from '@/store/useAppStore';
 import { useAutoLoadData } from '@/hooks/useAutoLoadData';
 import InternCard from '@/components/InternCard';
 import GoogleSheetSync from '@/components/GoogleSheetSync';
 import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { exportRosterCSV, exportWorksiteCSV } from '@/lib/exportData';
+import { toast } from 'sonner';
 
 export default function RosterPage() {
-  const { interns, worksites, loading } = useAppStore();
+  const { interns, worksites, assignments, loading } = useAppStore();
   const [search, setSearch] = useState('');
   const [gradeFilter, setGradeFilter] = useState('all');
   const [showDupesOnly, setShowDupesOnly] = useState(false);
+  const [assignFilter, setAssignFilter] = useState<'all' | 'assigned' | 'unassigned'>('all');
   useAutoLoadData();
 
   const activeInterns = useMemo(() => interns.filter(i => i.isNewest), [interns]);
+  const assignedIds = useMemo(() => new Set(assignments.map(a => a.internId)), [assignments]);
 
   const filtered = useMemo(() => {
     let list = activeInterns;
@@ -27,8 +32,10 @@ export default function RosterPage() {
     }
     if (gradeFilter !== 'all') list = list.filter(i => i.grade === gradeFilter);
     if (showDupesOnly) list = list.filter(i => i.isDuplicate);
+    if (assignFilter === 'assigned') list = list.filter(i => assignedIds.has(i.id));
+    if (assignFilter === 'unassigned') list = list.filter(i => !assignedIds.has(i.id));
     return list.sort((a, b) => a.lastName.localeCompare(b.lastName));
-  }, [activeInterns, search, gradeFilter, showDupesOnly]);
+  }, [activeInterns, search, gradeFilter, showDupesOnly, assignFilter, assignedIds]);
 
   const grades = useMemo(() => {
     const set = new Set(activeInterns.map(i => i.grade));
@@ -36,6 +43,7 @@ export default function RosterPage() {
   }, [activeInterns]);
 
   const dupeCount = activeInterns.filter(i => i.isDuplicate).length;
+  const assignedCount = activeInterns.filter(i => assignedIds.has(i.id)).length;
 
   if (!loading && interns.length === 0) {
     return (
@@ -55,9 +63,17 @@ export default function RosterPage() {
         <div>
           <h2 className="text-xl font-bold text-foreground">Intern Roster</h2>
           <p className="text-xs text-muted-foreground">
-            {filtered.length} of {activeInterns.length} interns
+            {filtered.length} of {activeInterns.length} interns · {assignedCount} assigned
             {dupeCount > 0 && ` · ${dupeCount} with duplicate entries`}
           </p>
+        </div>
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm" className="gap-1.5 text-xs" onClick={() => { exportRosterCSV(filtered, worksites, assignments); toast.success('Roster CSV downloaded'); }}>
+            <Download className="h-3.5 w-3.5" /> Export Roster
+          </Button>
+          <Button variant="outline" size="sm" className="gap-1.5 text-xs" onClick={() => { exportWorksiteCSV(worksites, assignments, interns); toast.success('Worksite report downloaded'); }}>
+            <Download className="h-3.5 w-3.5" /> Export Worksites
+          </Button>
         </div>
       </div>
 
@@ -69,6 +85,11 @@ export default function RosterPage() {
         <select value={gradeFilter} onChange={(e) => setGradeFilter(e.target.value)} className="h-9 rounded-md border bg-card px-3 text-sm text-foreground">
           <option value="all">All Grades</option>
           {grades.map((g) => <option key={g} value={g}>{g}</option>)}
+        </select>
+        <select value={assignFilter} onChange={(e) => setAssignFilter(e.target.value as any)} className="h-9 rounded-md border bg-card px-3 text-sm text-foreground">
+          <option value="all">All Status</option>
+          <option value="assigned">Assigned</option>
+          <option value="unassigned">Unassigned</option>
         </select>
         {dupeCount > 0 && (
           <button
