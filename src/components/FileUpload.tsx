@@ -46,10 +46,22 @@ export default function FileUpload({ onComplete }: FileUploadProps) {
           const lastName = row.lastName.trim().toLowerCase();
           if (!firstName && !lastName) continue;
 
-          // Find matching intern by name (fuzzy: case-insensitive)
-          const match = activeInterns.find(
-            i => i.firstName.toLowerCase() === firstName && i.lastName.toLowerCase() === lastName
-          );
+          // Find matching intern by name (fuzzy: case-insensitive, handles middle names)
+          const match = activeInterns.find(i => {
+            const dbFirst = i.firstName.toLowerCase().trim();
+            const dbLast = i.lastName.toLowerCase().trim();
+            
+            if (dbFirst === firstName && dbLast === lastName) return true;
+            
+            // Handle middle names by checking if the first word of the first name matches
+            const dbFirstPart = dbFirst.split(' ')[0];
+            const uploadFirstPart = firstName.split(' ')[0];
+            
+            const firstMatch = dbFirstPart === uploadFirstPart || dbFirst.includes(firstName) || firstName.includes(dbFirst);
+            const lastMatch = dbLast === lastName || dbLast.includes(lastName) || lastName.includes(dbLast);
+            
+            return firstMatch && lastMatch;
+          });
 
           if (match) {
             await updateIntern(match.id, { status: targetStatus });
