@@ -38,21 +38,35 @@ function getVal(row: any[], headers: string[], search: string): string {
 export function parseExcelFile(data: ArrayBuffer): Intern[] {
   const workbook = XLSX.read(data, { type: 'array' });
   
-  // Try all sheets to find one with intern data
   let headers: string[] = [];
   let dataRows: any[][] = [];
   
   for (const sheetName of workbook.SheetNames) {
     const sheet = workbook.Sheets[sheetName];
     const rows: any[][] = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+    console.log(`Sheet "${sheetName}": ${rows.length} rows`);
     if (rows.length < 2) continue;
+    
+    // Log first few rows for debugging
+    for (let i = 0; i < Math.min(rows.length, 5); i++) {
+      console.log(`  Row ${i}:`, (rows[i] || []).slice(0, 6).map((c: any) => String(c ?? '')));
+    }
     
     // Find header row by looking for name-like columns
     let headerIdx = -1;
-    for (let i = 0; i < Math.min(rows.length, 15); i++) {
-      const rowStr = (rows[i] || []).map((c: any) => String(c ?? '').toLowerCase()).join(' ');
-      if (rowStr.includes('first') || rowStr.includes('last name') || rowStr.includes('email address')) {
+    for (let i = 0; i < Math.min(rows.length, 20); i++) {
+      const cells = (rows[i] || []).map((c: any) => String(c ?? '').toLowerCase());
+      const rowStr = cells.join(' ');
+      // Check for common header patterns
+      if (
+        rowStr.includes('first name') || 
+        rowStr.includes('last name') || 
+        rowStr.includes('email address') ||
+        (rowStr.includes('first') && rowStr.includes('last')) ||
+        (rowStr.includes('name') && (rowStr.includes('grade') || rowStr.includes('school') || rowStr.includes('email')))
+      ) {
         headerIdx = i;
+        console.log(`  Found header row at index ${i}:`, cells.slice(0, 6));
         break;
       }
     }
@@ -60,12 +74,25 @@ export function parseExcelFile(data: ArrayBuffer): Intern[] {
     if (headerIdx >= 0) {
       headers = rows[headerIdx].map((h: any) => String(h ?? ''));
       dataRows = rows.slice(headerIdx + 1);
-      console.log(`Found intern data on sheet "${sheetName}" at row ${headerIdx}. Headers:`, headers.slice(0, 5));
       break;
     }
   }
   
-  if (headers.length === 0 || dataRows.length === 0) return [];
+  // Fallback: if no headers found, try first sheet, first row as headers
+  if (headers.length === 0) {
+    const sheet = workbook.Sheets[workbook.SheetNames[0]];
+    const rows: any[][] = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+    if (rows.length >= 2) {
+      headers = rows[0].map((h: any) => String(h ?? ''));
+      dataRows = rows.slice(1);
+      console.log('Fallback: using first row as headers:', headers.slice(0, 6));
+    }
+  }
+  
+  if (headers.length === 0 || dataRows.length === 0) {
+    console.log('No data found. Sheets:', workbook.SheetNames);
+    return [];
+  }
   
   const emailIdx1 = 1; // "Email Address" (submission)
   const emailIdx2 = findColumn(headers, 'student\'s email') >= 0 
