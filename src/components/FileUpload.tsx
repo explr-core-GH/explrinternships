@@ -5,13 +5,12 @@ import { useAppStore } from '@/store/useAppStore';
 import { toast } from 'sonner';
 
 interface FileUploadProps {
-  mode?: 'replace' | 'merge';
   onComplete?: () => void;
 }
 
-export default function FileUpload({ mode = 'merge', onComplete }: FileUploadProps) {
+export default function FileUpload({ onComplete }: FileUploadProps) {
   const inputRef = useRef<HTMLInputElement>(null);
-  const { setInterns, mergeInterns } = useAppStore();
+  const { uploadExcelInterns } = useAppStore();
 
   const handleFile = useCallback(async (file: File) => {
     try {
@@ -24,12 +23,7 @@ export default function FileUpload({ mode = 'merge', onComplete }: FileUploadPro
       }
 
       const dupes = parsed.filter(i => i.isDuplicate).length;
-
-      if (mode === 'replace') {
-        setInterns(parsed);
-      } else {
-        mergeInterns(parsed);
-      }
+      await uploadExcelInterns(parsed);
 
       toast.success(`Loaded ${parsed.length} interns${dupes > 0 ? ` (${dupes} duplicates detected)` : ''}`);
       onComplete?.();
@@ -37,7 +31,7 @@ export default function FileUpload({ mode = 'merge', onComplete }: FileUploadPro
       console.error(err);
       toast.error('Failed to parse Excel file');
     }
-  }, [mode, setInterns, mergeInterns, onComplete]);
+  }, [uploadExcelInterns, onComplete]);
 
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -65,7 +59,7 @@ export default function FileUpload({ mode = 'merge', onComplete }: FileUploadPro
       </div>
       <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
         <FileSpreadsheet className="h-3.5 w-3.5" />
-        <span>Data will be {mode === 'replace' ? 'replaced' : 'merged with existing'}</span>
+        <span>Data will be uploaded to the database</span>
       </div>
       <input
         ref={inputRef}
