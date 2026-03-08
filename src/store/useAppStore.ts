@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { supabase } from '@/integrations/supabase/client';
-import type { Intern, Worksite } from '@/types/intern';
+import type { Intern, Worksite, Assignment } from '@/types/intern';
 import { DEFAULT_WORKSITES } from '@/types/intern';
 import type { Tables } from '@/integrations/supabase/types';
 
@@ -61,23 +61,30 @@ function dbToWorksite(row: DbWorksite): Worksite {
 interface AppState {
   interns: Intern[];
   worksites: Worksite[];
+  assignments: Assignment[];
   loading: boolean;
   sheetUrl: string;
   lastSynced: string | null;
   syncing: boolean;
   fetchInterns: () => Promise<void>;
   fetchWorksites: () => Promise<void>;
+  fetchAssignments: () => Promise<void>;
   addWorksite: (ws: Omit<Worksite, 'id'>) => Promise<void>;
   removeWorksite: (id: string) => Promise<void>;
+  assignIntern: (internId: string, worksiteId: string) => Promise<void>;
+  unassignIntern: (internId: string) => Promise<void>;
   syncFromSheet: (url: string) => Promise<{ success: boolean; message: string }>;
   loadSyncConfig: () => Promise<void>;
   uploadExcelInterns: (interns: Intern[]) => Promise<void>;
   updateIntern: (id: string, updates: Partial<Record<string, any>>) => Promise<void>;
+  updateWorksite: (id: string, updates: Partial<Record<string, any>>) => Promise<void>;
+  refreshWorksiteCounts: () => Promise<void>;
 }
 
 export const useAppStore = create<AppState>()((set, get) => ({
   interns: [],
   worksites: [],
+  assignments: [],
   loading: false,
   sheetUrl: '',
   lastSynced: null,
@@ -105,6 +112,20 @@ export const useAppStore = create<AppState>()((set, get) => ({
     }
   },
 
+  fetchAssignments: async () => {
+    const { data } = await supabase.from('placements').select('*');
+    if (data) {
+      set({
+        assignments: data.map((r: any) => ({
+          id: r.id,
+          internId: r.intern_id,
+          worksiteId: r.worksite_id,
+          createdAt: r.created_at,
+        })),
+      });
+    }
+  },
+
   addWorksite: async (ws) => {
     const { data } = await supabase.from('worksites').insert({
       name: ws.name, category: ws.category, description: ws.description,
@@ -119,6 +140,59 @@ export const useAppStore = create<AppState>()((set, get) => ({
   removeWorksite: async (id) => {
     await supabase.from('worksites').delete().eq('id', id);
     set(s => ({ worksites: s.worksites.filter(w => w.id !== id) }));
+  },
+
+  assignIntern: async (internId, worksiteId) => {
+    // Upsert: remove old assignment first
+    await supabase.from('placements').delete().eq('intern_id', internId);
+    const { data } = await supabase.from('placements').insert({
+      intern_id: internId,
+      worksite_id: worksiteId,
+    }).select().single();
+    if (data) {
+      set(s => ({
+        assignments: [...s.assignments.filter(a => a.internId !== internId), {
+          id: data.id,
+          internId: data.intern_id,
+          worksiteId: data.worksite_id,
+          createdAt: data.created_at,
+        }],
+      }));
+      // Update worksite filled counts
+      await get().refreshWorksiteCounts();
+    }
+  },
+
+  unassignIntern: async (internId) => {
+    await supabase.from('placements').delete().eq('intern_id', internId);
+    set(s => ({ assignments: s.assignments.filter(a => a.internId !== internId) }));
+    await get().refreshWorksiteCounts();
+  },
+
+  updateWorksite: async (id, updates) => {
+    const dbUpdates: Record<string, any> = {};
+    const fieldMap: Record<string, string> = {
+      contactName: 'contact_name', contactEmail: 'contact_email',
+    };
+    for (const [key, val] of Object.entries(updates)) {
+      const dbKey = fieldMap[key] || key;
+      dbUpdates[dbKey] = val;
+    }
+    await supabase.from('worksites').update(dbUpdates).eq('id', id);
+    set(s => ({
+      worksites: s.worksites.map(w => w.id === id ? { ...w, ...updates } as Worksite : w),
+    }));
+  },
+
+  refreshWorksiteCounts: async () => {
+    const { data } = await supabase.from('placements').select('worksite_id');
+    const counts: Record<string, number> = {};
+    (data || []).forEach((r: any) => {
+      counts[r.worksite_id] = (counts[r.worksite_id] || 0) + 1;
+    });
+    set(s => ({
+      worksites: s.worksites.map(w => ({ ...w, filled: counts[w.id] || 0 })),
+    }));
   },
 
   updateIntern: async (id, updates) => {

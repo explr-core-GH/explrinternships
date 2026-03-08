@@ -125,6 +125,42 @@ export type Database = {
         }
         Relationships: []
       }
+      placements: {
+        Row: {
+          created_at: string
+          id: string
+          intern_id: string
+          worksite_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          intern_id: string
+          worksite_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          intern_id?: string
+          worksite_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "placements_intern_id_fkey"
+            columns: ["intern_id"]
+            isOneToOne: true
+            referencedRelation: "interns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "placements_worksite_id_fkey"
+            columns: ["worksite_id"]
+            isOneToOne: false
+            referencedRelation: "worksites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       sync_config: {
         Row: {
           created_at: string

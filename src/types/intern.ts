@@ -54,6 +54,13 @@ export interface Placement {
   reasoning: string;
 }
 
+export interface Assignment {
+  id: string;
+  internId: string;
+  worksiteId: string;
+  createdAt: string;
+}
+
 export type InterestField = 
   | 'clevelandClinic'
   | 'constructionMgmt'

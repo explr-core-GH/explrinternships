@@ -2,11 +2,12 @@ import { useEffect } from 'react';
 import { useAppStore } from '@/store/useAppStore';
 
 export function useAutoLoadData() {
-  const { interns, fetchInterns, fetchWorksites, loadSyncConfig } = useAppStore();
+  const { fetchInterns, fetchWorksites, fetchAssignments, loadSyncConfig } = useAppStore();
 
   useEffect(() => {
     fetchInterns();
     fetchWorksites();
+    fetchAssignments();
     loadSyncConfig();
   }, []);
 }
