@@ -78,6 +78,7 @@ interface AppState {
   uploadExcelInterns: (interns: Intern[]) => Promise<void>;
   updateIntern: (id: string, updates: Partial<Record<string, any>>) => Promise<void>;
   updateWorksite: (id: string, updates: Partial<Record<string, any>>) => Promise<void>;
+  refreshWorksiteCounts: () => Promise<void>;
 }
 
 export const useAppStore = create<AppState>()((set, get) => ({
