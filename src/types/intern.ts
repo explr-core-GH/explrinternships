@@ -1,3 +1,15 @@
+export const INTERN_STATUSES = ['pending', 'matched', 'assigned', 'in_progress_you', 'intake_issue', 'removed'] as const;
+export type InternStatus = typeof INTERN_STATUSES[number];
+
+export const STATUS_CONFIG: Record<InternStatus, { label: string; color: string; bgClass: string; textClass: string; borderClass: string }> = {
+  pending:         { label: 'Pending',            color: 'gray',    bgClass: 'bg-muted',              textClass: 'text-muted-foreground', borderClass: 'border-muted-foreground/30' },
+  matched:         { label: 'Matched',            color: '#86efac', bgClass: 'bg-emerald-200/40',      textClass: 'text-emerald-700 dark:text-emerald-300', borderClass: 'border-emerald-300' },
+  assigned:        { label: 'Assigned',           color: '#22c55e', bgClass: 'bg-green-500/20',        textClass: 'text-green-700 dark:text-green-300', borderClass: 'border-green-500' },
+  in_progress_you: { label: 'In Progress (YOU)',  color: '#facc15', bgClass: 'bg-yellow-400/20',       textClass: 'text-yellow-700 dark:text-yellow-300', borderClass: 'border-yellow-400' },
+  intake_issue:    { label: 'Intake Issue',       color: '#f97316', bgClass: 'bg-orange-400/20',       textClass: 'text-orange-700 dark:text-orange-300', borderClass: 'border-orange-400' },
+  removed:         { label: 'Removed',            color: '#ef4444', bgClass: 'bg-red-500/20',          textClass: 'text-red-700 dark:text-red-300', borderClass: 'border-red-500' },
+};
+
 export interface Intern {
   id: string;
   timestamp: string;
@@ -31,6 +43,7 @@ export interface Intern {
   duplicateOf?: string;
   isNewest: boolean;
   adminNotes: string;
+  status: InternStatus;
 }
 
 export interface Worksite {
