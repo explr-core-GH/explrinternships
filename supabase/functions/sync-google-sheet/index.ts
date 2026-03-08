@@ -108,12 +108,21 @@ serve(async (req) => {
     }
 
     console.log(`Parsed ${rows.length} rows from sheet`);
+    if (rows.length > 0) {
+      console.log('Headers found:', JSON.stringify(Object.keys(rows[0])));
+      console.log('First row sample:', JSON.stringify(rows[0]));
+    }
 
     // Map rows to intern records
-    const interns = rows.map(row => {
-      const firstName = getField(row, 'First Name');
-      const lastName = getField(row, 'Last Name');
-      if (!firstName && !lastName) return null;
+    const interns = rows.map((row, idx) => {
+      // Try multiple header patterns for first/last name
+      const firstName = getField(row, 'First Name') || getField(row, 'first') || getField(row, 'fname');
+      const lastName = getField(row, 'Last Name') || getField(row, 'last') || getField(row, 'lname');
+      
+      if (!firstName && !lastName) {
+        if (idx === 0) console.log('Row 0 has no name, skipping. Keys:', Object.keys(row).join(', '));
+        return null;
+      }
 
       return {
         first_name: firstName,
