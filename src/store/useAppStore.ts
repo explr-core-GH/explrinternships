@@ -111,6 +111,20 @@ export const useAppStore = create<AppState>()((set, get) => ({
     }
   },
 
+  fetchAssignments: async () => {
+    const { data } = await supabase.from('placements').select('*');
+    if (data) {
+      set({
+        assignments: data.map((r: any) => ({
+          id: r.id,
+          internId: r.intern_id,
+          worksiteId: r.worksite_id,
+          createdAt: r.created_at,
+        })),
+      });
+    }
+  },
+
   addWorksite: async (ws) => {
     const { data } = await supabase.from('worksites').insert({
       name: ws.name, category: ws.category, description: ws.description,
