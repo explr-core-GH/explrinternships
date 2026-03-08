@@ -99,19 +99,49 @@ serve(async (req) => {
     }
 
     const sheetId = sheetIdMatch[1];
-    const csvUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv`;
     
-    console.log('Fetching CSV from:', csvUrl);
-    const csvResponse = await fetch(csvUrl);
+    // Try multiple sheet tabs (gid=0, gid=1, gid=2, etc.) to find the one with intern data
+    let rows: Record<string, string>[] = [];
+    let csvText = '';
     
-    if (!csvResponse.ok) {
-      return new Response(JSON.stringify({ error: 'Failed to fetch sheet. Make sure it is publicly accessible (Anyone with the link can view).' }), {
-        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+    for (let gid = 0; gid < 10; gid++) {
+      const csvUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv&gid=${gid}`;
+      console.log(`Trying sheet tab gid=${gid}:`, csvUrl);
+      
+      const csvResponse = await fetch(csvUrl);
+      if (!csvResponse.ok) {
+        console.log(`Sheet tab gid=${gid} not found, stopping`);
+        break;
+      }
+      
+      csvText = await csvResponse.text();
+      const parsed = parseCSV(csvText);
+      
+      if (parsed.length > 0) {
+        const sampleKeys = Object.keys(parsed[0]).join(' ').toLowerCase();
+        console.log(`gid=${gid} has ${parsed.length} rows. Sample headers: ${sampleKeys.substring(0, 200)}`);
+        
+        // Check if this tab has name-like columns (intern data)
+        if (sampleKeys.includes('first') || sampleKeys.includes('last name') || sampleKeys.includes('email address')) {
+          console.log(`Found intern data on gid=${gid}!`);
+          rows = parsed;
+          break;
+        }
+      }
     }
-
-    const csvText = await csvResponse.text();
-    const rows = parseCSV(csvText);
+    
+    if (rows.length === 0) {
+      // Fallback: try the first sheet
+      const csvUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv`;
+      const csvResponse = await fetch(csvUrl);
+      if (!csvResponse.ok) {
+        return new Response(JSON.stringify({ error: 'Failed to fetch sheet. Make sure it is publicly accessible.' }), {
+          status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+      csvText = await csvResponse.text();
+      rows = parseCSV(csvText);
+    }
     
     if (rows.length === 0) {
       return new Response(JSON.stringify({ error: 'No data found in sheet' }), {
