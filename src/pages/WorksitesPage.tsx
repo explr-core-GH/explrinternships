@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Plus, Trash2, Building2, Users, MapPin, Download } from 'lucide-react';
+import { Plus, Trash2, Building2, Users, MapPin, Download, Pencil, Check, X } from 'lucide-react';
 import { useAppStore } from '@/store/useAppStore';
 import { WORKSITE_CATEGORIES, type Worksite } from '@/types/intern';
 import { Button } from '@/components/ui/button';
@@ -12,25 +12,37 @@ import {
 import { toast } from 'sonner';
 import { exportWorksiteCSV } from '@/lib/exportData';
 
-function AddWorksiteDialog({ onAdd }: { onAdd: (ws: Omit<Worksite, 'id'>) => void }) {
-  const [open, setOpen] = useState(false);
-  const [form, setForm] = useState({
-    name: '', category: WORKSITE_CATEGORIES[0], description: '',
-    capacity: 6, contactName: '', contactEmail: '', location: '', tags: '',
-  });
+function WorksiteForm({ initial, onSubmit, submitLabel }: {
+  initial: { name: string; category: string; description: string; capacity: number; contactName: string; contactEmail: string; location: string; tags: string };
+  onSubmit: (form: typeof initial) => void;
+  submitLabel: string;
+}) {
+  const [form, setForm] = useState(initial);
 
   const handleSubmit = () => {
     if (!form.name.trim()) { toast.error('Name required'); return; }
-    onAdd({
-      name: form.name.trim(), category: form.category, description: form.description.trim(),
-      capacity: form.capacity, filled: 0, contactName: form.contactName.trim(),
-      contactEmail: form.contactEmail.trim(), location: form.location.trim(),
-      tags: form.tags.split(',').map(t => t.trim()).filter(Boolean),
-    });
-    setOpen(false);
-    setForm({ name: '', category: WORKSITE_CATEGORIES[0], description: '', capacity: 6, contactName: '', contactEmail: '', location: '', tags: '' });
-    toast.success('Worksite added');
+    onSubmit(form);
   };
+
+  return (
+    <div className="space-y-3">
+      <Input placeholder="Worksite name" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} />
+      <select value={form.category} onChange={e => setForm({ ...form, category: e.target.value })} className="w-full h-9 rounded-md border border-input bg-background px-3 text-sm">
+        {WORKSITE_CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+      </select>
+      <Input placeholder="Description" value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} />
+      <Input placeholder="Location" value={form.location} onChange={e => setForm({ ...form, location: e.target.value })} />
+      <Input type="number" placeholder="Capacity" value={form.capacity} onChange={e => setForm({ ...form, capacity: +e.target.value })} />
+      <Input placeholder="Contact name" value={form.contactName} onChange={e => setForm({ ...form, contactName: e.target.value })} />
+      <Input placeholder="Contact email" value={form.contactEmail} onChange={e => setForm({ ...form, contactEmail: e.target.value })} />
+      <Input placeholder="Tags (comma separated)" value={form.tags} onChange={e => setForm({ ...form, tags: e.target.value })} />
+      <Button onClick={handleSubmit} className="w-full">{submitLabel}</Button>
+    </div>
+  );
+}
+
+function AddWorksiteDialog({ onAdd }: { onAdd: (ws: Omit<Worksite, 'id'>) => void }) {
+  const [open, setOpen] = useState(false);
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -39,31 +51,66 @@ function AddWorksiteDialog({ onAdd }: { onAdd: (ws: Omit<Worksite, 'id'>) => voi
       </DialogTrigger>
       <DialogContent className="max-w-md">
         <DialogHeader><DialogTitle>Add Worksite</DialogTitle></DialogHeader>
-        <div className="space-y-3">
-          <Input placeholder="Worksite name" value={form.name} onChange={e => setForm({...form, name: e.target.value})} />
-          <select value={form.category} onChange={e => setForm({...form, category: e.target.value})} className="w-full h-9 rounded-md border bg-card px-3 text-sm">
-            {WORKSITE_CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
-          </select>
-          <Input placeholder="Description" value={form.description} onChange={e => setForm({...form, description: e.target.value})} />
-          <Input placeholder="Location" value={form.location} onChange={e => setForm({...form, location: e.target.value})} />
-          <Input type="number" placeholder="Capacity" value={form.capacity} onChange={e => setForm({...form, capacity: +e.target.value})} />
-          <Input placeholder="Contact name" value={form.contactName} onChange={e => setForm({...form, contactName: e.target.value})} />
-          <Input placeholder="Contact email" value={form.contactEmail} onChange={e => setForm({...form, contactEmail: e.target.value})} />
-          <Input placeholder="Tags (comma separated)" value={form.tags} onChange={e => setForm({...form, tags: e.target.value})} />
-          <Button onClick={handleSubmit} className="w-full">Add Worksite</Button>
-        </div>
+        <WorksiteForm
+          initial={{ name: '', category: WORKSITE_CATEGORIES[0], description: '', capacity: 6, contactName: '', contactEmail: '', location: '', tags: '' }}
+          submitLabel="Add Worksite"
+          onSubmit={(form) => {
+            onAdd({
+              name: form.name.trim(), category: form.category, description: form.description.trim(),
+              capacity: form.capacity, filled: 0, contactName: form.contactName.trim(),
+              contactEmail: form.contactEmail.trim(), location: form.location.trim(),
+              tags: form.tags.split(',').map(t => t.trim()).filter(Boolean),
+            });
+            setOpen(false);
+            toast.success('Worksite added');
+          }}
+        />
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function EditWorksiteDialog({ ws, onSave }: { ws: Worksite; onSave: (id: string, updates: Partial<Worksite>) => void }) {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <button className="text-muted-foreground hover:text-primary transition-colors p-1">
+          <Pencil className="h-3.5 w-3.5" />
+        </button>
+      </DialogTrigger>
+      <DialogContent className="max-w-md">
+        <DialogHeader><DialogTitle>Edit Worksite</DialogTitle></DialogHeader>
+        <WorksiteForm
+          initial={{
+            name: ws.name, category: ws.category, description: ws.description,
+            capacity: ws.capacity, contactName: ws.contactName, contactEmail: ws.contactEmail,
+            location: ws.location, tags: ws.tags.join(', '),
+          }}
+          submitLabel="Save Changes"
+          onSubmit={(form) => {
+            onSave(ws.id, {
+              name: form.name.trim(), category: form.category, description: form.description.trim(),
+              capacity: form.capacity, contactName: form.contactName.trim(),
+              contactEmail: form.contactEmail.trim(), location: form.location.trim(),
+              tags: form.tags.split(',').map(t => t.trim()).filter(Boolean),
+            });
+            setOpen(false);
+            toast.success('Worksite updated');
+          }}
+        />
       </DialogContent>
     </Dialog>
   );
 }
 
 export default function WorksitesPage() {
-  const { worksites, interns, assignments, addWorksite, removeWorksite } = useAppStore();
+  const { worksites, interns, assignments, addWorksite, removeWorksite, updateWorksite } = useAppStore();
 
   const totalCapacity = worksites.reduce((sum, w) => sum + w.capacity, 0);
   const totalFilled = worksites.reduce((sum, w) => sum + w.filled, 0);
 
-  // Build assigned intern names per worksite
   const internMap = Object.fromEntries(interns.map(i => [i.id, i]));
   const wsInterns: Record<string, string[]> = {};
   assignments.forEach(a => {
@@ -107,13 +154,15 @@ export default function WorksitesPage() {
                     <Badge variant="outline" className="text-[10px] mt-0.5">{ws.category}</Badge>
                   </div>
                 </div>
-                <button onClick={() => { removeWorksite(ws.id); toast.success('Removed'); }} className="text-muted-foreground hover:text-destructive transition-colors p-1">
-                  <Trash2 className="h-3.5 w-3.5" />
-                </button>
+                <div className="flex items-center gap-0.5">
+                  <EditWorksiteDialog ws={ws} onSave={updateWorksite} />
+                  <button onClick={() => { removeWorksite(ws.id); toast.success('Removed'); }} className="text-muted-foreground hover:text-destructive transition-colors p-1">
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </button>
+                </div>
               </div>
               {ws.description && <p className="text-xs text-muted-foreground mt-2">{ws.description}</p>}
 
-              {/* Capacity bar */}
               <div className="mt-3">
                 <div className="flex items-center justify-between text-xs mb-1">
                   <span className="flex items-center gap-1 text-muted-foreground">
@@ -125,7 +174,6 @@ export default function WorksitesPage() {
                 <Progress value={pct} className="h-2" />
               </div>
 
-              {/* Assigned interns list */}
               {assigned.length > 0 && (
                 <div className="mt-2">
                   <p className="text-[10px] text-muted-foreground uppercase font-semibold mb-1">Assigned</p>
