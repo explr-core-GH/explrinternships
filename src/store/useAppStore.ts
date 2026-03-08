@@ -61,18 +61,23 @@ function dbToWorksite(row: DbWorksite): Worksite {
 interface AppState {
   interns: Intern[];
   worksites: Worksite[];
+  assignments: Assignment[];
   loading: boolean;
   sheetUrl: string;
   lastSynced: string | null;
   syncing: boolean;
   fetchInterns: () => Promise<void>;
   fetchWorksites: () => Promise<void>;
+  fetchAssignments: () => Promise<void>;
   addWorksite: (ws: Omit<Worksite, 'id'>) => Promise<void>;
   removeWorksite: (id: string) => Promise<void>;
+  assignIntern: (internId: string, worksiteId: string) => Promise<void>;
+  unassignIntern: (internId: string) => Promise<void>;
   syncFromSheet: (url: string) => Promise<{ success: boolean; message: string }>;
   loadSyncConfig: () => Promise<void>;
   uploadExcelInterns: (interns: Intern[]) => Promise<void>;
   updateIntern: (id: string, updates: Partial<Record<string, any>>) => Promise<void>;
+  updateWorksite: (id: string, updates: Partial<Record<string, any>>) => Promise<void>;
 }
 
 export const useAppStore = create<AppState>()((set, get) => ({
