@@ -42,7 +42,7 @@ export default function RosterPage() {
 
     // Sort: status priority, then last name
     const statusOrder: Record<InternStatus, number> = {
-      removed: 5, intake_issue: 4, in_progress_you: 3, pending: 2, matched: 1, assigned: 0,
+      removed: 6, intake_issue: 5, in_progress_you: 4, not_matched: 3, pending: 2, matched: 1, assigned: 0,
     };
     return list.sort((a, b) => {
       const sa = statusOrder[a.status] ?? 2;
