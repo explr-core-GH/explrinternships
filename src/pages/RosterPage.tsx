@@ -11,6 +11,7 @@ export default function RosterPage() {
   const [search, setSearch] = useState('');
   const [gradeFilter, setGradeFilter] = useState('all');
   const [showDupesOnly, setShowDupesOnly] = useState(false);
+  useAutoLoadData();
 
   // Only show newest entries
   const activeInterns = useMemo(() => {
