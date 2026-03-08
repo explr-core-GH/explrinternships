@@ -40,6 +40,7 @@ function dbToIntern(row: DbIntern): Intern {
     isDuplicate: row.is_duplicate || false,
     isNewest: row.is_newest ?? true,
     adminNotes: (row as any).admin_notes || '',
+    status: ((row as any).status || 'pending') as InternStatus,
   };
 }
 
