@@ -20,12 +20,12 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       <header className="h-14 border-b bg-card flex items-center px-4 sm:px-6 gap-4 shrink-0">
         <div className="flex items-center gap-2.5">
           <div className="h-8 w-8 rounded-md gradient-primary flex items-center justify-center">
-            <span className="text-primary-foreground font-bold text-xs">IP</span>
+            <span className="text-primary-foreground font-bold text-xs">EX</span>
           </div>
           <div>
-            <h1 className="text-sm font-bold text-foreground leading-none">Intern Placements</h1>
+            <h1 className="text-sm font-bold text-foreground leading-none">EXPLR INTERNSHIPS</h1>
             <p className="text-[10px] text-muted-foreground leading-none mt-0.5">
-              Kohn Seigler · Summer 2026
+              Internship Matching Tool
             </p>
           </div>
         </div>

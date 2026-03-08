@@ -8,6 +8,8 @@ const interestFields: InterestField[] = [
   'educationInternship', 'healthcare', 'videoGames',
 ];
 
+const GRADE_ORDER = ['8th', '9th', '10th', '11th', '12th'];
+
 export default function DemographicsPage() {
   const { interns } = useAppStore();
   const active = useMemo(() => interns.filter(i => i.isNewest), [interns]);
@@ -40,6 +42,12 @@ export default function DemographicsPage() {
     return { grades, schools, programs, interestCounts };
   }, [active]);
 
+  const sortedGrades = useMemo(() => {
+    return GRADE_ORDER
+      .filter(g => stats.grades[g] !== undefined)
+      .map(g => ({ grade: g, count: stats.grades[g] }));
+  }, [stats.grades]);
+
   const itInterests = useMemo(() => {
     const counts: Record<string, number> = {};
     for (const intern of active) {
@@ -58,7 +66,7 @@ export default function DemographicsPage() {
     );
   }
 
-  const maxInterest = Math.max(...interestFields.map(f => stats.interestCounts[f].yes + stats.interestCounts[f].maybe));
+  const totalGradeStudents = sortedGrades.reduce((sum, g) => sum + g.count, 0);
 
   return (
     <div className="max-w-5xl mx-auto animate-fade-in space-y-6">
@@ -75,23 +83,35 @@ export default function DemographicsPage() {
         <StatCard label="Duplicates" value={interns.filter(i => i.isDuplicate && i.isNewest).length} />
       </div>
 
-      {/* Grade breakdown */}
+      {/* Grade breakdown - donut style cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="rounded-lg border bg-card p-4 shadow-card">
-          <h3 className="text-sm font-semibold text-card-foreground mb-3">By Grade</h3>
-          <div className="space-y-2">
-            {Object.entries(stats.grades).sort().map(([grade, count]) => (
-              <div key={grade} className="flex items-center gap-3">
-                <span className="text-xs text-muted-foreground w-12">{grade}</span>
-                <div className="flex-1 h-5 bg-muted rounded-full overflow-hidden">
-                  <div
-                    className="h-full gradient-primary rounded-full transition-all"
-                    style={{ width: `${(count / active.length) * 100}%` }}
-                  />
+          <h3 className="text-sm font-semibold text-card-foreground mb-4">By Grade</h3>
+          <div className="grid grid-cols-5 gap-2">
+            {sortedGrades.map(({ grade, count }) => {
+              const pct = Math.round((count / totalGradeStudents) * 100);
+              return (
+                <div key={grade} className="flex flex-col items-center">
+                  <div className="relative h-16 w-16 mb-1.5">
+                    <svg className="h-16 w-16 -rotate-90" viewBox="0 0 36 36">
+                      <circle cx="18" cy="18" r="15.9" fill="none" className="stroke-muted" strokeWidth="3" />
+                      <circle
+                        cx="18" cy="18" r="15.9" fill="none"
+                        className="stroke-primary"
+                        strokeWidth="3"
+                        strokeDasharray={`${pct} ${100 - pct}`}
+                        strokeLinecap="round"
+                      />
+                    </svg>
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <span className="text-sm font-bold text-foreground">{count}</span>
+                    </div>
+                  </div>
+                  <span className="text-xs font-medium text-muted-foreground">{grade}</span>
+                  <span className="text-[10px] text-muted-foreground">{pct}%</span>
                 </div>
-                <span className="text-xs font-medium text-foreground w-8 text-right">{count}</span>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
 
@@ -121,16 +141,8 @@ export default function DemographicsPage() {
               <div key={f} className="flex items-center gap-3">
                 <span className="text-xs text-muted-foreground w-48 truncate">{INTEREST_LABELS[f]}</span>
                 <div className="flex-1 h-5 bg-muted rounded-full overflow-hidden flex">
-                  <div
-                    className="h-full bg-success transition-all"
-                    style={{ width: `${(yes / total) * 100}%` }}
-                    title={`Yes: ${yes}`}
-                  />
-                  <div
-                    className="h-full bg-warning transition-all"
-                    style={{ width: `${(maybe / total) * 100}%` }}
-                    title={`Maybe: ${maybe}`}
-                  />
+                  <div className="h-full bg-success transition-all" style={{ width: `${(yes / total) * 100}%` }} title={`Yes: ${yes}`} />
+                  <div className="h-full bg-warning transition-all" style={{ width: `${(maybe / total) * 100}%` }} title={`Maybe: ${maybe}`} />
                 </div>
                 <div className="flex gap-2 text-[10px] w-28">
                   <span className="text-success">{yes}Y</span>

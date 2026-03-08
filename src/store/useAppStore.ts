@@ -39,6 +39,7 @@ function dbToIntern(row: DbIntern): Intern {
     additionalQuestions: row.additional_questions || '',
     isDuplicate: row.is_duplicate || false,
     isNewest: row.is_newest ?? true,
+    adminNotes: (row as any).admin_notes || '',
   };
 }
 
@@ -71,6 +72,7 @@ interface AppState {
   syncFromSheet: (url: string) => Promise<{ success: boolean; message: string }>;
   loadSyncConfig: () => Promise<void>;
   uploadExcelInterns: (interns: Intern[]) => Promise<void>;
+  updateIntern: (id: string, updates: Partial<Record<string, any>>) => Promise<void>;
 }
 
 export const useAppStore = create<AppState>()((set, get) => ({
@@ -92,17 +94,10 @@ export const useAppStore = create<AppState>()((set, get) => ({
     if (data && data.length > 0) {
       set({ worksites: data.map(dbToWorksite) });
     } else {
-      // Seed default worksites
       const inserts = DEFAULT_WORKSITES.map(ws => ({
-        name: ws.name,
-        category: ws.category,
-        description: ws.description,
-        capacity: ws.capacity,
-        filled: ws.filled,
-        contact_name: ws.contactName,
-        contact_email: ws.contactEmail,
-        location: ws.location,
-        tags: ws.tags,
+        name: ws.name, category: ws.category, description: ws.description,
+        capacity: ws.capacity, filled: ws.filled, contact_name: ws.contactName,
+        contact_email: ws.contactEmail, location: ws.location, tags: ws.tags,
       }));
       await supabase.from('worksites').insert(inserts);
       const { data: seeded } = await supabase.from('worksites').select('*').order('name');
@@ -112,15 +107,9 @@ export const useAppStore = create<AppState>()((set, get) => ({
 
   addWorksite: async (ws) => {
     const { data } = await supabase.from('worksites').insert({
-      name: ws.name,
-      category: ws.category,
-      description: ws.description,
-      capacity: ws.capacity,
-      filled: ws.filled,
-      contact_name: ws.contactName,
-      contact_email: ws.contactEmail,
-      location: ws.location,
-      tags: ws.tags,
+      name: ws.name, category: ws.category, description: ws.description,
+      capacity: ws.capacity, filled: ws.filled, contact_name: ws.contactName,
+      contact_email: ws.contactEmail, location: ws.location, tags: ws.tags,
     }).select().single();
     if (data) {
       set(s => ({ worksites: [...s.worksites, dbToWorksite(data)] }));
@@ -132,21 +121,35 @@ export const useAppStore = create<AppState>()((set, get) => ({
     set(s => ({ worksites: s.worksites.filter(w => w.id !== id) }));
   },
 
+  updateIntern: async (id, updates) => {
+    // Map camelCase to snake_case for DB
+    const dbUpdates: Record<string, any> = {};
+    const fieldMap: Record<string, string> = {
+      firstName: 'first_name', lastName: 'last_name', phone: 'phone',
+      parentPhone: 'parent_phone', dob: 'dob', studentEmail: 'student_email',
+      school: 'school', otherSchool: 'other_school', grade: 'grade',
+      adminNotes: 'admin_notes', specificInterests: 'specific_interests',
+      emailSubmission: 'email_submission',
+    };
+    for (const [key, val] of Object.entries(updates)) {
+      const dbKey = fieldMap[key] || key;
+      dbUpdates[dbKey] = val;
+    }
+    await supabase.from('interns').update(dbUpdates).eq('id', id);
+    // Update local state
+    set(s => ({
+      interns: s.interns.map(i => i.id === id ? { ...i, ...updates } as Intern : i),
+    }));
+  },
+
   syncFromSheet: async (url) => {
     set({ syncing: true });
     try {
       const { data, error } = await supabase.functions.invoke('sync-google-sheet', {
         body: { sheetUrl: url },
       });
-      if (error) {
-        set({ syncing: false });
-        return { success: false, message: error.message };
-      }
-      if (data?.error) {
-        set({ syncing: false });
-        return { success: false, message: data.error };
-      }
-      // Refresh data
+      if (error) { set({ syncing: false }); return { success: false, message: error.message }; }
+      if (data?.error) { set({ syncing: false }); return { success: false, message: data.error }; }
       await get().fetchInterns();
       set({ syncing: false, sheetUrl: url, lastSynced: new Date().toISOString() });
       return { success: true, message: data.message || `Synced ${data.count} interns` };
@@ -158,46 +161,24 @@ export const useAppStore = create<AppState>()((set, get) => ({
 
   loadSyncConfig: async () => {
     const { data } = await supabase.from('sync_config').select('*').limit(1).single();
-    if (data) {
-      set({ sheetUrl: data.sheet_url, lastSynced: data.last_synced_at });
-    }
+    if (data) set({ sheetUrl: data.sheet_url, lastSynced: data.last_synced_at });
   },
 
   uploadExcelInterns: async (parsed: Intern[]) => {
-    // Insert parsed interns into DB
     const inserts = parsed.map(i => ({
-      first_name: i.firstName,
-      last_name: i.lastName,
-      email_submission: i.emailSubmission,
-      student_email: i.studentEmail,
-      phone: i.phone,
-      parent_phone: i.parentPhone,
-      dob: i.dob,
-      school: i.school,
-      other_school: i.otherSchool,
-      grade: i.grade,
-      programs: i.programs,
-      it_interests: i.itInterests,
-      cleveland_clinic: i.clevelandClinic,
-      construction_mgmt: i.constructionMgmt,
-      biomedical: i.biomedical,
-      env_justice: i.envJustice,
-      env_climate: i.envClimate,
-      env_field_science: i.envFieldScience,
-      iers_center: i.iersCenter,
-      magnet_manufacturing: i.magnetManufacturing,
-      education_internship: i.educationInternship,
-      healthcare: i.healthcare,
-      video_games: i.videoGames,
-      cs_course_taken: i.csCourseTaken,
-      specific_interests: i.specificInterests,
-      additional_questions: i.additionalQuestions,
-      timestamp: i.timestamp,
-      is_duplicate: i.isDuplicate,
-      is_newest: i.isNewest,
+      first_name: i.firstName, last_name: i.lastName, email_submission: i.emailSubmission,
+      student_email: i.studentEmail, phone: i.phone, parent_phone: i.parentPhone,
+      dob: i.dob, school: i.school, other_school: i.otherSchool, grade: i.grade,
+      programs: i.programs, it_interests: i.itInterests,
+      cleveland_clinic: i.clevelandClinic, construction_mgmt: i.constructionMgmt,
+      biomedical: i.biomedical, env_justice: i.envJustice, env_climate: i.envClimate,
+      env_field_science: i.envFieldScience, iers_center: i.iersCenter,
+      magnet_manufacturing: i.magnetManufacturing, education_internship: i.educationInternship,
+      healthcare: i.healthcare, video_games: i.videoGames, cs_course_taken: i.csCourseTaken,
+      specific_interests: i.specificInterests, additional_questions: i.additionalQuestions,
+      timestamp: i.timestamp, is_duplicate: i.isDuplicate, is_newest: i.isNewest,
       source_sheet_url: 'manual-upload',
     }));
-
     await supabase.from('interns').delete().eq('source_sheet_url', 'manual-upload');
     await supabase.from('interns').insert(inserts);
     await get().fetchInterns();

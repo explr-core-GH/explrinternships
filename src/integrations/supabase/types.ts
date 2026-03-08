@@ -17,6 +17,7 @@ export type Database = {
       interns: {
         Row: {
           additional_questions: string | null
+          admin_notes: string | null
           biomedical: string | null
           cleveland_clinic: string | null
           construction_mgmt: string | null
@@ -52,6 +53,7 @@ export type Database = {
         }
         Insert: {
           additional_questions?: string | null
+          admin_notes?: string | null
           biomedical?: string | null
           cleveland_clinic?: string | null
           construction_mgmt?: string | null
@@ -87,6 +89,7 @@ export type Database = {
         }
         Update: {
           additional_questions?: string | null
+          admin_notes?: string | null
           biomedical?: string | null
           cleveland_clinic?: string | null
           construction_mgmt?: string | null
