@@ -1,0 +1,1 @@
+ALTER TABLE public.interns ADD COLUMN status text NOT NULL DEFAULT 'pending';
