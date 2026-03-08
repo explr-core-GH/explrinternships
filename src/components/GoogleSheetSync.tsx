@@ -26,13 +26,18 @@ export default function GoogleSheetSync() {
     }
   };
 
-  // Initialize URL from config
-  useState(() => {
+  // Initialize URL from config on mount
+  useEffect(() => {
     if (!sheetUrl) loadSyncConfig();
-  });
+  }, []);
 
-  // Keep local state in sync
-  if (sheetUrl && !url) setUrl(sheetUrl);
+  // Set URL from store only once after loading
+  useEffect(() => {
+    if (sheetUrl && !initialized) {
+      setUrl(sheetUrl);
+      setInitialized(true);
+    }
+  }, [sheetUrl, initialized]);
 
   return (
     <div className="rounded-lg border bg-card p-4 shadow-card">
