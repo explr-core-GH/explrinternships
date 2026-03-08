@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { RefreshCw, Link2, Check, AlertCircle, Clock } from 'lucide-react';
 import { useAppStore } from '@/store/useAppStore';
 import { Button } from '@/components/ui/button';
@@ -8,7 +8,7 @@ import { toast } from 'sonner';
 export default function GoogleSheetSync() {
   const { sheetUrl, lastSynced, syncing, syncFromSheet, loadSyncConfig } = useAppStore();
   const [url, setUrl] = useState(sheetUrl);
-
+  const [initialized, setInitialized] = useState(false);
   const handleSync = async () => {
     if (!url.trim()) {
       toast.error('Please enter a Google Sheets URL');
@@ -26,13 +26,18 @@ export default function GoogleSheetSync() {
     }
   };
 
-  // Initialize URL from config
-  useState(() => {
+  // Initialize URL from config on mount
+  useEffect(() => {
     if (!sheetUrl) loadSyncConfig();
-  });
+  }, []);
 
-  // Keep local state in sync
-  if (sheetUrl && !url) setUrl(sheetUrl);
+  // Set URL from store only once after loading
+  useEffect(() => {
+    if (sheetUrl && !initialized) {
+      setUrl(sheetUrl);
+      setInitialized(true);
+    }
+  }, [sheetUrl, initialized]);
 
   return (
     <div className="rounded-lg border bg-card p-4 shadow-card">
