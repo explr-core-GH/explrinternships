@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { RefreshCw, Link2, Check, AlertCircle, Clock } from 'lucide-react';
 import { useAppStore } from '@/store/useAppStore';
 import { Button } from '@/components/ui/button';
@@ -8,7 +8,7 @@ import { toast } from 'sonner';
 export default function GoogleSheetSync() {
   const { sheetUrl, lastSynced, syncing, syncFromSheet, loadSyncConfig } = useAppStore();
   const [url, setUrl] = useState(sheetUrl);
-
+  const [initialized, setInitialized] = useState(false);
   const handleSync = async () => {
     if (!url.trim()) {
       toast.error('Please enter a Google Sheets URL');
