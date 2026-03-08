@@ -3,7 +3,8 @@ import { LayoutDashboard, Users, Building2, BarChart3, Upload, Settings } from '
 import { useAppStore } from '@/store/useAppStore';
 
 const navItems = [
-  { to: '/', label: 'Roster', icon: Users },
+  { to: '/', label: 'Dashboard', icon: LayoutDashboard },
+  { to: '/roster', label: 'Roster', icon: Users },
   { to: '/worksites', label: 'Worksites', icon: Building2 },
   { to: '/demographics', label: 'Demographics', icon: BarChart3 },
   { to: '/upload', label: 'Upload', icon: Upload },

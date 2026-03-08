@@ -22,7 +22,8 @@ const App = () => (
       <BrowserRouter>
         <AppShell>
           <Routes>
-            <Route path="/" element={<RosterPage />} />
+            <Route path="/" element={<DashboardPage />} />
+            <Route path="/roster" element={<RosterPage />} />
             <Route path="/worksites" element={<WorksitesPage />} />
             <Route path="/demographics" element={<DemographicsPage />} />
             <Route path="/upload" element={<UploadPage />} />
