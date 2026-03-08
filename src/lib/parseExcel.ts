@@ -128,14 +128,40 @@ export function parseExcelFile(data: ArrayBuffer): Intern[] {
     ? findColumn(headers, 'student\'s email')
     : findColumn(headers, 'This should be the student');
 
+  // Detect if we have separate first/last name columns or a combined "Contact"/"Name" column
+  const hasFirstName = findColumn(headers, 'First Name') >= 0;
+  const hasLastName = findColumn(headers, 'Last Name') >= 0;
+  const contactIdx = findColumn(headers, 'Contact') >= 0 ? findColumn(headers, 'Contact')
+    : findColumn(headers, 'Full Name') >= 0 ? findColumn(headers, 'Full Name')
+    : findColumn(headers, 'Student Name') >= 0 ? findColumn(headers, 'Student Name')
+    : findColumn(headers, 'Youth Name') >= 0 ? findColumn(headers, 'Youth Name')
+    : findColumn(headers, 'Participant') >= 0 ? findColumn(headers, 'Participant')
+    : findColumn(headers, 'Name') >= 0 ? findColumn(headers, 'Name')
+    : -1;
+
+  console.log('Name detection:', { hasFirstName, hasLastName, contactIdx, headers: headers.filter(h => h) });
+
   const interns: Intern[] = [];
   
   for (let i = 0; i < dataRows.length; i++) {
     const row = dataRows[i];
-    if (!row || row.length < 3) continue;
+    if (!row || row.length < 2) continue;
     
-    const firstName = getVal(row, headers, 'First Name');
-    const lastName = getVal(row, headers, 'Last Name');
+    let firstName = '';
+    let lastName = '';
+
+    if (hasFirstName || hasLastName) {
+      firstName = getVal(row, headers, 'First Name');
+      lastName = getVal(row, headers, 'Last Name');
+    } else if (contactIdx >= 0) {
+      const fullName = String(row[contactIdx] ?? '').trim();
+      if (fullName) {
+        const parts = fullName.split(/\s+/);
+        firstName = parts[0] || '';
+        lastName = parts.slice(1).join(' ') || '';
+      }
+    }
+
     if (!firstName && !lastName) continue;
 
     const programsStr = getVal(row, headers, 'Have you participated in any of the following');
