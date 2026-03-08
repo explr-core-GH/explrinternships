@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react';
 import { Search, Filter, Copy } from 'lucide-react';
 import { useAppStore } from '@/store/useAppStore';
+import { useAutoLoadData } from '@/hooks/useAutoLoadData';
 import InternCard from '@/components/InternCard';
 import FileUpload from '@/components/FileUpload';
 import { Input } from '@/components/ui/input';
