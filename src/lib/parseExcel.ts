@@ -37,12 +37,35 @@ function getVal(row: any[], headers: string[], search: string): string {
 
 export function parseExcelFile(data: ArrayBuffer): Intern[] {
   const workbook = XLSX.read(data, { type: 'array' });
-  const sheet = workbook.Sheets[workbook.SheetNames[0]];
-  const rows: any[][] = XLSX.utils.sheet_to_json(sheet, { header: 1 });
   
-  if (rows.length < 2) return [];
+  // Try all sheets to find one with intern data
+  let headers: string[] = [];
+  let dataRows: any[][] = [];
   
-  const headers = rows[0].map((h: any) => String(h ?? ''));
+  for (const sheetName of workbook.SheetNames) {
+    const sheet = workbook.Sheets[sheetName];
+    const rows: any[][] = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+    if (rows.length < 2) continue;
+    
+    // Find header row by looking for name-like columns
+    let headerIdx = -1;
+    for (let i = 0; i < Math.min(rows.length, 15); i++) {
+      const rowStr = (rows[i] || []).map((c: any) => String(c ?? '').toLowerCase()).join(' ');
+      if (rowStr.includes('first') || rowStr.includes('last name') || rowStr.includes('email address')) {
+        headerIdx = i;
+        break;
+      }
+    }
+    
+    if (headerIdx >= 0) {
+      headers = rows[headerIdx].map((h: any) => String(h ?? ''));
+      dataRows = rows.slice(headerIdx + 1);
+      console.log(`Found intern data on sheet "${sheetName}" at row ${headerIdx}. Headers:`, headers.slice(0, 5));
+      break;
+    }
+  }
+  
+  if (headers.length === 0 || dataRows.length === 0) return [];
   
   const emailIdx1 = 1; // "Email Address" (submission)
   const emailIdx2 = findColumn(headers, 'student\'s email') >= 0 
@@ -51,8 +74,8 @@ export function parseExcelFile(data: ArrayBuffer): Intern[] {
 
   const interns: Intern[] = [];
   
-  for (let i = 1; i < rows.length; i++) {
-    const row = rows[i];
+  for (let i = 0; i < dataRows.length; i++) {
+    const row = dataRows[i];
     if (!row || row.length < 3) continue;
     
     const firstName = getVal(row, headers, 'First Name');
