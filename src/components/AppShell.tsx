@@ -1,9 +1,10 @@
 import { Link, useLocation } from 'react-router-dom';
-import { Users, Building2, BarChart3, Upload, Settings } from 'lucide-react';
+import { LayoutDashboard, Users, Building2, BarChart3, Upload, Settings } from 'lucide-react';
 import { useAppStore } from '@/store/useAppStore';
 
 const navItems = [
-  { to: '/', label: 'Roster', icon: Users },
+  { to: '/', label: 'Dashboard', icon: LayoutDashboard },
+  { to: '/roster', label: 'Roster', icon: Users },
   { to: '/worksites', label: 'Worksites', icon: Building2 },
   { to: '/demographics', label: 'Demographics', icon: BarChart3 },
   { to: '/upload', label: 'Upload', icon: Upload },
