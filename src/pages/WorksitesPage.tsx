@@ -14,7 +14,7 @@ import {
 } from '@/components/ui/dialog';
 import { toast } from 'sonner';
 
-function AddWorksiteDialog({ onAdd }: { onAdd: (ws: Worksite) => void }) {
+function AddWorksiteDialog({ onAdd }: { onAdd: (ws: Omit<Worksite, 'id'>) => void }) {
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({
     name: '', category: WORKSITE_CATEGORIES[0], description: '',
@@ -24,7 +24,6 @@ function AddWorksiteDialog({ onAdd }: { onAdd: (ws: Worksite) => void }) {
   const handleSubmit = () => {
     if (!form.name.trim()) { toast.error('Name required'); return; }
     onAdd({
-      id: `ws-${Date.now()}`,
       name: form.name.trim(),
       category: form.category,
       description: form.description.trim(),
