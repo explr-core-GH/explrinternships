@@ -83,6 +83,7 @@ interface AppState {
 export const useAppStore = create<AppState>()((set, get) => ({
   interns: [],
   worksites: [],
+  assignments: [],
   loading: false,
   sheetUrl: '',
   lastSynced: null,
