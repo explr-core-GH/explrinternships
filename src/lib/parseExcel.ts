@@ -74,8 +74,8 @@ export function parseExcelFile(data: ArrayBuffer): Intern[] {
 
   const interns: Intern[] = [];
   
-  for (let i = 1; i < rows.length; i++) {
-    const row = rows[i];
+  for (let i = 0; i < dataRows.length; i++) {
+    const row = dataRows[i];
     if (!row || row.length < 3) continue;
     
     const firstName = getVal(row, headers, 'First Name');
