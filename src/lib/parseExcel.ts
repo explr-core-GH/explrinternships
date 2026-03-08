@@ -47,9 +47,9 @@ export function parseExcelFile(data: ArrayBuffer): Intern[] {
     console.log(`Sheet "${sheetName}": ${rows.length} rows`);
     if (rows.length < 2) continue;
     
-    // Log first few rows for debugging
-    for (let i = 0; i < Math.min(rows.length, 5); i++) {
-      console.log(`  Row ${i}:`, (rows[i] || []).slice(0, 6).map((c: any) => String(c ?? '')));
+    // Log first 15 rows for debugging
+    for (let i = 0; i < Math.min(rows.length, 15); i++) {
+      console.log(`  Row ${i}:`, JSON.stringify((rows[i] || []).slice(0, 8).map((c: any) => String(c ?? ''))));
     }
     
     // Find header row by looking for name-like columns
