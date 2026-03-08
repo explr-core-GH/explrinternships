@@ -184,6 +184,17 @@ export const useAppStore = create<AppState>()((set, get) => ({
     }));
   },
 
+  refreshWorksiteCounts: async () => {
+    const { data } = await supabase.from('placements').select('worksite_id');
+    const counts: Record<string, number> = {};
+    (data || []).forEach((r: any) => {
+      counts[r.worksite_id] = (counts[r.worksite_id] || 0) + 1;
+    });
+    set(s => ({
+      worksites: s.worksites.map(w => ({ ...w, filled: counts[w.id] || 0 })),
+    }));
+  },
+
   updateIntern: async (id, updates) => {
     // Map camelCase to snake_case for DB
     const dbUpdates: Record<string, any> = {};
