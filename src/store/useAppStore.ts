@@ -141,6 +141,48 @@ export const useAppStore = create<AppState>()((set, get) => ({
     set(s => ({ worksites: s.worksites.filter(w => w.id !== id) }));
   },
 
+  assignIntern: async (internId, worksiteId) => {
+    // Upsert: remove old assignment first
+    await supabase.from('placements').delete().eq('intern_id', internId);
+    const { data } = await supabase.from('placements').insert({
+      intern_id: internId,
+      worksite_id: worksiteId,
+    }).select().single();
+    if (data) {
+      set(s => ({
+        assignments: [...s.assignments.filter(a => a.internId !== internId), {
+          id: data.id,
+          internId: data.intern_id,
+          worksiteId: data.worksite_id,
+          createdAt: data.created_at,
+        }],
+      }));
+      // Update worksite filled counts
+      await get().refreshWorksiteCounts();
+    }
+  },
+
+  unassignIntern: async (internId) => {
+    await supabase.from('placements').delete().eq('intern_id', internId);
+    set(s => ({ assignments: s.assignments.filter(a => a.internId !== internId) }));
+    await get().refreshWorksiteCounts();
+  },
+
+  updateWorksite: async (id, updates) => {
+    const dbUpdates: Record<string, any> = {};
+    const fieldMap: Record<string, string> = {
+      contactName: 'contact_name', contactEmail: 'contact_email',
+    };
+    for (const [key, val] of Object.entries(updates)) {
+      const dbKey = fieldMap[key] || key;
+      dbUpdates[dbKey] = val;
+    }
+    await supabase.from('worksites').update(dbUpdates).eq('id', id);
+    set(s => ({
+      worksites: s.worksites.map(w => w.id === id ? { ...w, ...updates } as Worksite : w),
+    }));
+  },
+
   updateIntern: async (id, updates) => {
     // Map camelCase to snake_case for DB
     const dbUpdates: Record<string, any> = {};
