@@ -126,7 +126,7 @@ export default function FileUpload({ onComplete }: FileUploadProps) {
                       ? `${config.bgClass} ${config.textClass} ${config.borderClass} ring-2 ring-offset-1 ring-offset-background`
                       : `border-border text-muted-foreground hover:${config.textClass}`
                   }`}
-                  style={targetStatus === status ? { ringColor: config.color } : undefined}
+                  style={targetStatus === status ? { '--tw-ring-color': config.color } as React.CSSProperties : undefined}
                 >
                   {config.label}
                 </button>
