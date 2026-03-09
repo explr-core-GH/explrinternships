@@ -235,60 +235,62 @@ export default function FileUpload({ onComplete }: FileUploadProps) {
         </div>
 
         <div className="border rounded-lg bg-card">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Uploaded Name</TableHead>
-                <TableHead>Potential Match</TableHead>
-                <TableHead>Similarity</TableHead>
-                <TableHead>Action</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {potentialMatches.map((match, index) => (
-                <TableRow key={index}>
-                  <TableCell className="font-medium">{match.uploadedName}</TableCell>
-                  <TableCell>{match.internName}</TableCell>
-                  <TableCell>
-                    <span className={`px-2 py-1 rounded text-xs font-medium ${
-                      match.similarity >= 1.0 ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300' :
-                      match.similarity >= 0.9 ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300' :
-                      match.similarity >= 0.7 ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300' :
-                      match.similarity >= 0.6 ? 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300' :
-                      match.similarity >= 0.4 ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300' :
-                      'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300'
-                    }`}>
-                      {match.similarity >= 1.0 ? '100%' : `${Math.round(match.similarity * 100)}%`}
-                      {match.similarity >= 1.0 && <span className="ml-1 text-xs">Exact</span>}
-                      {match.similarity < 0.6 && <span className="ml-1 text-xs">Low</span>}
-                    </span>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex gap-2">
-                      <Button
-                        size="sm"
-                        variant={match.approved === true ? "default" : "outline"}
-                        onClick={() => handleApprove(index)}
-                        className="h-8"
-                      >
-                        <Check className="h-3 w-3" />
-                        Yes
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant={match.approved === false ? "destructive" : "outline"}
-                        onClick={() => handleReject(index)}
-                        className="h-8"
-                      >
-                        <X className="h-3 w-3" />
-                        No
-                      </Button>
-                    </div>
-                  </TableCell>
+          <ScrollArea className="h-[400px]">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Uploaded Name</TableHead>
+                  <TableHead>Potential Match</TableHead>
+                  <TableHead>Similarity</TableHead>
+                  <TableHead>Action</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {potentialMatches.map((match, index) => (
+                  <TableRow key={index}>
+                    <TableCell className="font-medium">{match.uploadedName}</TableCell>
+                    <TableCell>{match.internName}</TableCell>
+                    <TableCell>
+                      <span className={`px-2 py-1 rounded text-xs font-medium ${
+                        match.similarity >= 1.0 ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300' :
+                        match.similarity >= 0.9 ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300' :
+                        match.similarity >= 0.7 ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300' :
+                        match.similarity >= 0.6 ? 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300' :
+                        match.similarity >= 0.4 ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300' :
+                        'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300'
+                      }`}>
+                        {match.similarity >= 1.0 ? '100%' : `${Math.round(match.similarity * 100)}%`}
+                        {match.similarity >= 1.0 && <span className="ml-1 text-xs">Exact</span>}
+                        {match.similarity < 0.6 && <span className="ml-1 text-xs">Low</span>}
+                      </span>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex gap-2">
+                        <Button
+                          size="sm"
+                          variant={match.approved === true ? "default" : "outline"}
+                          onClick={() => handleApprove(index)}
+                          className="h-8"
+                        >
+                          <Check className="h-3 w-3" />
+                          Yes
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant={match.approved === false ? "destructive" : "outline"}
+                          onClick={() => handleReject(index)}
+                          className="h-8"
+                        >
+                          <X className="h-3 w-3" />
+                          No
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </ScrollArea>
         </div>
 
         {noMatches.length > 0 && (
