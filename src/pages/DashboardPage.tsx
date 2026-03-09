@@ -173,20 +173,3 @@ function StatCard({ icon: Icon, label, value, sub, variant = 'default' }: {
   );
 }
 
-function StatCard({ icon: Icon, label, value, sub, variant = 'default' }: {
-  icon: React.ElementType; label: string; value: number; sub?: string; variant?: 'default' | 'warning';
-}) {
-  return (
-    <Card>
-      <CardContent className="p-4 flex items-center gap-3">
-        <div className={`h-10 w-10 rounded-lg flex items-center justify-center shrink-0 ${variant === 'warning' ? 'bg-destructive/10 text-destructive' : 'bg-primary/10 text-primary'}`}>
-          <Icon className="h-5 w-5" />
-        </div>
-        <div>
-          <p className="text-2xl font-bold text-foreground leading-none">{value}</p>
-          <p className="text-[11px] text-muted-foreground mt-0.5">{label}{sub ? ` · ${sub}` : ''}</p>
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
