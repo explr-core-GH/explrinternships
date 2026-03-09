@@ -54,6 +54,15 @@
     --warning-foreground: 0 0% 100%;
     --info: 210 100% 52%;
     --info-foreground: 0 0% 100%;
+    
+    /* Status colors */
+    --status-pending: 220 10% 46%;
+    --status-not-matched: 38 92% 50%;
+    --status-matched: 152 60% 40%;
+    --status-assigned: 152 70% 30%;
+    --status-in-progress: 48 96% 53%;
+    --status-issue: 24 95% 53%;
+    --status-removed: 0 72% 51%;
 
     --gradient-primary: linear-gradient(135deg, hsl(173, 58%, 39%), hsl(173, 70%, 30%));
     --gradient-surface: linear-gradient(180deg, hsl(220, 20%, 97%), hsl(220, 14%, 95%));
