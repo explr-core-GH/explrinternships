@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Users, Building2, CheckCircle2, AlertCircle } from 'lucide-react';
+import { INTERN_STATUSES, STATUS_CONFIG, type InternStatus } from '@/types/intern';
 
 export default function DashboardPage() {
   useAutoLoadData();
@@ -15,6 +16,17 @@ export default function DashboardPage() {
   const assignedCount = active.filter(i => assignedIds.has(i.id)).length;
   const unassignedCount = active.length - assignedCount;
   const assignPct = active.length ? Math.round((assignedCount / active.length) * 100) : 0;
+
+  const statusCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    for (const status of INTERN_STATUSES) {
+      counts[status] = 0;
+    }
+    for (const intern of active) {
+      counts[intern.status] = (counts[intern.status] || 0) + 1;
+    }
+    return counts;
+  }, [active]);
 
   const wsCounts = useMemo(() => {
     const counts: Record<string, number> = {};
@@ -47,6 +59,42 @@ export default function DashboardPage() {
         <StatCard icon={AlertCircle} label="Unassigned" value={unassignedCount} variant={unassignedCount > 0 ? 'warning' : 'default'} />
         <StatCard icon={Building2} label="Worksites" value={worksites.length} sub={`${totalFilled}/${totalCapacity} slots`} />
       </div>
+
+      {/* Status breakdown */}
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm font-semibold">Status Breakdown</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-2.5">
+            {INTERN_STATUSES.map(status => {
+              const count = statusCounts[status] || 0;
+              const pct = active.length ? Math.round((count / active.length) * 100) : 0;
+              const config = STATUS_CONFIG[status];
+              return (
+                <div key={status} className="space-y-1">
+                  <div className="flex items-center justify-between text-xs">
+                    <div className="flex items-center gap-2">
+                      <span
+                        className="inline-block h-2.5 w-2.5 rounded-full shrink-0"
+                        style={{ backgroundColor: config.color }}
+                      />
+                      <span className="font-medium text-foreground">{config.label}</span>
+                    </div>
+                    <span className="text-muted-foreground">{count} <span className="text-[10px]">({pct}%)</span></span>
+                  </div>
+                  <div className="h-2 rounded-full bg-muted overflow-hidden">
+                    <div
+                      className="h-full rounded-full transition-all duration-500"
+                      style={{ width: `${pct}%`, backgroundColor: config.color }}
+                    />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Assignment progress */}
       <Card>
@@ -124,3 +172,4 @@ function StatCard({ icon: Icon, label, value, sub, variant = 'default' }: {
     </Card>
   );
 }
+
