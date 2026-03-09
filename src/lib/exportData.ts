@@ -1,5 +1,15 @@
 import type { Intern, Worksite, Assignment } from '@/types/intern';
 
+interface PotentialMatch {
+  uploadedName: string;
+  uploadedFirstName: string;
+  uploadedLastName: string;
+  internId: string;
+  internName: string;
+  similarity: number;
+  approved?: boolean;
+}
+
 export function exportRosterCSV(
   interns: Intern[],
   worksites: Worksite[],
