@@ -161,14 +161,14 @@ export default function FileUpload({ onComplete }: FileUploadProps) {
               internId: bestInternId,
               internName: bestInternName,
               similarity: finalSimilarity,
-              approved: finalSimilarity >= 1.0 ? true : undefined
+              approved: finalSimilarity >= 0.7 ? true : undefined
             };
 
             if (bestInternId) {
               matchedInternIds.add(bestInternId);
             }
             potentialMatchList.push(entry);
-            if (finalSimilarity >= 1.0) {
+            if (finalSimilarity >= 0.7) {
               exactMatchCount++;
             }
           } else {
@@ -178,7 +178,7 @@ export default function FileUpload({ onComplete }: FileUploadProps) {
             if (potentials.length > 0) {
               const bestMatch = potentials[0];
               
-              if (bestMatch.similarity >= 1.0) {
+              if (bestMatch.similarity >= 0.7) {
                 matchedInternIds.add(bestMatch.internId);
                 await updateIntern(bestMatch.internId, { status: targetStatus });
                 exactMatchCount++;
@@ -285,7 +285,7 @@ export default function FileUpload({ onComplete }: FileUploadProps) {
           <div>
             <h3 className="font-semibold text-foreground">Match Review</h3>
             <p className="text-sm text-muted-foreground">
-              {!showAllMatches && exactMatches > 0 && `${exactMatches} exact matches applied automatically. `}
+              {!showAllMatches && exactMatches > 0 && `${exactMatches} matches ≥70% applied automatically. `}
               Review {potentialMatches.length} match{potentialMatches.length !== 1 ? 'es' : ''} below.
               {showAllMatches && <span className="text-primary"> (Showing all matches including low confidence)</span>}
             </p>
@@ -497,7 +497,7 @@ export default function FileUpload({ onComplete }: FileUploadProps) {
             <p className="text-xs text-muted-foreground mt-2">
               {showAllMatches 
                 ? 'All matches will be shown for manual review with similarity percentages, including exact matches.'
-                : 'Only uncertain matches will require manual review. Exact matches will be applied automatically.'
+                : 'Only uncertain matches (60-69% similarity) will require manual review. Matches ≥70% will be applied automatically.'
               }
             </p>
           </div>
