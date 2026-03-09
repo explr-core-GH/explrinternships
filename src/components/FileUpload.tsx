@@ -293,6 +293,14 @@ export default function FileUpload({ onComplete }: FileUploadProps) {
           </Button>
           <Button
             variant="outline"
+            onClick={handleDownloadReview}
+            className="gap-1.5"
+          >
+            <Download className="h-4 w-4" />
+            Export
+          </Button>
+          <Button
+            variant="outline"
             onClick={() => {
               setShowingReview(false);
               setPotentialMatches([]);
