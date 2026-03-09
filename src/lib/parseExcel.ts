@@ -263,11 +263,19 @@ export function parseExcelFile(data: ArrayBuffer): Intern[] {
   return markDuplicates(interns);
 }
 
+function normalizeName(name: string): string {
+  return name
+    .toLowerCase()
+    .replace(/[''`]/g, '') // Remove apostrophes and similar characters
+    .replace(/[^\w]/g, '') // Remove all non-word characters (spaces, hyphens, etc.)
+    .trim();
+}
+
 function markDuplicates(interns: Intern[]): Intern[] {
   const groups = new Map<string, Intern[]>();
   
   for (const intern of interns) {
-    const key = `${intern.firstName.toLowerCase()}_${intern.lastName.toLowerCase()}`;
+    const key = `${normalizeName(intern.firstName)}_${normalizeName(intern.lastName)}`;
     if (!groups.has(key)) groups.set(key, []);
     groups.get(key)!.push(intern);
   }
