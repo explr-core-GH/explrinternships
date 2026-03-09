@@ -172,4 +172,29 @@
   .bg-info {
     background-color: hsl(var(--info));
   }
+  
+  /* Status utilities */
+  .border-status-pending { border-color: hsl(var(--status-pending)); }
+  .border-status-not-matched { border-color: hsl(var(--status-not-matched)); }
+  .border-status-matched { border-color: hsl(var(--status-matched)); }
+  .border-status-assigned { border-color: hsl(var(--status-assigned)); }
+  .border-status-in-progress { border-color: hsl(var(--status-in-progress)); }
+  .border-status-issue { border-color: hsl(var(--status-issue)); }
+  .border-status-removed { border-color: hsl(var(--status-removed)); }
+  
+  .bg-status-pending\/10 { background-color: hsl(var(--status-pending) / 0.1); }
+  .bg-status-not-matched\/10 { background-color: hsl(var(--status-not-matched) / 0.1); }
+  .bg-status-matched\/10 { background-color: hsl(var(--status-matched) / 0.1); }
+  .bg-status-assigned\/10 { background-color: hsl(var(--status-assigned) / 0.1); }
+  .bg-status-in-progress\/10 { background-color: hsl(var(--status-in-progress) / 0.1); }
+  .bg-status-issue\/10 { background-color: hsl(var(--status-issue) / 0.1); }
+  .bg-status-removed\/10 { background-color: hsl(var(--status-removed) / 0.1); }
+  
+  .text-status-pending { color: hsl(var(--status-pending)); }
+  .text-status-not-matched { color: hsl(var(--status-not-matched)); }
+  .text-status-matched { color: hsl(var(--status-matched)); }
+  .text-status-assigned { color: hsl(var(--status-assigned)); }
+  .text-status-in-progress { color: hsl(var(--status-in-progress)); }
+  .text-status-issue { color: hsl(var(--status-issue)); }
+  .text-status-removed { color: hsl(var(--status-removed)); }
 }
