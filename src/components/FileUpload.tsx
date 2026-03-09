@@ -252,10 +252,13 @@ export default function FileUpload({ onComplete }: FileUploadProps) {
                       match.similarity >= 1.0 ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300' :
                       match.similarity >= 0.9 ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300' :
                       match.similarity >= 0.7 ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300' :
-                      'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300'
+                      match.similarity >= 0.6 ? 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300' :
+                      match.similarity >= 0.4 ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300' :
+                      'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300'
                     }`}>
                       {match.similarity >= 1.0 ? '100%' : `${Math.round(match.similarity * 100)}%`}
                       {match.similarity >= 1.0 && <span className="ml-1 text-xs">Exact</span>}
+                      {match.similarity < 0.6 && <span className="ml-1 text-xs">Low</span>}
                     </span>
                   </TableCell>
                   <TableCell>
