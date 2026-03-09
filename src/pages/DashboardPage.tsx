@@ -12,10 +12,12 @@ export default function DashboardPage() {
   const { interns, worksites, assignments, loading } = useAppStore();
 
   const active = useMemo(() => interns.filter(i => i.isNewest), [interns]);
+  const diffPartnerCount = useMemo(() => active.filter(i => i.status === 'selected_different_partner').length, [active]);
+  const eligible = useMemo(() => active.filter(i => i.status !== 'selected_different_partner'), [active]);
   const assignedIds = useMemo(() => new Set(assignments.map(a => a.internId)), [assignments]);
-  const assignedCount = active.filter(i => assignedIds.has(i.id)).length;
-  const unassignedCount = active.length - assignedCount;
-  const assignPct = active.length ? Math.round((assignedCount / active.length) * 100) : 0;
+  const assignedCount = eligible.filter(i => assignedIds.has(i.id)).length;
+  const unassignedCount = eligible.length - assignedCount;
+  const assignPct = eligible.length ? Math.round((assignedCount / eligible.length) * 100) : 0;
 
   const statusCounts = useMemo(() => {
     const counts: Record<string, number> = {};
