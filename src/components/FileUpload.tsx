@@ -131,9 +131,12 @@ export default function FileUpload({ onComplete }: FileUploadProps) {
                 potentialMatchList.push({ ...bestMatch, approved: true });
               }
             } else if (bestMatch.similarity >= 0.6 || showAllMatches) {
+              // Track this intern as having a potential match
+              matchedInternIds.add(bestMatch.internId);
               // Add potential matches for review (include low-confidence matches when showing all)
               if (showAllMatches) {
                 // When showing all matches, include the top 3 matches per name for better analysis
+                potentials.slice(0, 3).forEach(p => matchedInternIds.add(p.internId));
                 potentialMatchList.push(...potentials.slice(0, 3));
               } else {
                 potentialMatchList.push(bestMatch);
