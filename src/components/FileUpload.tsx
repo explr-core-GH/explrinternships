@@ -307,15 +307,44 @@ export default function FileUpload({ onComplete }: FileUploadProps) {
           </ScrollArea>
         </div>
 
-        {noMatches.length > 0 && (
-          <div className="p-3 border rounded-lg bg-muted/50">
-            <p className="text-sm font-medium text-muted-foreground mb-2">
-              {noMatches.length} names with no close matches:
-            </p>
-            <p className="text-xs text-muted-foreground">
-              {noMatches.slice(0, 5).join(', ')}
-              {noMatches.length > 5 ? ` +${noMatches.length - 5} more` : ''}
-            </p>
+        {(noMatches.length > 0 || missingFromSpreadsheet.length > 0) && (
+          <div className="border rounded-lg bg-card">
+            <Tabs defaultValue="not-in-roster" className="w-full">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="not-in-roster">Names Not in Roster ({noMatches.length})</TabsTrigger>
+                <TabsTrigger value="missing-from-sheet">Missing from Spreadsheet ({missingFromSpreadsheet.length})</TabsTrigger>
+              </TabsList>
+              <TabsContent value="not-in-roster" className="p-3">
+                <p className="text-sm font-medium text-muted-foreground mb-2">
+                  Names from spreadsheet with no close matches in roster:
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {noMatches.length > 0 ? (
+                    <>
+                      {noMatches.slice(0, 10).join(', ')}
+                      {noMatches.length > 10 ? ` +${noMatches.length - 10} more` : ''}
+                    </>
+                  ) : (
+                    'All names from spreadsheet were matched!'
+                  )}
+                </p>
+              </TabsContent>
+              <TabsContent value="missing-from-sheet" className="p-3">
+                <p className="text-sm font-medium text-muted-foreground mb-2">
+                  Roster names not found in spreadsheet:
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {missingFromSpreadsheet.length > 0 ? (
+                    <>
+                      {missingFromSpreadsheet.slice(0, 10).join(', ')}
+                      {missingFromSpreadsheet.length > 10 ? ` +${missingFromSpreadsheet.length - 10} more` : ''}
+                    </>
+                  ) : (
+                    'All roster names were found in the spreadsheet!'
+                  )}
+                </p>
+              </TabsContent>
+            </Tabs>
           </div>
         )}
 
