@@ -50,12 +50,12 @@ export function parseExcelFile(data: ArrayBuffer): Intern[] {
     console.log(`\n=== Sheet "${sheetName}": ${rows.length} rows ===`);
     if (rows.length < 2) continue;
     
-    // Log first 30 rows, all columns for debugging
-    for (let i = 0; i < Math.min(rows.length, 30); i++) {
+    // Log first 10 rows for debugging, but show more detail
+    for (let i = 0; i < Math.min(rows.length, 10); i++) {
       const row = rows[i] || [];
       const cells = row.map((c: any) => String(c ?? ''));
       if (cells.some(c => c.length > 0)) {
-        console.log(`  Row ${i} (${cells.filter(c => c).length} cells):`, JSON.stringify(cells));
+        console.log(`  Row ${i}: [${cells.map((c, idx) => `${idx}: "${c}"`).filter((_, idx) => cells[idx]).join(', ')}]`);
       }
     }
     
@@ -139,7 +139,13 @@ export function parseExcelFile(data: ArrayBuffer): Intern[] {
     : findColumn(headers, 'Name') >= 0 ? findColumn(headers, 'Name')
     : -1;
 
-  console.log('Name detection:', { hasFirstName, hasLastName, contactIdx, headers: headers.filter(h => h) });
+  console.log('Name detection:', { 
+    hasFirstName, 
+    hasLastName, 
+    contactIdx,
+    contactHeader: contactIdx >= 0 ? headers[contactIdx] : 'none',
+    allHeaders: headers.map((h, i) => `${i}: "${h}"`).filter((_, i) => headers[i])
+  });
 
   const interns: Intern[] = [];
   
@@ -153,16 +159,24 @@ export function parseExcelFile(data: ArrayBuffer): Intern[] {
     if (hasFirstName || hasLastName) {
       firstName = getVal(row, headers, 'First Name');
       lastName = getVal(row, headers, 'Last Name');
+      console.log(`Row ${i} - Using separate name columns: "${firstName}" "${lastName}"`);
     } else if (contactIdx >= 0) {
       const fullName = String(row[contactIdx] ?? '').trim();
+      console.log(`Row ${i} - Full name from index ${contactIdx}: "${fullName}"`);
       if (fullName) {
         const parts = fullName.split(/\s+/);
         firstName = parts[0] || '';
         lastName = parts.slice(1).join(' ') || '';
+        console.log(`Row ${i} - Split into: "${firstName}" "${lastName}"`);
       }
+    } else {
+      console.log(`Row ${i} - No name columns detected, skipping`);
     }
 
-    if (!firstName && !lastName) continue;
+    if (!firstName && !lastName) {
+      console.log(`Row ${i} - No names found, skipping row`);
+      continue;
+    }
 
     const programsStr = getVal(row, headers, 'Have you participated in any of the following');
     const itStr = getVal(row, headers, 'What areas of IT Interest');
