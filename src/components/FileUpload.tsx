@@ -152,11 +152,53 @@ export default function FileUpload({ onComplete }: FileUploadProps) {
     }
   }, [uploadExcelInterns, onComplete, mode, targetStatus, interns, updateIntern]);
 
+  const handleApprove = (index: number) => {
+    setPotentialMatches(prev => prev.map((match, i) => 
+      i === index ? { ...match, approved: true } : match
+    ));
+  };
+
+  const handleReject = (index: number) => {
+    setPotentialMatches(prev => prev.map((match, i) => 
+      i === index ? { ...match, approved: false } : match
+    ));
+  };
+
+  const applyApprovedMatches = async () => {
+    setProcessing(true);
+    const approved = potentialMatches.filter(m => m.approved === true);
+    
+    for (const match of approved) {
+      await updateIntern(match.internId, { status: targetStatus });
+    }
+
+    const totalUpdated = exactMatches + approved.length;
+    const rejected = potentialMatches.filter(m => m.approved === false);
+    const allNoMatches = [...noMatches, ...rejected.map(r => r.uploadedName)];
+
+    if (totalUpdated > 0) {
+      toast.success(`Updated ${totalUpdated} intern(s) to "${STATUS_CONFIG[targetStatus].label}"`);
+    }
+    if (allNoMatches.length > 0) {
+      toast.warning(`${allNoMatches.length} name(s) not matched`);
+    }
+
+    // Reset state
+    setShowingReview(false);
+    setPotentialMatches([]);
+    setExactMatches(0);
+    setNoMatches([]);
+    setProcessing(false);
+    onComplete?.();
+  };
+
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     const file = e.dataTransfer.files[0];
     if (file) handleFile(file);
   }, [handleFile]);
+
+  if (showingReview) {
 
   return (
     <div className="space-y-4">
