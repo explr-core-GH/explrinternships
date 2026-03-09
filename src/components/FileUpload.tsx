@@ -121,6 +121,7 @@ export default function FileUpload({ onComplete }: FileUploadProps) {
             
             // Check if it's an exact match (100% similarity)
             if (bestMatch.similarity >= 1.0) {
+              matchedInternIds.add(bestMatch.internId);
               if (!showAllMatches) {
                 // Auto-apply exact matches when not showing all
                 await updateIntern(bestMatch.internId, { status: targetStatus });
