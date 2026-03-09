@@ -161,7 +161,7 @@ export default function FileUpload({ onComplete }: FileUploadProps) {
               internId: bestInternId,
               internName: bestInternName,
               similarity: finalSimilarity,
-              approved: finalSimilarity >= 1.0 ? true : undefined
+              approved: finalSimilarity >= 0.7 ? true : undefined
             };
 
             if (bestInternId) {
