@@ -12,10 +12,12 @@ export default function DashboardPage() {
   const { interns, worksites, assignments, loading } = useAppStore();
 
   const active = useMemo(() => interns.filter(i => i.isNewest), [interns]);
+  const diffPartnerCount = useMemo(() => active.filter(i => i.status === 'selected_different_partner').length, [active]);
+  const eligible = useMemo(() => active.filter(i => i.status !== 'selected_different_partner'), [active]);
   const assignedIds = useMemo(() => new Set(assignments.map(a => a.internId)), [assignments]);
-  const assignedCount = active.filter(i => assignedIds.has(i.id)).length;
-  const unassignedCount = active.length - assignedCount;
-  const assignPct = active.length ? Math.round((assignedCount / active.length) * 100) : 0;
+  const assignedCount = eligible.filter(i => assignedIds.has(i.id)).length;
+  const unassignedCount = eligible.length - assignedCount;
+  const assignPct = eligible.length ? Math.round((assignedCount / eligible.length) * 100) : 0;
 
   const statusCounts = useMemo(() => {
     const counts: Record<string, number> = {};
@@ -54,7 +56,7 @@ export default function DashboardPage() {
 
       {/* KPI cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard icon={Users} label="Total Interns" value={active.length} />
+        <StatCard icon={Users} label="Total Interns" value={eligible.length} subNote={diffPartnerCount > 0 ? `${diffPartnerCount} selected w/ different partner` : undefined} />
         <StatCard icon={CheckCircle2} label="Assigned" value={assignedCount} sub={`${assignPct}%`} />
         <StatCard icon={AlertCircle} label="Unassigned" value={unassignedCount} variant={unassignedCount > 0 ? 'warning' : 'default'} />
         <StatCard icon={Building2} label="Worksites" value={worksites.length} sub={`${totalFilled}/${totalCapacity} slots`} />
@@ -103,7 +105,7 @@ export default function DashboardPage() {
         </CardHeader>
         <CardContent className="space-y-2">
           <div className="flex items-center justify-between text-xs text-muted-foreground">
-            <span>{assignedCount} of {active.length} interns assigned</span>
+            <span>{assignedCount} of {eligible.length} interns assigned</span>
             <span className="font-medium text-foreground">{assignPct}%</span>
           </div>
           <Progress value={assignPct} className="h-3" />
@@ -155,8 +157,8 @@ export default function DashboardPage() {
   );
 }
 
-function StatCard({ icon: Icon, label, value, sub, variant = 'default' }: {
-  icon: React.ElementType; label: string; value: number; sub?: string; variant?: 'default' | 'warning';
+function StatCard({ icon: Icon, label, value, sub, subNote, variant = 'default' }: {
+  icon: React.ElementType; label: string; value: number; sub?: string; subNote?: string; variant?: 'default' | 'warning';
 }) {
   return (
     <Card>
@@ -167,6 +169,7 @@ function StatCard({ icon: Icon, label, value, sub, variant = 'default' }: {
         <div>
           <p className="text-2xl font-bold text-foreground leading-none">{value}</p>
           <p className="text-[11px] text-muted-foreground mt-0.5">{label}{sub ? ` · ${sub}` : ''}</p>
+          {subNote && <p className="text-[10px] text-muted-foreground/70 mt-0.5">{subNote}</p>}
         </div>
       </CardContent>
     </Card>
