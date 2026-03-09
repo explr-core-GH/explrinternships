@@ -110,8 +110,8 @@ export default function FileUpload({ onComplete }: FileUploadProps) {
           const lastName = row.lastName.trim();
           if (!firstName && !lastName) continue;
 
-          // Always find potential matches to show percentages
-          const potentials = findPotentialMatches(firstName, lastName, activeInterns);
+          // Always find potential matches to show percentages - show all when requested
+          const potentials = findPotentialMatches(firstName, lastName, activeInterns, showAllMatches);
           
           if (potentials.length > 0) {
             const bestMatch = potentials[0];
@@ -126,9 +126,14 @@ export default function FileUpload({ onComplete }: FileUploadProps) {
                 // Add to review list with pre-approval
                 potentialMatchList.push({ ...bestMatch, approved: true });
               }
-            } else if (bestMatch.similarity >= 0.6) {
-              // Add potential matches for review
-              potentialMatchList.push(bestMatch);
+            } else if (bestMatch.similarity >= 0.6 || showAllMatches) {
+              // Add potential matches for review (include low-confidence matches when showing all)
+              if (showAllMatches) {
+                // When showing all matches, include the top 3 matches per name for better analysis
+                potentialMatchList.push(...potentials.slice(0, 3));
+              } else {
+                potentialMatchList.push(bestMatch);
+              }
             } else {
               noMatchList.push(`${firstName} ${lastName}`);
             }
