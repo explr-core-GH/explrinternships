@@ -149,9 +149,15 @@ export default function FileUpload({ onComplete }: FileUploadProps) {
           }
         }
 
+        // Calculate roster names not found in spreadsheet
+        const missingRosterNames = activeInterns
+          .filter(intern => !matchedInternIds.has(intern.id))
+          .map(intern => `${intern.firstName} ${intern.lastName}`);
+
         setExactMatches(exactMatchCount);
         setPotentialMatches(potentialMatchList);
         setNoMatches(noMatchList);
+        setMissingFromSpreadsheet(missingRosterNames);
         setProcessing(false);
         
         if (potentialMatchList.length > 0 || showAllMatches) {
