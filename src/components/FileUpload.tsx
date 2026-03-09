@@ -35,6 +35,48 @@ export default function FileUpload({ onComplete }: FileUploadProps) {
   const [exactMatches, setExactMatches] = useState<number>(0);
   const [noMatches, setNoMatches] = useState<string[]>([]);
 
+  // Simple similarity calculation
+  const calculateSimilarity = (str1: string, str2: string): number => {
+    const normalize = (s: string) => s.toLowerCase().trim();
+    const norm1 = normalize(str1);
+    const norm2 = normalize(str2);
+    
+    if (norm1 === norm2) return 1.0;
+    
+    // Check if one contains the other (for middle names, etc.)
+    if (norm1.includes(norm2) || norm2.includes(norm1)) return 0.8;
+    
+    // Check first few characters
+    const prefix1 = norm1.substring(0, 3);
+    const prefix2 = norm2.substring(0, 3);
+    if (prefix1 === prefix2) return 0.6;
+    
+    return 0.0;
+  };
+
+  const findPotentialMatches = (firstName: string, lastName: string, activeInterns: Intern[]): PotentialMatch[] => {
+    const matches: PotentialMatch[] = [];
+    
+    for (const intern of activeInterns) {
+      const firstSim = calculateSimilarity(firstName, intern.firstName);
+      const lastSim = calculateSimilarity(lastName, intern.lastName);
+      const overallSim = (firstSim * 0.4) + (lastSim * 0.6);
+      
+      if (overallSim >= 0.6) {
+        matches.push({
+          uploadedName: `${firstName} ${lastName}`,
+          uploadedFirstName: firstName,
+          uploadedLastName: lastName,
+          internId: intern.id,
+          internName: `${intern.firstName} ${intern.lastName}`,
+          similarity: overallSim,
+        });
+      }
+    }
+    
+    return matches.sort((a, b) => b.similarity - a.similarity);
+  };
+
   const handleFile = useCallback(async (file: File) => {
     try {
       setProcessing(true);
@@ -51,58 +93,58 @@ export default function FileUpload({ onComplete }: FileUploadProps) {
         const dupes = parsed.filter(i => i.isDuplicate).length;
         await uploadExcelInterns(parsed);
         toast.success(`Loaded ${parsed.length} interns${dupes > 0 ? ` (${dupes} duplicates detected)` : ''}`);
+        setProcessing(false);
+        onComplete?.();
       } else {
-        // Status update mode: match by name, update status, don't add new students
+        // Status update mode with manual review
         const activeInterns = interns.filter(i => i.isNewest);
-        let matched = 0;
-        let notFound: string[] = [];
+        let exactMatchCount = 0;
+        let potentialMatchList: PotentialMatch[] = [];
+        let noMatchList: string[] = [];
 
         for (const row of parsed) {
-          const firstName = row.firstName.trim().toLowerCase();
-          const lastName = row.lastName.trim().toLowerCase();
+          const firstName = row.firstName.trim();
+          const lastName = row.lastName.trim();
           if (!firstName && !lastName) continue;
 
-          // Find matching intern by name (fuzzy: case-insensitive, handles middle names)
-          const match = activeInterns.find(i => {
-            const dbFirst = i.firstName.toLowerCase().trim();
-            const dbLast = i.lastName.toLowerCase().trim();
-            
-            if (dbFirst === firstName && dbLast === lastName) return true;
-            
-            // Handle middle names by checking if the first word of the first name matches
-            const dbFirstPart = dbFirst.split(' ')[0];
-            const uploadFirstPart = firstName.split(' ')[0];
-            
-            const firstMatch = dbFirstPart === uploadFirstPart || dbFirst.includes(firstName) || firstName.includes(dbFirst);
-            const lastMatch = dbLast === lastName || dbLast.includes(lastName) || lastName.includes(dbLast);
-            
-            return firstMatch && lastMatch;
-          });
+          // Try exact match first
+          const exactMatch = activeInterns.find(i => 
+            i.firstName.toLowerCase().trim() === firstName.toLowerCase() &&
+            i.lastName.toLowerCase().trim() === lastName.toLowerCase()
+          );
 
-          if (match) {
-            await updateIntern(match.id, { status: targetStatus });
-            matched++;
+          if (exactMatch) {
+            await updateIntern(exactMatch.id, { status: targetStatus });
+            exactMatchCount++;
           } else {
-            notFound.push(`${row.firstName} ${row.lastName}`);
+            // Look for potential matches
+            const potentials = findPotentialMatches(firstName, lastName, activeInterns);
+            if (potentials.length > 0) {
+              potentialMatchList.push(potentials[0]); // Take the best match
+            } else {
+              noMatchList.push(`${firstName} ${lastName}`);
+            }
           }
         }
 
-        if (matched > 0) {
-          toast.success(`Updated ${matched} intern(s) to "${STATUS_CONFIG[targetStatus].label}"`);
-        }
-        if (notFound.length > 0) {
-          toast.warning(`${notFound.length} name(s) not found in roster`, {
-            description: notFound.slice(0, 5).join(', ') + (notFound.length > 5 ? ` +${notFound.length - 5} more` : ''),
-            duration: 8000,
-          });
-        }
-        if (matched === 0 && notFound.length === 0) {
-          toast.error('No names found in the uploaded file');
+        setExactMatches(exactMatchCount);
+        setPotentialMatches(potentialMatchList);
+        setNoMatches(noMatchList);
+        setProcessing(false);
+        
+        if (potentialMatchList.length > 0) {
+          setShowingReview(true);
+        } else {
+          // No manual review needed
+          if (exactMatchCount > 0) {
+            toast.success(`Updated ${exactMatchCount} intern(s) to "${STATUS_CONFIG[targetStatus].label}"`);
+          }
+          if (noMatchList.length > 0) {
+            toast.warning(`${noMatchList.length} name(s) not found`);
+          }
+          onComplete?.();
         }
       }
-
-      setProcessing(false);
-      onComplete?.();
     } catch (err) {
       console.error(err);
       toast.error('Failed to parse Excel file');
