@@ -200,6 +200,108 @@ export default function FileUpload({ onComplete }: FileUploadProps) {
 
   if (showingReview) {
 
+  if (showingReview) {
+    return (
+      <div className="space-y-4">
+        <div className="flex items-center gap-2 p-4 border rounded-lg bg-card">
+          <Users className="h-5 w-5 text-primary" />
+          <div>
+            <h3 className="font-semibold text-foreground">Manual Match Review</h3>
+            <p className="text-sm text-muted-foreground">
+              {exactMatches} exact matches found. Review {potentialMatches.length} potential matches below.
+            </p>
+          </div>
+        </div>
+
+        <div className="border rounded-lg bg-card">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Uploaded Name</TableHead>
+                <TableHead>Potential Match</TableHead>
+                <TableHead>Similarity</TableHead>
+                <TableHead>Action</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {potentialMatches.map((match, index) => (
+                <TableRow key={index}>
+                  <TableCell className="font-medium">{match.uploadedName}</TableCell>
+                  <TableCell>{match.internName}</TableCell>
+                  <TableCell>
+                    <span className={`px-2 py-1 rounded text-xs ${
+                      match.similarity >= 0.9 ? 'bg-green-100 text-green-700' :
+                      match.similarity >= 0.7 ? 'bg-yellow-100 text-yellow-700' :
+                      'bg-orange-100 text-orange-700'
+                    }`}>
+                      {Math.round(match.similarity * 100)}%
+                    </span>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex gap-2">
+                      <Button
+                        size="sm"
+                        variant={match.approved === true ? "default" : "outline"}
+                        onClick={() => handleApprove(index)}
+                        className="h-8"
+                      >
+                        <Check className="h-3 w-3" />
+                        Yes
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant={match.approved === false ? "destructive" : "outline"}
+                        onClick={() => handleReject(index)}
+                        className="h-8"
+                      >
+                        <X className="h-3 w-3" />
+                        No
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+
+        {noMatches.length > 0 && (
+          <div className="p-3 border rounded-lg bg-muted/50">
+            <p className="text-sm font-medium text-muted-foreground mb-2">
+              {noMatches.length} names with no close matches:
+            </p>
+            <p className="text-xs text-muted-foreground">
+              {noMatches.slice(0, 5).join(', ')}
+              {noMatches.length > 5 ? ` +${noMatches.length - 5} more` : ''}
+            </p>
+          </div>
+        )}
+
+        <div className="flex gap-2 pt-4">
+          <Button
+            onClick={applyApprovedMatches}
+            disabled={processing || !potentialMatches.some(m => m.approved === true)}
+            className="flex-1"
+          >
+            {processing ? <RefreshCw className="h-4 w-4 animate-spin mr-2" /> : null}
+            Apply {potentialMatches.filter(m => m.approved === true).length} Approved Matches
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => {
+              setShowingReview(false);
+              setPotentialMatches([]);
+              setExactMatches(0);
+              setNoMatches([]);
+            }}
+          >
+            Cancel
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-4">
       {/* Upload mode selector */}
