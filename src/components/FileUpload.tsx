@@ -216,6 +216,7 @@ export default function FileUpload({ onComplete }: FileUploadProps) {
     setPotentialMatches([]);
     setExactMatches(0);
     setNoMatches([]);
+    setMissingFromSpreadsheet([]);
     setProcessing(false);
     onComplete?.();
   };
