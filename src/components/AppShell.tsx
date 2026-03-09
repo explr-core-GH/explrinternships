@@ -15,7 +15,18 @@ const navItems = [
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const location = useLocation();
+  const navigate = useNavigate();
   const internCount = useAppStore((s) => s.interns.filter(i => i.isNewest).length);
+
+  const handleLogout = async () => {
+    try {
+      await supabase.auth.signOut();
+      toast.success('Logged out successfully');
+      navigate('/auth');
+    } catch (error: any) {
+      toast.error('Error logging out');
+    }
+  };
 
   return (
     <div className="min-h-screen flex flex-col">
