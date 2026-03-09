@@ -203,7 +203,7 @@ export default function FileUpload({ onComplete }: FileUploadProps) {
       toast.error('Failed to parse Excel file');
       setProcessing(false);
     }
-  }, [uploadExcelInterns, onComplete, mode, targetStatus, interns, updateIntern]);
+  }, [uploadExcelInterns, onComplete, mode, targetStatus, interns, updateIntern, showAllMatches]);
 
   const handleApprove = (index: number) => {
     setPotentialMatches(prev => prev.map((match, i) => 
