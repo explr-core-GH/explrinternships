@@ -56,7 +56,7 @@ export default function DashboardPage() {
 
       {/* KPI cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard icon={Users} label="Total Interns" value={active.length} />
+        <StatCard icon={Users} label="Total Interns" value={eligible.length} subNote={diffPartnerCount > 0 ? `${diffPartnerCount} selected w/ different partner` : undefined} />
         <StatCard icon={CheckCircle2} label="Assigned" value={assignedCount} sub={`${assignPct}%`} />
         <StatCard icon={AlertCircle} label="Unassigned" value={unassignedCount} variant={unassignedCount > 0 ? 'warning' : 'default'} />
         <StatCard icon={Building2} label="Worksites" value={worksites.length} sub={`${totalFilled}/${totalCapacity} slots`} />
