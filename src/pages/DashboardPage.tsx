@@ -105,7 +105,7 @@ export default function DashboardPage() {
         </CardHeader>
         <CardContent className="space-y-2">
           <div className="flex items-center justify-between text-xs text-muted-foreground">
-            <span>{assignedCount} of {active.length} interns assigned</span>
+            <span>{assignedCount} of {eligible.length} interns assigned</span>
             <span className="font-medium text-foreground">{assignPct}%</span>
           </div>
           <Progress value={assignPct} className="h-3" />
