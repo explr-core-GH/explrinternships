@@ -67,7 +67,8 @@ export default function FileUpload({ onComplete }: FileUploadProps) {
       const lastSim = calculateSimilarity(lastName, intern.lastName);
       const overallSim = (firstSim * 0.4) + (lastSim * 0.6);
       
-      // Show all matches when requested, or only good matches (>=60%) normally
+      // When showAll is true, include ALL matches regardless of similarity
+      // Otherwise only show matches with >= 60% similarity
       if (showAll || overallSim >= 0.6) {
         matches.push({
           uploadedName: `${firstName} ${lastName}`,
