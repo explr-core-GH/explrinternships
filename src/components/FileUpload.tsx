@@ -30,6 +30,10 @@ export default function FileUpload({ onComplete }: FileUploadProps) {
   const [mode, setMode] = useState<UploadMode>('new_interns');
   const [targetStatus, setTargetStatus] = useState<InternStatus>('matched');
   const [processing, setProcessing] = useState(false);
+  const [potentialMatches, setPotentialMatches] = useState<PotentialMatch[]>([]);
+  const [showingReview, setShowingReview] = useState(false);
+  const [exactMatches, setExactMatches] = useState<number>(0);
+  const [noMatches, setNoMatches] = useState<string[]>([]);
 
   const handleFile = useCallback(async (file: File) => {
     try {
