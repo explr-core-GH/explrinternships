@@ -1,12 +1,24 @@
 import { useCallback, useRef, useState } from 'react';
-import { Upload, FileSpreadsheet, RefreshCw } from 'lucide-react';
+import { Upload, FileSpreadsheet, RefreshCw, Check, X, Users } from 'lucide-react';
 import { parseExcelFile } from '@/lib/parseExcel';
 import { useAppStore } from '@/store/useAppStore';
 import { toast } from 'sonner';
 import { INTERN_STATUSES, STATUS_CONFIG, type InternStatus } from '@/types/intern';
 import type { Intern } from '@/types/intern';
+import { Button } from '@/components/ui/button';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
 type UploadMode = 'new_interns' | 'status_update';
+
+interface PotentialMatch {
+  uploadedName: string;
+  uploadedFirstName: string;
+  uploadedLastName: string;
+  internId: string;
+  internName: string;
+  similarity: number;
+  approved?: boolean;
+}
 
 interface FileUploadProps {
   onComplete?: () => void;
