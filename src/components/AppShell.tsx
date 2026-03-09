@@ -1,6 +1,8 @@
-import { Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Users, Building2, BarChart3, Upload, Settings } from 'lucide-react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { LayoutDashboard, Users, Building2, BarChart3, Upload, Settings, LogOut } from 'lucide-react';
 import { useAppStore } from '@/store/useAppStore';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 const navItems = [
   { to: '/', label: 'Dashboard', icon: LayoutDashboard },
@@ -13,7 +15,18 @@ const navItems = [
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const location = useLocation();
+  const navigate = useNavigate();
   const internCount = useAppStore((s) => s.interns.filter(i => i.isNewest).length);
+
+  const handleLogout = async () => {
+    try {
+      await supabase.auth.signOut();
+      toast.success('Logged out successfully');
+      navigate('/auth');
+    } catch (error: any) {
+      toast.error('Error logging out');
+    }
+  };
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -58,6 +71,16 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
               </Link>
             );
           })}
+          
+          <div className="mt-auto pt-4 pb-2 px-3 sm:px-4">
+            <button
+              onClick={handleLogout}
+              className="flex w-full items-center gap-3 px-3 sm:px-4 py-2.5 text-sm transition-colors text-muted-foreground hover:text-foreground hover:bg-accent/50 rounded-md"
+            >
+              <LogOut className="h-4 w-4 shrink-0" />
+              <span className="hidden sm:inline">Sign Out</span>
+            </button>
+          </div>
         </nav>
 
         {/* Main content */}

@@ -10,6 +10,9 @@ import WorksitesPage from "@/pages/WorksitesPage";
 import DemographicsPage from "@/pages/DemographicsPage";
 import UploadPage from "@/pages/UploadPage";
 import SettingsPage from "@/pages/SettingsPage";
+import AuthPage from "@/pages/AuthPage";
+import ResetPasswordPage from "@/pages/ResetPasswordPage";
+import ProtectedRoute from "@/components/ProtectedRoute";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -20,17 +23,27 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <AppShell>
-          <Routes>
-            <Route path="/" element={<DashboardPage />} />
-            <Route path="/roster" element={<RosterPage />} />
-            <Route path="/worksites" element={<WorksitesPage />} />
-            <Route path="/demographics" element={<DemographicsPage />} />
-            <Route path="/upload" element={<UploadPage />} />
-            <Route path="/settings" element={<SettingsPage />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </AppShell>
+        <Routes>
+          <Route path="/auth" element={<AuthPage />} />
+          <Route path="/reset-password" element={<ResetPasswordPage />} />
+          
+          {/* Protected Routes */}
+          <Route path="/*" element={
+            <ProtectedRoute>
+              <AppShell>
+                <Routes>
+                  <Route path="/" element={<DashboardPage />} />
+                  <Route path="/roster" element={<RosterPage />} />
+                  <Route path="/worksites" element={<WorksitesPage />} />
+                  <Route path="/demographics" element={<DemographicsPage />} />
+                  <Route path="/upload" element={<UploadPage />} />
+                  <Route path="/settings" element={<SettingsPage />} />
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </AppShell>
+            </ProtectedRoute>
+          } />
+        </Routes>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
