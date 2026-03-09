@@ -139,7 +139,13 @@ export function parseExcelFile(data: ArrayBuffer): Intern[] {
     : findColumn(headers, 'Name') >= 0 ? findColumn(headers, 'Name')
     : -1;
 
-  console.log('Name detection:', { hasFirstName, hasLastName, contactIdx, headers: headers.filter(h => h) });
+  console.log('Name detection:', { 
+    hasFirstName, 
+    hasLastName, 
+    contactIdx,
+    contactHeader: contactIdx >= 0 ? headers[contactIdx] : 'none',
+    allHeaders: headers.map((h, i) => `${i}: "${h}"`).filter((_, i) => headers[i])
+  });
 
   const interns: Intern[] = [];
   
@@ -153,16 +159,24 @@ export function parseExcelFile(data: ArrayBuffer): Intern[] {
     if (hasFirstName || hasLastName) {
       firstName = getVal(row, headers, 'First Name');
       lastName = getVal(row, headers, 'Last Name');
+      console.log(`Row ${i} - Using separate name columns: "${firstName}" "${lastName}"`);
     } else if (contactIdx >= 0) {
       const fullName = String(row[contactIdx] ?? '').trim();
+      console.log(`Row ${i} - Full name from index ${contactIdx}: "${fullName}"`);
       if (fullName) {
         const parts = fullName.split(/\s+/);
         firstName = parts[0] || '';
         lastName = parts.slice(1).join(' ') || '';
+        console.log(`Row ${i} - Split into: "${firstName}" "${lastName}"`);
       }
+    } else {
+      console.log(`Row ${i} - No name columns detected, skipping`);
     }
 
-    if (!firstName && !lastName) continue;
+    if (!firstName && !lastName) {
+      console.log(`Row ${i} - No names found, skipping row`);
+      continue;
+    }
 
     const programsStr = getVal(row, headers, 'Have you participated in any of the following');
     const itStr = getVal(row, headers, 'What areas of IT Interest');
