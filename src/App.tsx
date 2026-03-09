@@ -10,6 +10,9 @@ import WorksitesPage from "@/pages/WorksitesPage";
 import DemographicsPage from "@/pages/DemographicsPage";
 import UploadPage from "@/pages/UploadPage";
 import SettingsPage from "@/pages/SettingsPage";
+import AuthPage from "@/pages/AuthPage";
+import ResetPasswordPage from "@/pages/ResetPasswordPage";
+import ProtectedRoute from "@/components/ProtectedRoute";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
