@@ -109,23 +109,30 @@ export default function FileUpload({ onComplete }: FileUploadProps) {
           const lastName = row.lastName.trim();
           if (!firstName && !lastName) continue;
 
-          // Try exact match first
-          const exactMatch = activeInterns.find(i => 
-            i.firstName.toLowerCase().trim() === firstName.toLowerCase() &&
-            i.lastName.toLowerCase().trim() === lastName.toLowerCase()
-          );
-
-          if (exactMatch) {
-            await updateIntern(exactMatch.id, { status: targetStatus });
-            exactMatchCount++;
-          } else {
-            // Look for potential matches
-            const potentials = findPotentialMatches(firstName, lastName, activeInterns);
-            if (potentials.length > 0) {
-              potentialMatchList.push(potentials[0]); // Take the best match
+          // Always find potential matches to show percentages
+          const potentials = findPotentialMatches(firstName, lastName, activeInterns);
+          
+          if (potentials.length > 0) {
+            const bestMatch = potentials[0];
+            
+            // Check if it's an exact match (100% similarity)
+            if (bestMatch.similarity >= 1.0) {
+              if (!showAllMatches) {
+                // Auto-apply exact matches when not showing all
+                await updateIntern(bestMatch.internId, { status: targetStatus });
+                exactMatchCount++;
+              } else {
+                // Add to review list with pre-approval
+                potentialMatchList.push({ ...bestMatch, approved: true });
+              }
+            } else if (bestMatch.similarity >= 0.6) {
+              // Add potential matches for review
+              potentialMatchList.push(bestMatch);
             } else {
               noMatchList.push(`${firstName} ${lastName}`);
             }
+          } else {
+            noMatchList.push(`${firstName} ${lastName}`);
           }
         }
 
@@ -134,7 +141,7 @@ export default function FileUpload({ onComplete }: FileUploadProps) {
         setNoMatches(noMatchList);
         setProcessing(false);
         
-        if (potentialMatchList.length > 0) {
+        if (potentialMatchList.length > 0 || showAllMatches) {
           setShowingReview(true);
         } else {
           // No manual review needed
