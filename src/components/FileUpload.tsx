@@ -193,6 +193,12 @@ export default function FileUpload({ onComplete }: FileUploadProps) {
     onComplete?.();
   };
 
+  const handleDownloadReview = () => {
+    exportMatchReviewCSV(potentialMatches, exactMatches, noMatches, STATUS_CONFIG[targetStatus].label);
+    toast.success('Match review downloaded as CSV');
+  };
+  };
+
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     const file = e.dataTransfer.files[0];
