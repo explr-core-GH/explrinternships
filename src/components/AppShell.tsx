@@ -71,6 +71,16 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
               </Link>
             );
           })}
+          
+          <div className="mt-auto pt-4 pb-2 px-3 sm:px-4">
+            <button
+              onClick={handleLogout}
+              className="flex w-full items-center gap-3 px-3 sm:px-4 py-2.5 text-sm transition-colors text-muted-foreground hover:text-foreground hover:bg-accent/50 rounded-md"
+            >
+              <LogOut className="h-4 w-4 shrink-0" />
+              <span className="hidden sm:inline">Sign Out</span>
+            </button>
+          </div>
         </nav>
 
         {/* Main content */}
