@@ -1,5 +1,15 @@
 import type { Intern, Worksite, Assignment } from '@/types/intern';
 
+interface PotentialMatch {
+  uploadedName: string;
+  uploadedFirstName: string;
+  uploadedLastName: string;
+  internId: string;
+  internName: string;
+  similarity: number;
+  approved?: boolean;
+}
+
 export function exportRosterCSV(
   interns: Intern[],
   worksites: Worksite[],
@@ -67,6 +77,66 @@ export function exportWorksiteCSV(
   const link = document.createElement('a');
   link.href = url;
   link.download = `worksite-report-${new Date().toISOString().slice(0, 10)}.csv`;
+  link.click();
+  URL.revokeObjectURL(url);
+}
+
+export function exportMatchReviewCSV(
+  potentialMatches: PotentialMatch[],
+  exactMatches: number,
+  noMatches: string[],
+  targetStatus: string
+) {
+  const timestamp = new Date().toISOString().slice(0, 19).replace('T', '_');
+  
+  // Summary data
+  const summary = [
+    ['Match Review Summary', ''],
+    ['Timestamp', new Date().toLocaleString()],
+    ['Target Status', targetStatus],
+    ['Exact Matches', String(exactMatches)],
+    ['Potential Matches', String(potentialMatches.length)],
+    ['No Matches Found', String(noMatches.length)],
+    ['', ''],
+  ];
+
+  // Potential matches data
+  const matchHeaders = [
+    'Uploaded Name', 'Database Match', 'Similarity %', 'Decision', 'Status'
+  ];
+  
+  const matchRows = potentialMatches.map(match => [
+    match.uploadedName,
+    match.internName,
+    `${Math.round(match.similarity * 100)}%`,
+    match.approved === true ? 'Approved' : match.approved === false ? 'Rejected' : 'Pending',
+    match.approved === true ? `Will update to ${targetStatus}` : match.approved === false ? 'No change' : 'Awaiting decision'
+  ]);
+
+  // No matches data
+  const noMatchSection = noMatches.length > 0 ? [
+    ['', ''],
+    ['Names with No Matches', ''],
+    ...noMatches.map(name => [name, 'No close match found'])
+  ] : [];
+
+  // Combine all sections
+  const allRows = [
+    ...summary,
+    matchHeaders,
+    ...matchRows,
+    ...noMatchSection
+  ];
+
+  const csvContent = allRows
+    .map(row => row.map(cell => `"${(cell || '').replace(/"/g, '""')}"`).join(','))
+    .join('\n');
+
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `match-review-${timestamp}.csv`;
   link.click();
   URL.revokeObjectURL(url);
 }

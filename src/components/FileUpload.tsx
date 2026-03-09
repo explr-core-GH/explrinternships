@@ -1,5 +1,5 @@
 import { useCallback, useRef, useState } from 'react';
-import { Upload, FileSpreadsheet, RefreshCw, Check, X, Users } from 'lucide-react';
+import { Upload, FileSpreadsheet, RefreshCw, Check, X, Users, Download } from 'lucide-react';
 import { parseExcelFile } from '@/lib/parseExcel';
 import { useAppStore } from '@/store/useAppStore';
 import { toast } from 'sonner';
@@ -7,6 +7,7 @@ import { INTERN_STATUSES, STATUS_CONFIG, type InternStatus } from '@/types/inter
 import type { Intern } from '@/types/intern';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { exportMatchReviewCSV } from '@/lib/exportData';
 
 type UploadMode = 'new_interns' | 'status_update';
 
@@ -192,6 +193,11 @@ export default function FileUpload({ onComplete }: FileUploadProps) {
     onComplete?.();
   };
 
+  const handleDownloadReview = () => {
+    exportMatchReviewCSV(potentialMatches, exactMatches, noMatches, STATUS_CONFIG[targetStatus].label);
+    toast.success('Match review downloaded as CSV');
+  };
+
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     const file = e.dataTransfer.files[0];
@@ -283,6 +289,14 @@ export default function FileUpload({ onComplete }: FileUploadProps) {
           >
             {processing ? <RefreshCw className="h-4 w-4 animate-spin mr-2" /> : null}
             Apply {potentialMatches.filter(m => m.approved === true).length} Approved Matches
+          </Button>
+          <Button
+            variant="outline"
+            onClick={handleDownloadReview}
+            className="gap-1.5"
+          >
+            <Download className="h-4 w-4" />
+            Export
           </Button>
           <Button
             variant="outline"
