@@ -35,6 +35,7 @@ export default function FileUpload({ onComplete }: FileUploadProps) {
   const [showingReview, setShowingReview] = useState(false);
   const [exactMatches, setExactMatches] = useState<number>(0);
   const [noMatches, setNoMatches] = useState<string[]>([]);
+  const [showAllMatches, setShowAllMatches] = useState(false);
 
   // Simple similarity calculation
   const calculateSimilarity = (str1: string, str2: string): number => {
@@ -108,23 +109,30 @@ export default function FileUpload({ onComplete }: FileUploadProps) {
           const lastName = row.lastName.trim();
           if (!firstName && !lastName) continue;
 
-          // Try exact match first
-          const exactMatch = activeInterns.find(i => 
-            i.firstName.toLowerCase().trim() === firstName.toLowerCase() &&
-            i.lastName.toLowerCase().trim() === lastName.toLowerCase()
-          );
-
-          if (exactMatch) {
-            await updateIntern(exactMatch.id, { status: targetStatus });
-            exactMatchCount++;
-          } else {
-            // Look for potential matches
-            const potentials = findPotentialMatches(firstName, lastName, activeInterns);
-            if (potentials.length > 0) {
-              potentialMatchList.push(potentials[0]); // Take the best match
+          // Always find potential matches to show percentages
+          const potentials = findPotentialMatches(firstName, lastName, activeInterns);
+          
+          if (potentials.length > 0) {
+            const bestMatch = potentials[0];
+            
+            // Check if it's an exact match (100% similarity)
+            if (bestMatch.similarity >= 1.0) {
+              if (!showAllMatches) {
+                // Auto-apply exact matches when not showing all
+                await updateIntern(bestMatch.internId, { status: targetStatus });
+                exactMatchCount++;
+              } else {
+                // Add to review list with pre-approval
+                potentialMatchList.push({ ...bestMatch, approved: true });
+              }
+            } else if (bestMatch.similarity >= 0.6) {
+              // Add potential matches for review
+              potentialMatchList.push(bestMatch);
             } else {
               noMatchList.push(`${firstName} ${lastName}`);
             }
+          } else {
+            noMatchList.push(`${firstName} ${lastName}`);
           }
         }
 
@@ -133,7 +141,7 @@ export default function FileUpload({ onComplete }: FileUploadProps) {
         setNoMatches(noMatchList);
         setProcessing(false);
         
-        if (potentialMatchList.length > 0) {
+        if (potentialMatchList.length > 0 || showAllMatches) {
           setShowingReview(true);
         } else {
           // No manual review needed
@@ -210,9 +218,10 @@ export default function FileUpload({ onComplete }: FileUploadProps) {
         <div className="flex items-center gap-2 p-4 border rounded-lg bg-card">
           <Users className="h-5 w-5 text-primary" />
           <div>
-            <h3 className="font-semibold text-foreground">Manual Match Review</h3>
+            <h3 className="font-semibold text-foreground">Match Review</h3>
             <p className="text-sm text-muted-foreground">
-              {exactMatches} exact matches found. Review {potentialMatches.length} potential matches below.
+              {!showAllMatches && exactMatches > 0 && `${exactMatches} exact matches applied automatically. `}
+              Review {potentialMatches.length} match{potentialMatches.length !== 1 ? 'es' : ''} below.
             </p>
           </div>
         </div>
@@ -233,12 +242,14 @@ export default function FileUpload({ onComplete }: FileUploadProps) {
                   <TableCell className="font-medium">{match.uploadedName}</TableCell>
                   <TableCell>{match.internName}</TableCell>
                   <TableCell>
-                    <span className={`px-2 py-1 rounded text-xs ${
-                      match.similarity >= 0.9 ? 'bg-green-100 text-green-700' :
-                      match.similarity >= 0.7 ? 'bg-yellow-100 text-yellow-700' :
-                      'bg-orange-100 text-orange-700'
+                    <span className={`px-2 py-1 rounded text-xs font-medium ${
+                      match.similarity >= 1.0 ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300' :
+                      match.similarity >= 0.9 ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300' :
+                      match.similarity >= 0.7 ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300' :
+                      'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300'
                     }`}>
-                      {Math.round(match.similarity * 100)}%
+                      {match.similarity >= 1.0 ? '100%' : `${Math.round(match.similarity * 100)}%`}
+                      {match.similarity >= 1.0 && <span className="ml-1 text-xs">Exact</span>}
                     </span>
                   </TableCell>
                   <TableCell>
@@ -336,32 +347,59 @@ export default function FileUpload({ onComplete }: FileUploadProps) {
 
       {/* Status selector for status_update mode */}
       {mode === 'status_update' && (
-        <div className="rounded-lg border bg-card p-3">
-          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
-            Set matched students to:
-          </p>
-          <div className="flex flex-wrap gap-2">
-            {INTERN_STATUSES.filter(s => s !== 'pending').map(status => {
-              const config = STATUS_CONFIG[status];
-              return (
-                <button
-                  key={status}
-                  onClick={() => setTargetStatus(status)}
-                  className={`px-3 py-1.5 rounded-md text-xs font-medium border transition-all ${
-                    targetStatus === status
-                      ? `${config.bgClass} ${config.textClass} ${config.borderClass} ring-2 ring-offset-1 ring-offset-background`
-                      : `border-border text-muted-foreground hover:${config.textClass}`
-                  }`}
-                  style={targetStatus === status ? { '--tw-ring-color': config.color } as React.CSSProperties : undefined}
-                >
-                  {config.label}
-                </button>
-              );
-            })}
+        <div className="space-y-3">
+          <div className="rounded-lg border bg-card p-3">
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
+              Set matched students to:
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {INTERN_STATUSES.filter(s => s !== 'pending').map(status => {
+                const config = STATUS_CONFIG[status];
+                return (
+                  <button
+                    key={status}
+                    onClick={() => setTargetStatus(status)}
+                    className={`px-3 py-1.5 rounded-md text-xs font-medium border transition-all ${
+                      targetStatus === status
+                        ? `${config.bgClass} ${config.textClass} ${config.borderClass} ring-2 ring-offset-1 ring-offset-background`
+                        : `border-border text-muted-foreground hover:${config.textClass}`
+                    }`}
+                    style={targetStatus === status ? { '--tw-ring-color': config.color } as React.CSSProperties : undefined}
+                  >
+                    {config.label}
+                  </button>
+                );
+              })}
+            </div>
           </div>
-          <p className="text-xs text-muted-foreground mt-2">
-            Upload an Excel file with student names. Each name will be matched against the existing roster and their status will be updated. Students not already in the roster will be skipped.
-          </p>
+          
+          <div className="rounded-lg border bg-card p-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                  Review Options
+                </p>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Choose how to handle matching
+                </p>
+              </div>
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={showAllMatches}
+                  onChange={(e) => setShowAllMatches(e.target.checked)}
+                  className="rounded border border-input"
+                />
+                <span className="text-xs text-foreground">Show all matches with percentages</span>
+              </label>
+            </div>
+            <p className="text-xs text-muted-foreground mt-2">
+              {showAllMatches 
+                ? 'All matches will be shown for manual review with similarity percentages, including exact matches.'
+                : 'Only uncertain matches will require manual review. Exact matches will be applied automatically.'
+              }
+            </p>
+          </div>
         </div>
       )}
 
