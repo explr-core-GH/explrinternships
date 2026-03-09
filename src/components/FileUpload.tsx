@@ -36,6 +36,7 @@ export default function FileUpload({ onComplete }: FileUploadProps) {
   const [showingReview, setShowingReview] = useState(false);
   const [exactMatches, setExactMatches] = useState<number>(0);
   const [noMatches, setNoMatches] = useState<string[]>([]);
+  const [missingFromSpreadsheet, setMissingFromSpreadsheet] = useState<string[]>([]);
   const [showAllMatches, setShowAllMatches] = useState(false);
 
   // Simple similarity calculation
