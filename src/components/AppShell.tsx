@@ -1,6 +1,8 @@
-import { Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Users, Building2, BarChart3, Upload, Settings } from 'lucide-react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { LayoutDashboard, Users, Building2, BarChart3, Upload, Settings, LogOut } from 'lucide-react';
 import { useAppStore } from '@/store/useAppStore';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 const navItems = [
   { to: '/', label: 'Dashboard', icon: LayoutDashboard },
