@@ -199,8 +199,6 @@ export default function FileUpload({ onComplete }: FileUploadProps) {
   }, [handleFile]);
 
   if (showingReview) {
-
-  if (showingReview) {
     return (
       <div className="space-y-4">
         <div className="flex items-center gap-2 p-4 border rounded-lg bg-card">
