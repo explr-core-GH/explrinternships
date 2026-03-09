@@ -157,8 +157,8 @@ export default function DashboardPage() {
   );
 }
 
-function StatCard({ icon: Icon, label, value, sub, variant = 'default' }: {
-  icon: React.ElementType; label: string; value: number; sub?: string; variant?: 'default' | 'warning';
+function StatCard({ icon: Icon, label, value, sub, subNote, variant = 'default' }: {
+  icon: React.ElementType; label: string; value: number; sub?: string; subNote?: string; variant?: 'default' | 'warning';
 }) {
   return (
     <Card>
@@ -169,6 +169,7 @@ function StatCard({ icon: Icon, label, value, sub, variant = 'default' }: {
         <div>
           <p className="text-2xl font-bold text-foreground leading-none">{value}</p>
           <p className="text-[11px] text-muted-foreground mt-0.5">{label}{sub ? ` · ${sub}` : ''}</p>
+          {subNote && <p className="text-[10px] text-muted-foreground/70 mt-0.5">{subNote}</p>}
         </div>
       </CardContent>
     </Card>
