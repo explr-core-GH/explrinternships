@@ -203,9 +203,28 @@ export function parseExcelFile(data: ArrayBuffer): Intern[] {
       }
     }
 
-    // More lenient: allow rows with only first name or only last name
-    if (!firstName && !lastName) {
-      console.log(`Row ${i} - No names found anywhere, skipping row. Available data:`, row.slice(0, 5).map(String));
+    // Add validation to ensure we have actual names, not other data
+    const isValidName = (name: string): boolean => {
+      if (!name || name.length < 2) return false;
+      // Reject if it's just numbers
+      if (/^\d+$/.test(name)) return false;
+      // Reject common non-name terms
+      const nonNameTerms = [
+        'law', 'social', 'justice', 'environmental', 'climate', 'science', 
+        'engineering', 'healthcare', 'education', 'program', 'internship',
+        'recommended', 'generated', 'status', 'pending', 'matched', 'placed',
+        'construction', 'biomedical', 'manufacturing', 'academy'
+      ];
+      const lowerName = name.toLowerCase();
+      if (nonNameTerms.some(term => lowerName.includes(term))) return false;
+      // Should contain at least one letter
+      if (!/[a-zA-Z]/.test(name)) return false;
+      return true;
+    };
+
+    // Require BOTH first and last names to be present and valid
+    if (!firstName || !lastName || !isValidName(firstName) || !isValidName(lastName)) {
+      console.log(`Row ${i} - Invalid names: firstName="${firstName}", lastName="${lastName}" - skipping`);
       emptyNameRows++;
       continue;
     }
