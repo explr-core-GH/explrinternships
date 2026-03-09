@@ -132,18 +132,16 @@ export default function FileUpload({ onComplete }: FileUploadProps) {
                 // Add to review list with pre-approval
                 potentialMatchList.push({ ...bestMatch, approved: true });
               }
-            } else if (bestMatch.similarity >= 0.6 || showAllMatches) {
-              // Track this intern as having a potential match
+            } else if (showAllMatches) {
+              // When showing all matches, include ALL potential matches for review
+              potentials.forEach(p => matchedInternIds.add(p.internId));
+              potentialMatchList.push(...potentials);
+            } else if (bestMatch.similarity >= 0.6) {
+              // Normal mode: only add matches above 60% similarity
               matchedInternIds.add(bestMatch.internId);
-              // Add potential matches for review (include low-confidence matches when showing all)
-              if (showAllMatches) {
-                // When showing all matches, include the top 3 matches per name for better analysis
-                potentials.slice(0, 3).forEach(p => matchedInternIds.add(p.internId));
-                potentialMatchList.push(...potentials.slice(0, 3));
-              } else {
-                potentialMatchList.push(bestMatch);
-              }
+              potentialMatchList.push(bestMatch);
             } else {
+              // Below threshold, add to no matches
               noMatchList.push(`${firstName} ${lastName}`);
             }
           } else {
