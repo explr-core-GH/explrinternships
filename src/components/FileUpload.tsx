@@ -106,6 +106,7 @@ export default function FileUpload({ onComplete }: FileUploadProps) {
         let exactMatchCount = 0;
         let potentialMatchList: PotentialMatch[] = [];
         let noMatchList: string[] = [];
+        let matchedInternIds = new Set<string>();
 
         for (const row of parsed) {
           const firstName = row.firstName.trim();
