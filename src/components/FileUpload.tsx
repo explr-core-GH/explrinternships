@@ -69,10 +69,19 @@ export default function FileUpload({ onComplete }: FileUploadProps) {
   const findPotentialMatches = (firstName: string, lastName: string, activeInterns: Intern[], showAll: boolean = false): PotentialMatch[] => {
     const matches: PotentialMatch[] = [];
     
+    // Debug: Log the uploaded name we're trying to match
+    console.log(`[MATCH DEBUG] Looking for matches for: "${firstName}" "${lastName}"`);
+    
     for (const intern of activeInterns) {
       const firstSim = calculateSimilarity(firstName, intern.firstName);
       const lastSim = calculateSimilarity(lastName, intern.lastName);
       const overallSim = (firstSim * 0.4) + (lastSim * 0.6);
+      
+      // Debug: Log each comparison
+      if (overallSim >= 0.6 || showAll) {
+        console.log(`[MATCH DEBUG] Comparing with intern: "${intern.firstName}" "${intern.lastName}"`);
+        console.log(`[MATCH DEBUG] First name sim: ${firstSim}, Last name sim: ${lastSim}, Overall: ${overallSim}`);
+      }
       
       // When showAll is true, include ALL matches regardless of similarity
       // Otherwise only show matches with >= 60% similarity
