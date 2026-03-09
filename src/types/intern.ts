@@ -1,4 +1,4 @@
-export const INTERN_STATUSES = ['pending', 'not_matched', 'matched', 'assigned', 'in_progress_you', 'intake_issue', 'removed'] as const;
+export const INTERN_STATUSES = ['pending', 'not_matched', 'matched', 'assigned', 'in_progress_you', 'intake_issue', 'selected_different_partner', 'removed'] as const;
 export type InternStatus = typeof INTERN_STATUSES[number];
 
 export const STATUS_CONFIG: Record<InternStatus, { label: string; color: string; bgClass: string; textClass: string; borderClass: string }> = {
