@@ -56,7 +56,7 @@ export default function FileUpload({ onComplete }: FileUploadProps) {
     return 0.0;
   };
 
-  const findPotentialMatches = (firstName: string, lastName: string, activeInterns: Intern[]): PotentialMatch[] => {
+  const findPotentialMatches = (firstName: string, lastName: string, activeInterns: Intern[], showAll: boolean = false): PotentialMatch[] => {
     const matches: PotentialMatch[] = [];
     
     for (const intern of activeInterns) {
@@ -64,7 +64,8 @@ export default function FileUpload({ onComplete }: FileUploadProps) {
       const lastSim = calculateSimilarity(lastName, intern.lastName);
       const overallSim = (firstSim * 0.4) + (lastSim * 0.6);
       
-      if (overallSim >= 0.6) {
+      // Show all matches when requested, or only good matches (>=60%) normally
+      if (showAll || overallSim >= 0.6) {
         matches.push({
           uploadedName: `${firstName} ${lastName}`,
           uploadedFirstName: firstName,
