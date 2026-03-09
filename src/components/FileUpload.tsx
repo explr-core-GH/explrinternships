@@ -228,6 +228,7 @@ export default function FileUpload({ onComplete }: FileUploadProps) {
             <p className="text-sm text-muted-foreground">
               {!showAllMatches && exactMatches > 0 && `${exactMatches} exact matches applied automatically. `}
               Review {potentialMatches.length} match{potentialMatches.length !== 1 ? 'es' : ''} below.
+              {showAllMatches && <span className="text-primary"> (Showing all matches including low confidence)</span>}
             </p>
           </div>
         </div>
