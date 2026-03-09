@@ -121,6 +121,9 @@ export default function FileUpload({ onComplete }: FileUploadProps) {
       } else {
         // Status update mode with manual review
         const activeInterns = interns.filter(i => i.isNewest);
+        console.log(`[INTERN DEBUG] Found ${activeInterns.length} active interns in database:`);
+        activeInterns.forEach(intern => console.log(`  - "${intern.firstName}" "${intern.lastName}"`));
+        
         let exactMatchCount = 0;
         let potentialMatchList: PotentialMatch[] = [];
         let noMatchList: string[] = [];
