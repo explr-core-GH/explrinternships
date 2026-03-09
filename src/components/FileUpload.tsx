@@ -168,7 +168,7 @@ export default function FileUpload({ onComplete }: FileUploadProps) {
               matchedInternIds.add(bestInternId);
             }
             potentialMatchList.push(entry);
-            if (finalSimilarity >= 1.0) {
+            if (finalSimilarity >= 0.7) {
               exactMatchCount++;
             }
           } else {
