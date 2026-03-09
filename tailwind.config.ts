@@ -65,6 +65,15 @@ export default {
         success: "hsl(var(--success))",
         warning: "hsl(var(--warning))",
         info: "hsl(var(--info))",
+        status: {
+          pending: "hsl(var(--status-pending))",
+          "not-matched": "hsl(var(--status-not-matched))",
+          matched: "hsl(var(--status-matched))",
+          assigned: "hsl(var(--status-assigned))",
+          "in-progress": "hsl(var(--status-in-progress))",
+          issue: "hsl(var(--status-issue))",
+          removed: "hsl(var(--status-removed))",
+        },
       },
       borderRadius: {
         lg: "var(--radius)",
