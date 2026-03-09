@@ -218,9 +218,10 @@ export default function FileUpload({ onComplete }: FileUploadProps) {
         <div className="flex items-center gap-2 p-4 border rounded-lg bg-card">
           <Users className="h-5 w-5 text-primary" />
           <div>
-            <h3 className="font-semibold text-foreground">Manual Match Review</h3>
+            <h3 className="font-semibold text-foreground">Match Review</h3>
             <p className="text-sm text-muted-foreground">
-              {exactMatches} exact matches found. Review {potentialMatches.length} potential matches below.
+              {!showAllMatches && exactMatches > 0 && `${exactMatches} exact matches applied automatically. `}
+              Review {potentialMatches.length} match{potentialMatches.length !== 1 ? 'es' : ''} below.
             </p>
           </div>
         </div>
