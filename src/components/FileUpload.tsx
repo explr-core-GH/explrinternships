@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { exportMatchReviewCSV } from '@/lib/exportData';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 type UploadMode = 'new_interns' | 'status_update';
 
@@ -36,6 +37,7 @@ export default function FileUpload({ onComplete }: FileUploadProps) {
   const [showingReview, setShowingReview] = useState(false);
   const [exactMatches, setExactMatches] = useState<number>(0);
   const [noMatches, setNoMatches] = useState<string[]>([]);
+  const [missingFromSpreadsheet, setMissingFromSpreadsheet] = useState<string[]>([]);
   const [showAllMatches, setShowAllMatches] = useState(false);
 
   // Simple similarity calculation
@@ -105,6 +107,7 @@ export default function FileUpload({ onComplete }: FileUploadProps) {
         let exactMatchCount = 0;
         let potentialMatchList: PotentialMatch[] = [];
         let noMatchList: string[] = [];
+        let matchedInternIds = new Set<string>();
 
         for (const row of parsed) {
           const firstName = row.firstName.trim();
@@ -119,6 +122,7 @@ export default function FileUpload({ onComplete }: FileUploadProps) {
             
             // Check if it's an exact match (100% similarity)
             if (bestMatch.similarity >= 1.0) {
+              matchedInternIds.add(bestMatch.internId);
               if (!showAllMatches) {
                 // Auto-apply exact matches when not showing all
                 await updateIntern(bestMatch.internId, { status: targetStatus });
@@ -128,9 +132,12 @@ export default function FileUpload({ onComplete }: FileUploadProps) {
                 potentialMatchList.push({ ...bestMatch, approved: true });
               }
             } else if (bestMatch.similarity >= 0.6 || showAllMatches) {
+              // Track this intern as having a potential match
+              matchedInternIds.add(bestMatch.internId);
               // Add potential matches for review (include low-confidence matches when showing all)
               if (showAllMatches) {
                 // When showing all matches, include the top 3 matches per name for better analysis
+                potentials.slice(0, 3).forEach(p => matchedInternIds.add(p.internId));
                 potentialMatchList.push(...potentials.slice(0, 3));
               } else {
                 potentialMatchList.push(bestMatch);
@@ -143,9 +150,15 @@ export default function FileUpload({ onComplete }: FileUploadProps) {
           }
         }
 
+        // Calculate roster names not found in spreadsheet
+        const missingRosterNames = activeInterns
+          .filter(intern => !matchedInternIds.has(intern.id))
+          .map(intern => `${intern.firstName} ${intern.lastName}`);
+
         setExactMatches(exactMatchCount);
         setPotentialMatches(potentialMatchList);
         setNoMatches(noMatchList);
+        setMissingFromSpreadsheet(missingRosterNames);
         setProcessing(false);
         
         if (potentialMatchList.length > 0 || showAllMatches) {
@@ -204,6 +217,7 @@ export default function FileUpload({ onComplete }: FileUploadProps) {
     setPotentialMatches([]);
     setExactMatches(0);
     setNoMatches([]);
+    setMissingFromSpreadsheet([]);
     setProcessing(false);
     onComplete?.();
   };
@@ -293,15 +307,44 @@ export default function FileUpload({ onComplete }: FileUploadProps) {
           </ScrollArea>
         </div>
 
-        {noMatches.length > 0 && (
-          <div className="p-3 border rounded-lg bg-muted/50">
-            <p className="text-sm font-medium text-muted-foreground mb-2">
-              {noMatches.length} names with no close matches:
-            </p>
-            <p className="text-xs text-muted-foreground">
-              {noMatches.slice(0, 5).join(', ')}
-              {noMatches.length > 5 ? ` +${noMatches.length - 5} more` : ''}
-            </p>
+        {(noMatches.length > 0 || missingFromSpreadsheet.length > 0) && (
+          <div className="border rounded-lg bg-card">
+            <Tabs defaultValue="not-in-roster" className="w-full">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="not-in-roster">Names Not in Roster ({noMatches.length})</TabsTrigger>
+                <TabsTrigger value="missing-from-sheet">Missing from Spreadsheet ({missingFromSpreadsheet.length})</TabsTrigger>
+              </TabsList>
+              <TabsContent value="not-in-roster" className="p-3">
+                <p className="text-sm font-medium text-muted-foreground mb-2">
+                  Names from spreadsheet with no close matches in roster:
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {noMatches.length > 0 ? (
+                    <>
+                      {noMatches.slice(0, 10).join(', ')}
+                      {noMatches.length > 10 ? ` +${noMatches.length - 10} more` : ''}
+                    </>
+                  ) : (
+                    'All names from spreadsheet were matched!'
+                  )}
+                </p>
+              </TabsContent>
+              <TabsContent value="missing-from-sheet" className="p-3">
+                <p className="text-sm font-medium text-muted-foreground mb-2">
+                  Roster names not found in spreadsheet:
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {missingFromSpreadsheet.length > 0 ? (
+                    <>
+                      {missingFromSpreadsheet.slice(0, 10).join(', ')}
+                      {missingFromSpreadsheet.length > 10 ? ` +${missingFromSpreadsheet.length - 10} more` : ''}
+                    </>
+                  ) : (
+                    'All roster names were found in the spreadsheet!'
+                  )}
+                </p>
+              </TabsContent>
+            </Tabs>
           </div>
         )}
 
@@ -329,6 +372,7 @@ export default function FileUpload({ onComplete }: FileUploadProps) {
               setPotentialMatches([]);
               setExactMatches(0);
               setNoMatches([]);
+              setMissingFromSpreadsheet([]);
             }}
           >
             Cancel
