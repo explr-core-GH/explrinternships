@@ -497,7 +497,7 @@ export default function FileUpload({ onComplete }: FileUploadProps) {
             <p className="text-xs text-muted-foreground mt-2">
               {showAllMatches 
                 ? 'All matches will be shown for manual review with similarity percentages, including exact matches.'
-                : 'Only uncertain matches will require manual review. Exact matches will be applied automatically.'
+                : 'Only uncertain matches (60-69% similarity) will require manual review. Matches ≥70% will be applied automatically.'
               }
             </p>
           </div>
