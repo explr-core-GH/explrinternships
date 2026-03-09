@@ -72,6 +72,7 @@ export default {
           assigned: "hsl(var(--status-assigned))",
           "in-progress": "hsl(var(--status-in-progress))",
           issue: "hsl(var(--status-issue))",
+          "selected-partner": "hsl(var(--status-selected-partner))",
           removed: "hsl(var(--status-removed))",
         },
       },
