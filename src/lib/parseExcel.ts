@@ -50,12 +50,12 @@ export function parseExcelFile(data: ArrayBuffer): Intern[] {
     console.log(`\n=== Sheet "${sheetName}": ${rows.length} rows ===`);
     if (rows.length < 2) continue;
     
-    // Log first 30 rows, all columns for debugging
-    for (let i = 0; i < Math.min(rows.length, 30); i++) {
+    // Log first 10 rows for debugging, but show more detail
+    for (let i = 0; i < Math.min(rows.length, 10); i++) {
       const row = rows[i] || [];
       const cells = row.map((c: any) => String(c ?? ''));
       if (cells.some(c => c.length > 0)) {
-        console.log(`  Row ${i} (${cells.filter(c => c).length} cells):`, JSON.stringify(cells));
+        console.log(`  Row ${i}: [${cells.map((c, idx) => `${idx}: "${c}"`).filter((_, idx) => cells[idx]).join(', ')}]`);
       }
     }
     
