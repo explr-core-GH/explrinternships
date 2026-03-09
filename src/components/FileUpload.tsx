@@ -242,12 +242,14 @@ export default function FileUpload({ onComplete }: FileUploadProps) {
                   <TableCell className="font-medium">{match.uploadedName}</TableCell>
                   <TableCell>{match.internName}</TableCell>
                   <TableCell>
-                    <span className={`px-2 py-1 rounded text-xs ${
-                      match.similarity >= 0.9 ? 'bg-green-100 text-green-700' :
-                      match.similarity >= 0.7 ? 'bg-yellow-100 text-yellow-700' :
-                      'bg-orange-100 text-orange-700'
+                    <span className={`px-2 py-1 rounded text-xs font-medium ${
+                      match.similarity >= 1.0 ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300' :
+                      match.similarity >= 0.9 ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300' :
+                      match.similarity >= 0.7 ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300' :
+                      'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300'
                     }`}>
-                      {Math.round(match.similarity * 100)}%
+                      {match.similarity >= 1.0 ? '100%' : `${Math.round(match.similarity * 100)}%`}
+                      {match.similarity >= 1.0 && <span className="ml-1 text-xs">Exact</span>}
                     </span>
                   </TableCell>
                   <TableCell>
