@@ -252,6 +252,14 @@ export function parseExcelFile(data: ArrayBuffer): Intern[] {
     interns.push(intern);
   }
   
+  console.log(`\n=== PARSE SUMMARY ===`);
+  console.log(`Total data rows processed: ${dataRows.length}`);
+  console.log(`Successful interns parsed: ${interns.length}`);
+  console.log(`Rows skipped - null/undefined: ${skippedRows}`);
+  console.log(`Rows skipped - empty: ${shortRows}`);
+  console.log(`Rows skipped - no names: ${emptyNameRows}`);
+  console.log(`=== END SUMMARY ===\n`);
+  
   return markDuplicates(interns);
 }
 
