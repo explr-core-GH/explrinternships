@@ -2,13 +2,13 @@ export const INTERN_STATUSES = ['pending', 'not_matched', 'matched', 'assigned',
 export type InternStatus = typeof INTERN_STATUSES[number];
 
 export const STATUS_CONFIG: Record<InternStatus, { label: string; color: string; bgClass: string; textClass: string; borderClass: string }> = {
-  pending:         { label: 'Pending',            color: 'gray',    bgClass: 'bg-muted',              textClass: 'text-muted-foreground', borderClass: 'border-muted-foreground/30' },
-  not_matched:     { label: 'Not Matched',        color: '#fb923c', bgClass: 'bg-orange-200/30',       textClass: 'text-orange-600 dark:text-orange-400', borderClass: 'border-orange-300' },
-  matched:         { label: 'Matched',            color: '#86efac', bgClass: 'bg-emerald-200/40',      textClass: 'text-emerald-700 dark:text-emerald-300', borderClass: 'border-emerald-300' },
-  assigned:        { label: 'Assigned',           color: '#22c55e', bgClass: 'bg-green-500/20',        textClass: 'text-green-700 dark:text-green-300', borderClass: 'border-green-500' },
-  in_progress_you: { label: 'In Progress (YOU)',  color: '#facc15', bgClass: 'bg-yellow-400/20',       textClass: 'text-yellow-700 dark:text-yellow-300', borderClass: 'border-yellow-400' },
-  intake_issue:    { label: 'Intake Issue',       color: '#f97316', bgClass: 'bg-orange-400/20',       textClass: 'text-orange-700 dark:text-orange-300', borderClass: 'border-orange-400' },
-  removed:         { label: 'Removed',            color: '#ef4444', bgClass: 'bg-red-500/20',          textClass: 'text-red-700 dark:text-red-300', borderClass: 'border-red-500' },
+  pending:         { label: 'Pending',            color: 'hsl(var(--status-pending))',     bgClass: 'bg-muted',                  textClass: 'text-muted-foreground',     borderClass: 'border-status-pending' },
+  not_matched:     { label: 'Not Matched',        color: 'hsl(var(--status-not-matched))', bgClass: 'bg-status-not-matched/10',   textClass: 'text-status-not-matched',   borderClass: 'border-status-not-matched' },
+  matched:         { label: 'Matched',            color: 'hsl(var(--status-matched))',     bgClass: 'bg-status-matched/10',      textClass: 'text-status-matched',       borderClass: 'border-status-matched' },
+  assigned:        { label: 'Assigned',           color: 'hsl(var(--status-assigned))',    bgClass: 'bg-status-assigned/10',     textClass: 'text-status-assigned',      borderClass: 'border-status-assigned' },
+  in_progress_you: { label: 'In Progress (YOU)',  color: 'hsl(var(--status-in-progress))', bgClass: 'bg-status-in-progress/10',  textClass: 'text-status-in-progress',   borderClass: 'border-status-in-progress' },
+  intake_issue:    { label: 'Intake Issue',       color: 'hsl(var(--status-issue))',       bgClass: 'bg-status-issue/10',        textClass: 'text-status-issue',         borderClass: 'border-status-issue' },
+  removed:         { label: 'Removed',            color: 'hsl(var(--status-removed))',     bgClass: 'bg-status-removed/10',      textClass: 'text-status-removed',       borderClass: 'border-status-removed' },
 };
 
 export interface Intern {
