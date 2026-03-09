@@ -46,6 +46,13 @@ export default function FileUpload({ onComplete }: FileUploadProps) {
     const norm1 = normalize(str1);
     const norm2 = normalize(str2);
     
+    // Debug logging for exact match issues
+    if (str1 === 'DEBUG_MATCH' || str2 === 'DEBUG_MATCH') {
+      console.log(`[DEBUG] Comparing "${str1}" vs "${str2}"`);
+      console.log(`[DEBUG] Normalized: "${norm1}" vs "${norm2}"`);
+      console.log(`[DEBUG] Exact match: ${norm1 === norm2}`);
+    }
+    
     if (norm1 === norm2) return 1.0;
     
     // Check if one contains the other (for middle names, etc.)
@@ -62,10 +69,19 @@ export default function FileUpload({ onComplete }: FileUploadProps) {
   const findPotentialMatches = (firstName: string, lastName: string, activeInterns: Intern[], showAll: boolean = false): PotentialMatch[] => {
     const matches: PotentialMatch[] = [];
     
+    // Debug: Log the uploaded name we're trying to match
+    console.log(`[MATCH DEBUG] Looking for matches for: "${firstName}" "${lastName}"`);
+    
     for (const intern of activeInterns) {
       const firstSim = calculateSimilarity(firstName, intern.firstName);
       const lastSim = calculateSimilarity(lastName, intern.lastName);
       const overallSim = (firstSim * 0.4) + (lastSim * 0.6);
+      
+      // Debug: Log each comparison
+      if (overallSim >= 0.6 || showAll) {
+        console.log(`[MATCH DEBUG] Comparing with intern: "${intern.firstName}" "${intern.lastName}"`);
+        console.log(`[MATCH DEBUG] First name sim: ${firstSim}, Last name sim: ${lastSim}, Overall: ${overallSim}`);
+      }
       
       // When showAll is true, include ALL matches regardless of similarity
       // Otherwise only show matches with >= 60% similarity
@@ -105,6 +121,9 @@ export default function FileUpload({ onComplete }: FileUploadProps) {
       } else {
         // Status update mode with manual review
         const activeInterns = interns.filter(i => i.isNewest);
+        console.log(`[INTERN DEBUG] Found ${activeInterns.length} active interns in database:`);
+        activeInterns.forEach(intern => console.log(`  - "${intern.firstName}" "${intern.lastName}"`));
+        
         let exactMatchCount = 0;
         let potentialMatchList: PotentialMatch[] = [];
         let noMatchList: string[] = [];
@@ -113,6 +132,7 @@ export default function FileUpload({ onComplete }: FileUploadProps) {
         for (const row of parsed) {
           const firstName = row.firstName.trim();
           const lastName = row.lastName.trim();
+          console.log(`[EXCEL DEBUG] Parsed from Excel: firstName="${firstName}", lastName="${lastName}"`);
           if (!firstName && !lastName) continue;
 
           if (showAllMatches) {
