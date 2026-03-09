@@ -116,9 +116,10 @@ export default function FileUpload({ onComplete }: FileUploadProps) {
           if (!firstName && !lastName) continue;
 
           if (showAllMatches) {
-            // When showing all matches, find the best match for EVERY uploaded entry
-            let bestMatch: PotentialMatch | null = null;
+            // showAllMatches: every uploaded row gets shown with its best % match
             let bestSimilarity = -1;
+            let bestInternId = '';
+            let bestInternName = 'No roster available';
 
             for (const intern of activeInterns) {
               const firstSim = calculateSimilarity(firstName, intern.firstName);
@@ -127,35 +128,28 @@ export default function FileUpload({ onComplete }: FileUploadProps) {
               
               if (overallSim > bestSimilarity) {
                 bestSimilarity = overallSim;
-                bestMatch = {
-                  uploadedName: `${firstName} ${lastName}`,
-                  uploadedFirstName: firstName,
-                  uploadedLastName: lastName,
-                  internId: intern.id,
-                  internName: `${intern.firstName} ${intern.lastName}`,
-                  similarity: overallSim,
-                  approved: overallSim >= 1.0 ? true : undefined
-                };
+                bestInternId = intern.id;
+                bestInternName = `${intern.firstName} ${intern.lastName}`;
               }
             }
 
-            // Add EVERY entry to review list, even if similarity is 0%
-            if (bestMatch) {
-              matchedInternIds.add(bestMatch.internId);
-              potentialMatchList.push(bestMatch);
-              if (bestMatch.similarity >= 1.0) {
-                exactMatchCount++;
-              }
-            } else {
-              // If no roster at all, still show the uploaded name with no match
-              potentialMatchList.push({
-                uploadedName: `${firstName} ${lastName}`,
-                uploadedFirstName: firstName,
-                uploadedLastName: lastName,
-                internId: '',
-                internName: 'No roster to match against',
-                similarity: 0,
-              });
+            const finalSimilarity = bestSimilarity < 0 ? 0 : bestSimilarity;
+            const entry: PotentialMatch = {
+              uploadedName: `${firstName} ${lastName}`,
+              uploadedFirstName: firstName,
+              uploadedLastName: lastName,
+              internId: bestInternId,
+              internName: bestInternName,
+              similarity: finalSimilarity,
+              approved: finalSimilarity >= 1.0 ? true : undefined
+            };
+
+            if (bestInternId) {
+              matchedInternIds.add(bestInternId);
+            }
+            potentialMatchList.push(entry);
+            if (finalSimilarity >= 1.0) {
+              exactMatchCount++;
             }
           } else {
             // Normal mode with thresholds
