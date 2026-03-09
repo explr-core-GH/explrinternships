@@ -148,10 +148,27 @@ export function parseExcelFile(data: ArrayBuffer): Intern[] {
   });
 
   const interns: Intern[] = [];
+  let skippedRows = 0;
+  let emptyNameRows = 0;
+  let shortRows = 0;
+  
+  console.log(`\n=== Processing ${dataRows.length} data rows ===`);
   
   for (let i = 0; i < dataRows.length; i++) {
     const row = dataRows[i];
-    if (!row || row.length < 2) continue;
+    if (!row) {
+      console.log(`Row ${i} - Row is null/undefined, skipping`);
+      skippedRows++;
+      continue;
+    }
+    
+    // More lenient: allow rows with just 1 column if it has content
+    const nonEmptyCells = row.filter((cell: any) => String(cell ?? '').trim().length > 0);
+    if (nonEmptyCells.length === 0) {
+      console.log(`Row ${i} - Row is completely empty, skipping`);
+      shortRows++;
+      continue;
+    }
     
     let firstName = '';
     let lastName = '';
@@ -170,11 +187,26 @@ export function parseExcelFile(data: ArrayBuffer): Intern[] {
         console.log(`Row ${i} - Split into: "${firstName}" "${lastName}"`);
       }
     } else {
-      console.log(`Row ${i} - No name columns detected, skipping`);
+      console.log(`Row ${i} - No name columns detected, trying fallback methods`);
+      // Fallback: try to find name in any column
+      for (let colIdx = 0; colIdx < Math.min(row.length, 10); colIdx++) {
+        const cellValue = String(row[colIdx] ?? '').trim();
+        if (cellValue && cellValue.length > 2 && cellValue.includes(' ')) {
+          const parts = cellValue.split(/\s+/);
+          if (parts.length >= 2 && parts[0].length > 1 && parts[1].length > 1) {
+            firstName = parts[0];
+            lastName = parts.slice(1).join(' ');
+            console.log(`Row ${i} - Found name in column ${colIdx}: "${firstName}" "${lastName}"`);
+            break;
+          }
+        }
+      }
     }
 
+    // More lenient: allow rows with only first name or only last name
     if (!firstName && !lastName) {
-      console.log(`Row ${i} - No names found, skipping row`);
+      console.log(`Row ${i} - No names found anywhere, skipping row. Available data:`, row.slice(0, 5).map(String));
+      emptyNameRows++;
       continue;
     }
 
@@ -219,6 +251,14 @@ export function parseExcelFile(data: ArrayBuffer): Intern[] {
     
     interns.push(intern);
   }
+  
+  console.log(`\n=== PARSE SUMMARY ===`);
+  console.log(`Total data rows processed: ${dataRows.length}`);
+  console.log(`Successful interns parsed: ${interns.length}`);
+  console.log(`Rows skipped - null/undefined: ${skippedRows}`);
+  console.log(`Rows skipped - empty: ${shortRows}`);
+  console.log(`Rows skipped - no names: ${emptyNameRows}`);
+  console.log(`=== END SUMMARY ===\n`);
   
   return markDuplicates(interns);
 }
