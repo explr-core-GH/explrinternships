@@ -344,32 +344,59 @@ export default function FileUpload({ onComplete }: FileUploadProps) {
 
       {/* Status selector for status_update mode */}
       {mode === 'status_update' && (
-        <div className="rounded-lg border bg-card p-3">
-          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
-            Set matched students to:
-          </p>
-          <div className="flex flex-wrap gap-2">
-            {INTERN_STATUSES.filter(s => s !== 'pending').map(status => {
-              const config = STATUS_CONFIG[status];
-              return (
-                <button
-                  key={status}
-                  onClick={() => setTargetStatus(status)}
-                  className={`px-3 py-1.5 rounded-md text-xs font-medium border transition-all ${
-                    targetStatus === status
-                      ? `${config.bgClass} ${config.textClass} ${config.borderClass} ring-2 ring-offset-1 ring-offset-background`
-                      : `border-border text-muted-foreground hover:${config.textClass}`
-                  }`}
-                  style={targetStatus === status ? { '--tw-ring-color': config.color } as React.CSSProperties : undefined}
-                >
-                  {config.label}
-                </button>
-              );
-            })}
+        <div className="space-y-3">
+          <div className="rounded-lg border bg-card p-3">
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
+              Set matched students to:
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {INTERN_STATUSES.filter(s => s !== 'pending').map(status => {
+                const config = STATUS_CONFIG[status];
+                return (
+                  <button
+                    key={status}
+                    onClick={() => setTargetStatus(status)}
+                    className={`px-3 py-1.5 rounded-md text-xs font-medium border transition-all ${
+                      targetStatus === status
+                        ? `${config.bgClass} ${config.textClass} ${config.borderClass} ring-2 ring-offset-1 ring-offset-background`
+                        : `border-border text-muted-foreground hover:${config.textClass}`
+                    }`}
+                    style={targetStatus === status ? { '--tw-ring-color': config.color } as React.CSSProperties : undefined}
+                  >
+                    {config.label}
+                  </button>
+                );
+              })}
+            </div>
           </div>
-          <p className="text-xs text-muted-foreground mt-2">
-            Upload an Excel file with student names. Each name will be matched against the existing roster and their status will be updated. Students not already in the roster will be skipped.
-          </p>
+          
+          <div className="rounded-lg border bg-card p-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                  Review Options
+                </p>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Choose how to handle matching
+                </p>
+              </div>
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={showAllMatches}
+                  onChange={(e) => setShowAllMatches(e.target.checked)}
+                  className="rounded border border-input"
+                />
+                <span className="text-xs text-foreground">Show all matches with percentages</span>
+              </label>
+            </div>
+            <p className="text-xs text-muted-foreground mt-2">
+              {showAllMatches 
+                ? 'All matches will be shown for manual review with similarity percentages, including exact matches.'
+                : 'Only uncertain matches will require manual review. Exact matches will be applied automatically.'
+              }
+            </p>
+          </div>
         </div>
       )}
 
