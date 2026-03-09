@@ -129,6 +129,7 @@ export default function FileUpload({ onComplete }: FileUploadProps) {
         for (const row of parsed) {
           const firstName = row.firstName.trim();
           const lastName = row.lastName.trim();
+          console.log(`[EXCEL DEBUG] Parsed from Excel: firstName="${firstName}", lastName="${lastName}"`);
           if (!firstName && !lastName) continue;
 
           if (showAllMatches) {
