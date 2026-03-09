@@ -115,37 +115,68 @@ export default function FileUpload({ onComplete }: FileUploadProps) {
           const lastName = row.lastName.trim();
           if (!firstName && !lastName) continue;
 
-          // Always find potential matches to show percentages - show all when requested
-          const potentials = findPotentialMatches(firstName, lastName, activeInterns, showAllMatches);
-          
-          if (potentials.length > 0) {
-            const bestMatch = potentials[0];
-            
-            // Check if it's an exact match (100% similarity)
-            if (bestMatch.similarity >= 1.0) {
-              matchedInternIds.add(bestMatch.internId);
-              if (!showAllMatches) {
-                // Auto-apply exact matches when not showing all
-                await updateIntern(bestMatch.internId, { status: targetStatus });
-                exactMatchCount++;
-              } else {
-                // Add to review list with pre-approval
-                potentialMatchList.push({ ...bestMatch, approved: true });
+          if (showAllMatches) {
+            // When showing all matches, find the best match for EVERY uploaded entry
+            let bestMatch: PotentialMatch | null = null;
+            let bestSimilarity = -1;
+
+            for (const intern of activeInterns) {
+              const firstSim = calculateSimilarity(firstName, intern.firstName);
+              const lastSim = calculateSimilarity(lastName, intern.lastName);
+              const overallSim = (firstSim * 0.4) + (lastSim * 0.6);
+              
+              if (overallSim > bestSimilarity) {
+                bestSimilarity = overallSim;
+                bestMatch = {
+                  uploadedName: `${firstName} ${lastName}`,
+                  uploadedFirstName: firstName,
+                  uploadedLastName: lastName,
+                  internId: intern.id,
+                  internName: `${intern.firstName} ${intern.lastName}`,
+                  similarity: overallSim,
+                  approved: overallSim >= 1.0 ? true : undefined
+                };
               }
-            } else if (showAllMatches) {
-              // When showing all matches, include ALL potential matches for review
-              potentials.forEach(p => matchedInternIds.add(p.internId));
-              potentialMatchList.push(...potentials);
-            } else if (bestMatch.similarity >= 0.6) {
-              // Normal mode: only add matches above 60% similarity
+            }
+
+            // Add EVERY entry to review list, even if similarity is 0%
+            if (bestMatch) {
               matchedInternIds.add(bestMatch.internId);
               potentialMatchList.push(bestMatch);
+              if (bestMatch.similarity >= 1.0) {
+                exactMatchCount++;
+              }
             } else {
-              // Below threshold, add to no matches
-              noMatchList.push(`${firstName} ${lastName}`);
+              // If no roster at all, still show the uploaded name with no match
+              potentialMatchList.push({
+                uploadedName: `${firstName} ${lastName}`,
+                uploadedFirstName: firstName,
+                uploadedLastName: lastName,
+                internId: '',
+                internName: 'No roster to match against',
+                similarity: 0,
+              });
             }
           } else {
-            noMatchList.push(`${firstName} ${lastName}`);
+            // Normal mode with thresholds
+            const potentials = findPotentialMatches(firstName, lastName, activeInterns, false);
+            
+            if (potentials.length > 0) {
+              const bestMatch = potentials[0];
+              
+              if (bestMatch.similarity >= 1.0) {
+                matchedInternIds.add(bestMatch.internId);
+                await updateIntern(bestMatch.internId, { status: targetStatus });
+                exactMatchCount++;
+              } else if (bestMatch.similarity >= 0.6) {
+                matchedInternIds.add(bestMatch.internId);
+                potentialMatchList.push(bestMatch);
+              } else {
+                noMatchList.push(`${firstName} ${lastName}`);
+              }
+            } else {
+              noMatchList.push(`${firstName} ${lastName}`);
+            }
           }
         }
 
