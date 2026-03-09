@@ -1,12 +1,24 @@
 import { useCallback, useRef, useState } from 'react';
-import { Upload, FileSpreadsheet, RefreshCw } from 'lucide-react';
+import { Upload, FileSpreadsheet, RefreshCw, Check, X, Users } from 'lucide-react';
 import { parseExcelFile } from '@/lib/parseExcel';
 import { useAppStore } from '@/store/useAppStore';
 import { toast } from 'sonner';
 import { INTERN_STATUSES, STATUS_CONFIG, type InternStatus } from '@/types/intern';
 import type { Intern } from '@/types/intern';
+import { Button } from '@/components/ui/button';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
 type UploadMode = 'new_interns' | 'status_update';
+
+interface PotentialMatch {
+  uploadedName: string;
+  uploadedFirstName: string;
+  uploadedLastName: string;
+  internId: string;
+  internName: string;
+  similarity: number;
+  approved?: boolean;
+}
 
 interface FileUploadProps {
   onComplete?: () => void;
@@ -18,6 +30,52 @@ export default function FileUpload({ onComplete }: FileUploadProps) {
   const [mode, setMode] = useState<UploadMode>('new_interns');
   const [targetStatus, setTargetStatus] = useState<InternStatus>('matched');
   const [processing, setProcessing] = useState(false);
+  const [potentialMatches, setPotentialMatches] = useState<PotentialMatch[]>([]);
+  const [showingReview, setShowingReview] = useState(false);
+  const [exactMatches, setExactMatches] = useState<number>(0);
+  const [noMatches, setNoMatches] = useState<string[]>([]);
+
+  // Simple similarity calculation
+  const calculateSimilarity = (str1: string, str2: string): number => {
+    const normalize = (s: string) => s.toLowerCase().trim();
+    const norm1 = normalize(str1);
+    const norm2 = normalize(str2);
+    
+    if (norm1 === norm2) return 1.0;
+    
+    // Check if one contains the other (for middle names, etc.)
+    if (norm1.includes(norm2) || norm2.includes(norm1)) return 0.8;
+    
+    // Check first few characters
+    const prefix1 = norm1.substring(0, 3);
+    const prefix2 = norm2.substring(0, 3);
+    if (prefix1 === prefix2) return 0.6;
+    
+    return 0.0;
+  };
+
+  const findPotentialMatches = (firstName: string, lastName: string, activeInterns: Intern[]): PotentialMatch[] => {
+    const matches: PotentialMatch[] = [];
+    
+    for (const intern of activeInterns) {
+      const firstSim = calculateSimilarity(firstName, intern.firstName);
+      const lastSim = calculateSimilarity(lastName, intern.lastName);
+      const overallSim = (firstSim * 0.4) + (lastSim * 0.6);
+      
+      if (overallSim >= 0.6) {
+        matches.push({
+          uploadedName: `${firstName} ${lastName}`,
+          uploadedFirstName: firstName,
+          uploadedLastName: lastName,
+          internId: intern.id,
+          internName: `${intern.firstName} ${intern.lastName}`,
+          similarity: overallSim,
+        });
+      }
+    }
+    
+    return matches.sort((a, b) => b.similarity - a.similarity);
+  };
 
   const handleFile = useCallback(async (file: File) => {
     try {
@@ -35,58 +93,58 @@ export default function FileUpload({ onComplete }: FileUploadProps) {
         const dupes = parsed.filter(i => i.isDuplicate).length;
         await uploadExcelInterns(parsed);
         toast.success(`Loaded ${parsed.length} interns${dupes > 0 ? ` (${dupes} duplicates detected)` : ''}`);
+        setProcessing(false);
+        onComplete?.();
       } else {
-        // Status update mode: match by name, update status, don't add new students
+        // Status update mode with manual review
         const activeInterns = interns.filter(i => i.isNewest);
-        let matched = 0;
-        let notFound: string[] = [];
+        let exactMatchCount = 0;
+        let potentialMatchList: PotentialMatch[] = [];
+        let noMatchList: string[] = [];
 
         for (const row of parsed) {
-          const firstName = row.firstName.trim().toLowerCase();
-          const lastName = row.lastName.trim().toLowerCase();
+          const firstName = row.firstName.trim();
+          const lastName = row.lastName.trim();
           if (!firstName && !lastName) continue;
 
-          // Find matching intern by name (fuzzy: case-insensitive, handles middle names)
-          const match = activeInterns.find(i => {
-            const dbFirst = i.firstName.toLowerCase().trim();
-            const dbLast = i.lastName.toLowerCase().trim();
-            
-            if (dbFirst === firstName && dbLast === lastName) return true;
-            
-            // Handle middle names by checking if the first word of the first name matches
-            const dbFirstPart = dbFirst.split(' ')[0];
-            const uploadFirstPart = firstName.split(' ')[0];
-            
-            const firstMatch = dbFirstPart === uploadFirstPart || dbFirst.includes(firstName) || firstName.includes(dbFirst);
-            const lastMatch = dbLast === lastName || dbLast.includes(lastName) || lastName.includes(dbLast);
-            
-            return firstMatch && lastMatch;
-          });
+          // Try exact match first
+          const exactMatch = activeInterns.find(i => 
+            i.firstName.toLowerCase().trim() === firstName.toLowerCase() &&
+            i.lastName.toLowerCase().trim() === lastName.toLowerCase()
+          );
 
-          if (match) {
-            await updateIntern(match.id, { status: targetStatus });
-            matched++;
+          if (exactMatch) {
+            await updateIntern(exactMatch.id, { status: targetStatus });
+            exactMatchCount++;
           } else {
-            notFound.push(`${row.firstName} ${row.lastName}`);
+            // Look for potential matches
+            const potentials = findPotentialMatches(firstName, lastName, activeInterns);
+            if (potentials.length > 0) {
+              potentialMatchList.push(potentials[0]); // Take the best match
+            } else {
+              noMatchList.push(`${firstName} ${lastName}`);
+            }
           }
         }
 
-        if (matched > 0) {
-          toast.success(`Updated ${matched} intern(s) to "${STATUS_CONFIG[targetStatus].label}"`);
-        }
-        if (notFound.length > 0) {
-          toast.warning(`${notFound.length} name(s) not found in roster`, {
-            description: notFound.slice(0, 5).join(', ') + (notFound.length > 5 ? ` +${notFound.length - 5} more` : ''),
-            duration: 8000,
-          });
-        }
-        if (matched === 0 && notFound.length === 0) {
-          toast.error('No names found in the uploaded file');
+        setExactMatches(exactMatchCount);
+        setPotentialMatches(potentialMatchList);
+        setNoMatches(noMatchList);
+        setProcessing(false);
+        
+        if (potentialMatchList.length > 0) {
+          setShowingReview(true);
+        } else {
+          // No manual review needed
+          if (exactMatchCount > 0) {
+            toast.success(`Updated ${exactMatchCount} intern(s) to "${STATUS_CONFIG[targetStatus].label}"`);
+          }
+          if (noMatchList.length > 0) {
+            toast.warning(`${noMatchList.length} name(s) not found`);
+          }
+          onComplete?.();
         }
       }
-
-      setProcessing(false);
-      onComplete?.();
     } catch (err) {
       console.error(err);
       toast.error('Failed to parse Excel file');
@@ -94,11 +152,153 @@ export default function FileUpload({ onComplete }: FileUploadProps) {
     }
   }, [uploadExcelInterns, onComplete, mode, targetStatus, interns, updateIntern]);
 
+  const handleApprove = (index: number) => {
+    setPotentialMatches(prev => prev.map((match, i) => 
+      i === index ? { ...match, approved: true } : match
+    ));
+  };
+
+  const handleReject = (index: number) => {
+    setPotentialMatches(prev => prev.map((match, i) => 
+      i === index ? { ...match, approved: false } : match
+    ));
+  };
+
+  const applyApprovedMatches = async () => {
+    setProcessing(true);
+    const approved = potentialMatches.filter(m => m.approved === true);
+    
+    for (const match of approved) {
+      await updateIntern(match.internId, { status: targetStatus });
+    }
+
+    const totalUpdated = exactMatches + approved.length;
+    const rejected = potentialMatches.filter(m => m.approved === false);
+    const allNoMatches = [...noMatches, ...rejected.map(r => r.uploadedName)];
+
+    if (totalUpdated > 0) {
+      toast.success(`Updated ${totalUpdated} intern(s) to "${STATUS_CONFIG[targetStatus].label}"`);
+    }
+    if (allNoMatches.length > 0) {
+      toast.warning(`${allNoMatches.length} name(s) not matched`);
+    }
+
+    // Reset state
+    setShowingReview(false);
+    setPotentialMatches([]);
+    setExactMatches(0);
+    setNoMatches([]);
+    setProcessing(false);
+    onComplete?.();
+  };
+
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     const file = e.dataTransfer.files[0];
     if (file) handleFile(file);
   }, [handleFile]);
+
+  if (showingReview) {
+    return (
+      <div className="space-y-4">
+        <div className="flex items-center gap-2 p-4 border rounded-lg bg-card">
+          <Users className="h-5 w-5 text-primary" />
+          <div>
+            <h3 className="font-semibold text-foreground">Manual Match Review</h3>
+            <p className="text-sm text-muted-foreground">
+              {exactMatches} exact matches found. Review {potentialMatches.length} potential matches below.
+            </p>
+          </div>
+        </div>
+
+        <div className="border rounded-lg bg-card">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Uploaded Name</TableHead>
+                <TableHead>Potential Match</TableHead>
+                <TableHead>Similarity</TableHead>
+                <TableHead>Action</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {potentialMatches.map((match, index) => (
+                <TableRow key={index}>
+                  <TableCell className="font-medium">{match.uploadedName}</TableCell>
+                  <TableCell>{match.internName}</TableCell>
+                  <TableCell>
+                    <span className={`px-2 py-1 rounded text-xs ${
+                      match.similarity >= 0.9 ? 'bg-green-100 text-green-700' :
+                      match.similarity >= 0.7 ? 'bg-yellow-100 text-yellow-700' :
+                      'bg-orange-100 text-orange-700'
+                    }`}>
+                      {Math.round(match.similarity * 100)}%
+                    </span>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex gap-2">
+                      <Button
+                        size="sm"
+                        variant={match.approved === true ? "default" : "outline"}
+                        onClick={() => handleApprove(index)}
+                        className="h-8"
+                      >
+                        <Check className="h-3 w-3" />
+                        Yes
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant={match.approved === false ? "destructive" : "outline"}
+                        onClick={() => handleReject(index)}
+                        className="h-8"
+                      >
+                        <X className="h-3 w-3" />
+                        No
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+
+        {noMatches.length > 0 && (
+          <div className="p-3 border rounded-lg bg-muted/50">
+            <p className="text-sm font-medium text-muted-foreground mb-2">
+              {noMatches.length} names with no close matches:
+            </p>
+            <p className="text-xs text-muted-foreground">
+              {noMatches.slice(0, 5).join(', ')}
+              {noMatches.length > 5 ? ` +${noMatches.length - 5} more` : ''}
+            </p>
+          </div>
+        )}
+
+        <div className="flex gap-2 pt-4">
+          <Button
+            onClick={applyApprovedMatches}
+            disabled={processing || !potentialMatches.some(m => m.approved === true)}
+            className="flex-1"
+          >
+            {processing ? <RefreshCw className="h-4 w-4 animate-spin mr-2" /> : null}
+            Apply {potentialMatches.filter(m => m.approved === true).length} Approved Matches
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => {
+              setShowingReview(false);
+              setPotentialMatches([]);
+              setExactMatches(0);
+              setNoMatches([]);
+            }}
+          >
+            Cancel
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">
