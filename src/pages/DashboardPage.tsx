@@ -13,7 +13,8 @@ export default function DashboardPage() {
 
   const active = useMemo(() => interns.filter(i => i.isNewest), [interns]);
   const diffPartnerCount = useMemo(() => active.filter(i => i.status === 'selected_different_partner').length, [active]);
-  const eligible = useMemo(() => active.filter(i => i.status !== 'selected_different_partner'), [active]);
+  const removedCount = useMemo(() => active.filter(i => i.status === 'removed').length, [active]);
+  const eligible = useMemo(() => active.filter(i => i.status !== 'selected_different_partner' && i.status !== 'removed'), [active]);
   const assignedIds = useMemo(() => new Set(assignments.map(a => a.internId)), [assignments]);
   const assignedCount = eligible.filter(i => assignedIds.has(i.id)).length;
   const unassignedCount = eligible.length - assignedCount;
