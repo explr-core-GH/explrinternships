@@ -178,7 +178,7 @@ export default function FileUpload({ onComplete }: FileUploadProps) {
             if (potentials.length > 0) {
               const bestMatch = potentials[0];
               
-              if (bestMatch.similarity >= 1.0) {
+              if (bestMatch.similarity >= 0.7) {
                 matchedInternIds.add(bestMatch.internId);
                 await updateIntern(bestMatch.internId, { status: targetStatus });
                 exactMatchCount++;
