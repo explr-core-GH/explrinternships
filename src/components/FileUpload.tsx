@@ -46,6 +46,13 @@ export default function FileUpload({ onComplete }: FileUploadProps) {
     const norm1 = normalize(str1);
     const norm2 = normalize(str2);
     
+    // Debug logging for exact match issues
+    if (str1 === 'DEBUG_MATCH' || str2 === 'DEBUG_MATCH') {
+      console.log(`[DEBUG] Comparing "${str1}" vs "${str2}"`);
+      console.log(`[DEBUG] Normalized: "${norm1}" vs "${norm2}"`);
+      console.log(`[DEBUG] Exact match: ${norm1 === norm2}`);
+    }
+    
     if (norm1 === norm2) return 1.0;
     
     // Check if one contains the other (for middle names, etc.)
