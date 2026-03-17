@@ -164,6 +164,7 @@ export const useAppStore = create<AppState>()((set, get) => ({
     await get().fetchSchoolContacts();
   },
 
+  addWorksite: async (ws) => {
     const { data } = await supabase.from('worksites').insert({
       name: ws.name, category: ws.category, description: ws.description,
       capacity: ws.capacity, filled: ws.filled, contact_name: ws.contactName,
