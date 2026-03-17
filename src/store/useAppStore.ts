@@ -93,6 +93,8 @@ export const useAppStore = create<AppState>()((set, get) => ({
   sheetUrl: '',
   lastSynced: null,
   syncing: false,
+  lastUploadSnapshot: null,
+  canUndoUpload: false,
 
   fetchInterns: async () => {
     set({ loading: true });
