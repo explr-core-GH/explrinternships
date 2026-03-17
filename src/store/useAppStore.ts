@@ -223,7 +223,9 @@ export const useAppStore = create<AppState>()((set, get) => ({
   },
 
   syncFromSheet: async (url) => {
-    set({ syncing: true });
+    // Snapshot current interns before sync for undo
+    const { data: snapshot } = await supabase.from('interns').select('*');
+    set({ syncing: true, lastUploadSnapshot: snapshot || [], canUndoUpload: true });
     try {
       const { data, error } = await supabase.functions.invoke('sync-google-sheet', {
         body: { sheetUrl: url },
