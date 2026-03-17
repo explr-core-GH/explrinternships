@@ -1,17 +1,24 @@
 import { useState, useMemo } from 'react';
-import { Search, Copy, Download, CheckSquare, Square } from 'lucide-react';
+import { Search, Copy, Download, CheckSquare, Square, Mail } from 'lucide-react';
 import { useAppStore } from '@/store/useAppStore';
 import { useAutoLoadData } from '@/hooks/useAutoLoadData';
 import InternCard from '@/components/InternCard';
 import GoogleSheetSync from '@/components/GoogleSheetSync';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { exportRosterCSV, exportWorksiteCSV } from '@/lib/exportData';
+import { exportRosterCSV } from '@/lib/exportData';
+import { exportStatusContactCSV } from '@/lib/exportData';
 import { toast } from 'sonner';
 import { INTERN_STATUSES, STATUS_CONFIG, type InternStatus } from '@/types/intern';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 export default function RosterPage() {
-  const { interns, worksites, assignments, loading, updateIntern } = useAppStore();
+  const { interns, worksites, assignments, loading, updateIntern, schoolContacts } = useAppStore();
   const [search, setSearch] = useState('');
   const [gradeFilter, setGradeFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState<InternStatus | 'all'>('all');
@@ -125,6 +132,28 @@ export default function RosterPage() {
           <Button variant="outline" size="sm" className="gap-1.5 text-xs" onClick={() => { exportRosterCSV(filtered, worksites, assignments); toast.success('Roster CSV downloaded'); }}>
             <Download className="h-3.5 w-3.5" /> Export
           </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm" className="gap-1.5 text-xs">
+                <Mail className="h-3.5 w-3.5" /> Export by Status
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              {INTERN_STATUSES.map(s => (
+                <DropdownMenuItem
+                  key={s}
+                  onClick={() => {
+                    const ok = exportStatusContactCSV(interns, schoolContacts, s);
+                    if (ok) toast.success(`Exported ${STATUS_CONFIG[s].label} interns with contacts`);
+                    else toast.error(`No interns with status "${STATUS_CONFIG[s].label}"`);
+                  }}
+                >
+                  <span className={`inline-block w-2 h-2 rounded-full mr-2 ${STATUS_CONFIG[s].bgClass}`} />
+                  {STATUS_CONFIG[s].label} ({statusCounts[s] || 0})
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
 

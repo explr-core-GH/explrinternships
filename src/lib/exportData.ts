@@ -1,4 +1,5 @@
-import type { Intern, Worksite, Assignment } from '@/types/intern';
+import type { Intern, Worksite, Assignment, SchoolContact, InternStatus } from '@/types/intern';
+import { STATUS_CONFIG, CONTACT_ROLE_LABELS } from '@/types/intern';
 
 interface PotentialMatch {
   uploadedName: string;
@@ -139,4 +140,58 @@ export function exportMatchReviewCSV(
   link.download = `match-review-${timestamp}.csv`;
   link.click();
   URL.revokeObjectURL(url);
+}
+
+export function exportStatusContactCSV(
+  interns: Intern[],
+  schoolContacts: SchoolContact[],
+  status: InternStatus
+) {
+  const filtered = interns.filter(i => i.isNewest && i.status === status);
+  if (filtered.length === 0) return false;
+
+  const contactsBySchool: Record<string, SchoolContact[]> = {};
+  schoolContacts.forEach(c => {
+    const key = c.schoolName.toLowerCase().trim();
+    if (!contactsBySchool[key]) contactsBySchool[key] = [];
+    contactsBySchool[key].push(c);
+  });
+
+  const headers = [
+    'First Name', 'Last Name', 'Student Email', 'Phone', 'Parent Phone',
+    'School', 'Grade', 'Status',
+    'Principal Name', 'Principal Email',
+    'Guidance Counselor Name', 'Guidance Counselor Email',
+    '5C Name', '5C Email',
+  ];
+
+  const rows = filtered.map(i => {
+    const school = (i.otherSchool || i.school || '').toLowerCase().trim();
+    const contacts = contactsBySchool[school] || [];
+    const byRole = (role: string) => contacts.find(c => c.role === role);
+    const principal = byRole('principal');
+    const guidance = byRole('guidance_counselor');
+    const fiveC = byRole('5c');
+
+    return [
+      i.firstName, i.lastName, i.studentEmail || i.emailSubmission, i.phone, i.parentPhone,
+      i.otherSchool || i.school, i.grade, STATUS_CONFIG[i.status].label,
+      principal?.contactName || '', principal?.contactEmail || '',
+      guidance?.contactName || '', guidance?.contactEmail || '',
+      fiveC?.contactName || '', fiveC?.contactEmail || '',
+    ];
+  });
+
+  const csvContent = [headers, ...rows]
+    .map(row => row.map(cell => `"${(cell || '').replace(/"/g, '""')}"`).join(','))
+    .join('\n');
+
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `${status}-interns-contacts-${new Date().toISOString().slice(0, 10)}.csv`;
+  link.click();
+  URL.revokeObjectURL(url);
+  return true;
 }
