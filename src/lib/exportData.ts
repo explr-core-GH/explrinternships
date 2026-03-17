@@ -157,40 +157,53 @@ export function exportStatusContactCSV(
     contactsBySchool[key].push(c);
   });
 
-  const headers = [
-    'First Name', 'Last Name', 'Student Email', 'Phone', 'Parent Phone',
-    'School', 'Grade', 'Status',
-    'Principal Name', 'Principal Email',
-    'Guidance Counselor Name', 'Guidance Counselor Email',
-    '5C Name', '5C Email',
-  ];
-
-  // Group by school then sort within each group by last name
-  const grouped = filtered.sort((a, b) => {
-    const schoolA = (a.otherSchool || a.school || '').toLowerCase();
-    const schoolB = (b.otherSchool || b.school || '').toLowerCase();
-    if (schoolA !== schoolB) return schoolA.localeCompare(schoolB);
-    return a.lastName.localeCompare(b.lastName);
+  // Group interns by school
+  const bySchool: Record<string, { displayName: string; interns: Intern[] }> = {};
+  filtered.forEach(i => {
+    const schoolDisplay = i.otherSchool || i.school || 'Unknown School';
+    const key = schoolDisplay.toLowerCase().trim();
+    if (!bySchool[key]) bySchool[key] = { displayName: schoolDisplay, interns: [] };
+    bySchool[key].interns.push(i);
   });
 
-  const rows = grouped.map(i => {
-    const school = (i.otherSchool || i.school || '').toLowerCase().trim();
-    const contacts = contactsBySchool[school] || [];
+  const allRows: string[][] = [];
+  const schoolKeys = Object.keys(bySchool).sort();
+
+  schoolKeys.forEach((key, idx) => {
+    const group = bySchool[key];
+    const contacts = contactsBySchool[key] || [];
     const byRole = (role: string) => contacts.find(c => c.role === role);
     const principal = byRole('principal');
     const guidance = byRole('guidance_counselor');
     const fiveC = byRole('5c');
 
-    return [
-      i.firstName, i.lastName, i.studentEmail || i.emailSubmission, i.phone, i.parentPhone,
-      i.otherSchool || i.school, i.grade, STATUS_CONFIG[i.status].label,
-      principal?.contactName || '', principal?.contactEmail || '',
-      guidance?.contactName || '', guidance?.contactEmail || '',
-      fiveC?.contactName || '', fiveC?.contactEmail || '',
-    ];
+    // School header block
+    allRows.push([`SCHOOL: ${group.displayName}`, '', '', `Students: ${group.interns.length}`]);
+    if (principal) allRows.push(['', 'Principal:', principal.contactName, principal.contactEmail]);
+    if (guidance) allRows.push(['', 'Guidance Counselor:', guidance.contactName, guidance.contactEmail]);
+    if (fiveC) allRows.push(['', '5C Career Counselor:', fiveC.contactName, fiveC.contactEmail]);
+    if (!principal && !guidance && !fiveC) allRows.push(['', 'No school contacts on file', '', '']);
+
+    // Column headers for students
+    allRows.push(['First Name', 'Last Name', 'Student Email', 'Phone', 'Parent Phone', 'Grade']);
+
+    // Student rows sorted by last name
+    group.interns
+      .sort((a, b) => a.lastName.localeCompare(b.lastName))
+      .forEach(i => {
+        allRows.push([
+          i.firstName, i.lastName, i.studentEmail || i.emailSubmission,
+          i.phone, i.parentPhone, i.grade,
+        ]);
+      });
+
+    // Blank separator between schools
+    if (idx < schoolKeys.length - 1) {
+      allRows.push([]);
+    }
   });
 
-  const csvContent = [headers, ...rows]
+  const csvContent = allRows
     .map(row => row.map(cell => `"${(cell || '').replace(/"/g, '""')}"`).join(','))
     .join('\n');
 
@@ -198,7 +211,7 @@ export function exportStatusContactCSV(
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
   link.href = url;
-  link.download = `${status}-interns-contacts-${new Date().toISOString().slice(0, 10)}.csv`;
+  link.download = `${status}-by-school-${new Date().toISOString().slice(0, 10)}.csv`;
   link.click();
   URL.revokeObjectURL(url);
   return true;
