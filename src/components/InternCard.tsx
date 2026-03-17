@@ -2,7 +2,7 @@ import { useState, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronDown, Mail, Phone, School, Calendar, AlertTriangle, Star, Copy, Edit2, Save, X, StickyNote, CheckCircle2, Square, CheckSquare, Users } from 'lucide-react';
 import type { Intern, Placement, Worksite, InternStatus } from '@/types/intern';
-import { INTEREST_LABELS, type InterestField, INTERN_STATUSES, STATUS_CONFIG } from '@/types/intern';
+import { INTEREST_LABELS, type InterestField, INTERN_STATUSES, STATUS_CONFIG, CONTACT_ROLE_LABELS, type SchoolContactRole } from '@/types/intern';
 import { generatePlacements } from '@/lib/placementEngine';
 import { useAppStore } from '@/store/useAppStore';
 import { Badge } from '@/components/ui/badge';
