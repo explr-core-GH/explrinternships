@@ -92,6 +92,7 @@ export const useAppStore = create<AppState>()((set, get) => ({
   interns: [],
   worksites: [],
   assignments: [],
+  schoolContacts: [],
   loading: false,
   sheetUrl: '',
   lastSynced: null,
