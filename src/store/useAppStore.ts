@@ -63,6 +63,7 @@ interface AppState {
   interns: Intern[];
   worksites: Worksite[];
   assignments: Assignment[];
+  schoolContacts: SchoolContact[];
   loading: boolean;
   sheetUrl: string;
   lastSynced: string | null;
@@ -72,6 +73,8 @@ interface AppState {
   fetchInterns: () => Promise<void>;
   fetchWorksites: () => Promise<void>;
   fetchAssignments: () => Promise<void>;
+  fetchSchoolContacts: () => Promise<void>;
+  uploadSchoolContacts: (contacts: { schoolName: string; role: SchoolContactRole; contactName: string; contactEmail: string }[]) => Promise<void>;
   addWorksite: (ws: Omit<Worksite, 'id'>) => Promise<void>;
   removeWorksite: (id: string) => Promise<void>;
   assignIntern: (internId: string, worksiteId: string) => Promise<void>;
