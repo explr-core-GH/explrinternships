@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Undo2 } from 'lucide-react';
 import FileUpload from '@/components/FileUpload';
 import GoogleSheetSync from '@/components/GoogleSheetSync';
+import SchoolContactUpload from '@/components/SchoolContactUpload';
 import { useAppStore } from '@/store/useAppStore';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
@@ -64,6 +65,10 @@ export default function UploadPage() {
       <div>
         <h3 className="text-sm font-medium text-foreground mb-2">Or upload an Excel file</h3>
         <FileUpload />
+      </div>
+
+      <div className="border-t pt-6">
+        <SchoolContactUpload />
       </div>
 
       {interns.length > 0 && (

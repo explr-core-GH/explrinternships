@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { supabase } from '@/integrations/supabase/client';
-import type { Intern, Worksite, Assignment, InternStatus } from '@/types/intern';
+import type { Intern, Worksite, Assignment, InternStatus, SchoolContact, SchoolContactRole } from '@/types/intern';
 import { DEFAULT_WORKSITES } from '@/types/intern';
 import type { Tables } from '@/integrations/supabase/types';
 
@@ -63,6 +63,7 @@ interface AppState {
   interns: Intern[];
   worksites: Worksite[];
   assignments: Assignment[];
+  schoolContacts: SchoolContact[];
   loading: boolean;
   sheetUrl: string;
   lastSynced: string | null;
@@ -72,6 +73,8 @@ interface AppState {
   fetchInterns: () => Promise<void>;
   fetchWorksites: () => Promise<void>;
   fetchAssignments: () => Promise<void>;
+  fetchSchoolContacts: () => Promise<void>;
+  uploadSchoolContacts: (contacts: { schoolName: string; role: SchoolContactRole; contactName: string; contactEmail: string }[]) => Promise<void>;
   addWorksite: (ws: Omit<Worksite, 'id'>) => Promise<void>;
   removeWorksite: (id: string) => Promise<void>;
   assignIntern: (internId: string, worksiteId: string) => Promise<void>;
@@ -89,6 +92,7 @@ export const useAppStore = create<AppState>()((set, get) => ({
   interns: [],
   worksites: [],
   assignments: [],
+  schoolContacts: [],
   loading: false,
   sheetUrl: '',
   lastSynced: null,
@@ -130,6 +134,34 @@ export const useAppStore = create<AppState>()((set, get) => ({
         })),
       });
     }
+  },
+
+  fetchSchoolContacts: async () => {
+    const { data } = await supabase.from('school_contacts').select('*').order('school_name');
+    set({
+      schoolContacts: (data || []).map((r: any) => ({
+        id: r.id,
+        schoolName: r.school_name,
+        role: r.role,
+        contactName: r.contact_name,
+        contactEmail: r.contact_email,
+      })),
+    });
+  },
+
+  uploadSchoolContacts: async (contacts) => {
+    // Replace all existing contacts
+    await supabase.from('school_contacts').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+    if (contacts.length > 0) {
+      const inserts = contacts.map(c => ({
+        school_name: c.schoolName,
+        role: c.role,
+        contact_name: c.contactName,
+        contact_email: c.contactEmail,
+      }));
+      await supabase.from('school_contacts').insert(inserts);
+    }
+    await get().fetchSchoolContacts();
   },
 
   addWorksite: async (ws) => {
