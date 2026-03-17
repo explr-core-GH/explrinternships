@@ -268,6 +268,8 @@ export default function InternCard({ intern, worksites, bulkMode, selected, onTo
                     <div className="flex items-center gap-2 text-sm"><Calendar className="h-3.5 w-3.5 text-muted-foreground" /><span className="text-muted-foreground">DOB: {intern.dob}</span></div>
                   </div>
                   <div className="text-xs text-muted-foreground">Parent/Guardian Phone: {intern.parentPhone}</div>
+
+                  <SchoolContactsSection schoolName={displaySchool} />
                 </>
               )}
 
