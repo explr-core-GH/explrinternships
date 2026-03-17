@@ -132,6 +132,28 @@ export default function RosterPage() {
           <Button variant="outline" size="sm" className="gap-1.5 text-xs" onClick={() => { exportRosterCSV(filtered, worksites, assignments); toast.success('Roster CSV downloaded'); }}>
             <Download className="h-3.5 w-3.5" /> Export
           </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm" className="gap-1.5 text-xs">
+                <Mail className="h-3.5 w-3.5" /> Export by Status
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              {INTERN_STATUSES.map(s => (
+                <DropdownMenuItem
+                  key={s}
+                  onClick={() => {
+                    const ok = exportStatusContactCSV(interns, schoolContacts, s);
+                    if (ok) toast.success(`Exported ${STATUS_CONFIG[s].label} interns with contacts`);
+                    else toast.error(`No interns with status "${STATUS_CONFIG[s].label}"`);
+                  }}
+                >
+                  <span className={`inline-block w-2 h-2 rounded-full mr-2 ${STATUS_CONFIG[s].bgClass}`} />
+                  {STATUS_CONFIG[s].label} ({statusCounts[s] || 0})
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
 
