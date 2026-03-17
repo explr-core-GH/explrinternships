@@ -165,7 +165,15 @@ export function exportStatusContactCSV(
     '5C Name', '5C Email',
   ];
 
-  const rows = filtered.map(i => {
+  // Group by school then sort within each group by last name
+  const grouped = filtered.sort((a, b) => {
+    const schoolA = (a.otherSchool || a.school || '').toLowerCase();
+    const schoolB = (b.otherSchool || b.school || '').toLowerCase();
+    if (schoolA !== schoolB) return schoolA.localeCompare(schoolB);
+    return a.lastName.localeCompare(b.lastName);
+  });
+
+  const rows = grouped.map(i => {
     const school = (i.otherSchool || i.school || '').toLowerCase().trim();
     const contacts = contactsBySchool[school] || [];
     const byRole = (role: string) => contacts.find(c => c.role === role);
