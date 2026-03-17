@@ -136,7 +136,34 @@ export const useAppStore = create<AppState>()((set, get) => ({
     }
   },
 
-  addWorksite: async (ws) => {
+  fetchSchoolContacts: async () => {
+    const { data } = await supabase.from('school_contacts').select('*').order('school_name');
+    set({
+      schoolContacts: (data || []).map((r: any) => ({
+        id: r.id,
+        schoolName: r.school_name,
+        role: r.role,
+        contactName: r.contact_name,
+        contactEmail: r.contact_email,
+      })),
+    });
+  },
+
+  uploadSchoolContacts: async (contacts) => {
+    // Replace all existing contacts
+    await supabase.from('school_contacts').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+    if (contacts.length > 0) {
+      const inserts = contacts.map(c => ({
+        school_name: c.schoolName,
+        role: c.role,
+        contact_name: c.contactName,
+        contact_email: c.contactEmail,
+      }));
+      await supabase.from('school_contacts').insert(inserts);
+    }
+    await get().fetchSchoolContacts();
+  },
+
     const { data } = await supabase.from('worksites').insert({
       name: ws.name, category: ws.category, description: ws.description,
       capacity: ws.capacity, filled: ws.filled, contact_name: ws.contactName,
