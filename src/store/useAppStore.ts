@@ -82,6 +82,7 @@ interface AppState {
   updateIntern: (id: string, updates: Partial<Record<string, any>>) => Promise<void>;
   updateWorksite: (id: string, updates: Partial<Record<string, any>>) => Promise<void>;
   refreshWorksiteCounts: () => Promise<void>;
+  undoLastUpload: () => Promise<boolean>;
 }
 
 export const useAppStore = create<AppState>()((set, get) => ({
