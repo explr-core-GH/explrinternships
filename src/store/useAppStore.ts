@@ -67,6 +67,8 @@ interface AppState {
   sheetUrl: string;
   lastSynced: string | null;
   syncing: boolean;
+  lastUploadSnapshot: any[] | null;
+  canUndoUpload: boolean;
   fetchInterns: () => Promise<void>;
   fetchWorksites: () => Promise<void>;
   fetchAssignments: () => Promise<void>;
