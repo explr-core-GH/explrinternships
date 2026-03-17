@@ -117,6 +117,43 @@ function AssignmentSection({ intern, worksites }: { intern: Intern; worksites: W
   );
 }
 
+function SchoolContactsSection({ schoolName }: { schoolName: string }) {
+  const { schoolContacts } = useAppStore();
+  const contacts = useMemo(() => {
+    if (!schoolName) return [];
+    const normalizedSchool = schoolName.toLowerCase().trim();
+    return schoolContacts.filter(c => c.schoolName.toLowerCase().trim() === normalizedSchool);
+  }, [schoolContacts, schoolName]);
+
+  if (contacts.length === 0) return null;
+
+  const roleBadgeColor: Record<SchoolContactRole, string> = {
+    principal: 'bg-primary/10 text-primary',
+    guidance_counselor: 'bg-info/10 text-info',
+    '5c': 'bg-success/10 text-success',
+  };
+
+  return (
+    <div className="rounded-md border border-border p-3 bg-muted/30">
+      <div className="flex items-center gap-1.5 mb-2">
+        <Users className="h-3.5 w-3.5 text-primary" />
+        <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">School Contacts</span>
+      </div>
+      <div className="space-y-1.5">
+        {contacts.map(c => (
+          <div key={c.id} className="flex items-center gap-2 text-xs">
+            <Badge variant="outline" className={`text-[10px] shrink-0 ${roleBadgeColor[c.role]}`}>{CONTACT_ROLE_LABELS[c.role]}</Badge>
+            <span className="font-medium text-foreground">{c.contactName}</span>
+            {c.contactEmail && (
+              <a href={`mailto:${c.contactEmail}`} className="text-primary hover:underline truncate">{c.contactEmail}</a>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export default function InternCard({ intern, worksites, bulkMode, selected, onToggleSelect }: InternCardProps) {
   const [expanded, setExpanded] = useState(false);
   const [editing, setEditing] = useState(false);
