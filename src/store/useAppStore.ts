@@ -67,6 +67,8 @@ interface AppState {
   sheetUrl: string;
   lastSynced: string | null;
   syncing: boolean;
+  lastUploadSnapshot: any[] | null;
+  canUndoUpload: boolean;
   fetchInterns: () => Promise<void>;
   fetchWorksites: () => Promise<void>;
   fetchAssignments: () => Promise<void>;
@@ -80,6 +82,7 @@ interface AppState {
   updateIntern: (id: string, updates: Partial<Record<string, any>>) => Promise<void>;
   updateWorksite: (id: string, updates: Partial<Record<string, any>>) => Promise<void>;
   refreshWorksiteCounts: () => Promise<void>;
+  undoLastUpload: () => Promise<boolean>;
 }
 
 export const useAppStore = create<AppState>()((set, get) => ({
@@ -90,6 +93,8 @@ export const useAppStore = create<AppState>()((set, get) => ({
   sheetUrl: '',
   lastSynced: null,
   syncing: false,
+  lastUploadSnapshot: null,
+  canUndoUpload: false,
 
   fetchInterns: async () => {
     set({ loading: true });
@@ -218,7 +223,9 @@ export const useAppStore = create<AppState>()((set, get) => ({
   },
 
   syncFromSheet: async (url) => {
-    set({ syncing: true });
+    // Snapshot current interns before sync for undo
+    const { data: snapshot } = await supabase.from('interns').select('*');
+    set({ syncing: true, lastUploadSnapshot: snapshot || [], canUndoUpload: true });
     try {
       const { data, error } = await supabase.functions.invoke('sync-google-sheet', {
         body: { sheetUrl: url },
@@ -240,6 +247,10 @@ export const useAppStore = create<AppState>()((set, get) => ({
   },
 
   uploadExcelInterns: async (parsed: Intern[]) => {
+    // Snapshot current interns before upload for undo
+    const { data: snapshot } = await supabase.from('interns').select('*');
+    set({ lastUploadSnapshot: snapshot || [], canUndoUpload: true });
+
     const inserts = parsed.map(i => ({
       first_name: i.firstName, last_name: i.lastName, email_submission: i.emailSubmission,
       student_email: i.studentEmail, phone: i.phone, parent_phone: i.parentPhone,
@@ -257,5 +268,40 @@ export const useAppStore = create<AppState>()((set, get) => ({
     await supabase.from('interns').delete().eq('source_sheet_url', 'manual-upload');
     await supabase.from('interns').insert(inserts);
     await get().fetchInterns();
+  },
+
+  undoLastUpload: async () => {
+    const snapshot = get().lastUploadSnapshot;
+    if (!snapshot) return false;
+    try {
+      // Delete all current interns and restore snapshot
+      await supabase.from('interns').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+      if (snapshot.length > 0) {
+        // Re-insert snapshot rows (remove auto-generated fields to let DB handle them)
+        const rows = snapshot.map((r: any) => ({
+          id: r.id,
+          first_name: r.first_name, last_name: r.last_name,
+          email_submission: r.email_submission, student_email: r.student_email,
+          phone: r.phone, parent_phone: r.parent_phone, dob: r.dob,
+          school: r.school, other_school: r.other_school, grade: r.grade,
+          programs: r.programs, it_interests: r.it_interests,
+          cleveland_clinic: r.cleveland_clinic, construction_mgmt: r.construction_mgmt,
+          biomedical: r.biomedical, env_justice: r.env_justice, env_climate: r.env_climate,
+          env_field_science: r.env_field_science, iers_center: r.iers_center,
+          magnet_manufacturing: r.magnet_manufacturing, education_internship: r.education_internship,
+          healthcare: r.healthcare, video_games: r.video_games, cs_course_taken: r.cs_course_taken,
+          specific_interests: r.specific_interests, additional_questions: r.additional_questions,
+          timestamp: r.timestamp, is_duplicate: r.is_duplicate, is_newest: r.is_newest,
+          source_sheet_url: r.source_sheet_url, admin_notes: r.admin_notes, status: r.status,
+        }));
+        await supabase.from('interns').insert(rows);
+      }
+      await get().fetchInterns();
+      set({ lastUploadSnapshot: null, canUndoUpload: false });
+      return true;
+    } catch (err) {
+      console.error('Undo failed:', err);
+      return false;
+    }
   },
 }));
