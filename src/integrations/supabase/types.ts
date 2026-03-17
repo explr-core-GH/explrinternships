@@ -164,6 +164,36 @@ export type Database = {
           },
         ]
       }
+      school_contacts: {
+        Row: {
+          contact_email: string
+          contact_name: string
+          created_at: string
+          id: string
+          role: string
+          school_name: string
+          updated_at: string
+        }
+        Insert: {
+          contact_email?: string
+          contact_name: string
+          created_at?: string
+          id?: string
+          role: string
+          school_name: string
+          updated_at?: string
+        }
+        Update: {
+          contact_email?: string
+          contact_name?: string
+          created_at?: string
+          id?: string
+          role?: string
+          school_name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       sync_config: {
         Row: {
           created_at: string
