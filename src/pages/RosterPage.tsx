@@ -1,14 +1,21 @@
 import { useState, useMemo } from 'react';
-import { Search, Copy, Download, CheckSquare, Square } from 'lucide-react';
+import { Search, Copy, Download, CheckSquare, Square, Mail } from 'lucide-react';
 import { useAppStore } from '@/store/useAppStore';
 import { useAutoLoadData } from '@/hooks/useAutoLoadData';
 import InternCard from '@/components/InternCard';
 import GoogleSheetSync from '@/components/GoogleSheetSync';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { exportRosterCSV, exportWorksiteCSV } from '@/lib/exportData';
+import { exportRosterCSV } from '@/lib/exportData';
+import { exportStatusContactCSV } from '@/lib/exportData';
 import { toast } from 'sonner';
 import { INTERN_STATUSES, STATUS_CONFIG, type InternStatus } from '@/types/intern';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 export default function RosterPage() {
   const { interns, worksites, assignments, loading, updateIntern } = useAppStore();
