@@ -61,6 +61,22 @@ export interface Worksite {
   tags: string[];
 }
 
+export type SchoolContactRole = 'principal' | 'guidance_counselor' | '5c';
+
+export const CONTACT_ROLE_LABELS: Record<SchoolContactRole, string> = {
+  principal: 'Principal',
+  guidance_counselor: 'Guidance Counselor',
+  '5c': '5C Career Counselor',
+};
+
+export interface SchoolContact {
+  id: string;
+  schoolName: string;
+  role: SchoolContactRole;
+  contactName: string;
+  contactEmail: string;
+}
+
 export interface Placement {
   priority: 1 | 2 | 3;
   worksiteId: string;
