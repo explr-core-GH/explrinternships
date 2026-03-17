@@ -1,4 +1,5 @@
-import type { Intern, Worksite, Assignment } from '@/types/intern';
+import type { Intern, Worksite, Assignment, SchoolContact, InternStatus } from '@/types/intern';
+import { STATUS_CONFIG, CONTACT_ROLE_LABELS } from '@/types/intern';
 
 interface PotentialMatch {
   uploadedName: string;
