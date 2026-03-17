@@ -18,7 +18,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 
 export default function RosterPage() {
-  const { interns, worksites, assignments, loading, updateIntern } = useAppStore();
+  const { interns, worksites, assignments, loading, updateIntern, schoolContacts } = useAppStore();
   const [search, setSearch] = useState('');
   const [gradeFilter, setGradeFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState<InternStatus | 'all'>('all');
