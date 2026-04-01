@@ -6,8 +6,7 @@ import InternCard from '@/components/InternCard';
 import GoogleSheetSync from '@/components/GoogleSheetSync';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { exportRosterCSV } from '@/lib/exportData';
-import { exportStatusContactCSV } from '@/lib/exportData';
+import { exportRosterCSV, exportStatusContactCSV, exportEmailReadyByStatus } from '@/lib/exportData';
 import { toast } from 'sonner';
 import { INTERN_STATUSES, STATUS_CONFIG, type InternStatus } from '@/types/intern';
 import {
@@ -138,16 +137,33 @@ export default function RosterPage() {
                 <Mail className="h-3.5 w-3.5" /> Export by Status
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
+            <DropdownMenuContent align="end" className="w-64">
+              <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">Email-Ready (Copy-Paste .txt)</div>
               {INTERN_STATUSES.map(s => (
                 <DropdownMenuItem
-                  key={s}
+                  key={`email-${s}`}
+                  onClick={() => {
+                    const ok = exportEmailReadyByStatus(interns, schoolContacts, s);
+                    if (ok) toast.success(`Email-ready export for ${STATUS_CONFIG[s].label}`);
+                    else toast.error(`No interns with status "${STATUS_CONFIG[s].label}"`);
+                  }}
+                >
+                  <Mail className="h-3 w-3 mr-2 text-muted-foreground" />
+                  <span className={`inline-block w-2 h-2 rounded-full mr-2 ${STATUS_CONFIG[s].bgClass}`} />
+                  {STATUS_CONFIG[s].label} ({statusCounts[s] || 0})
+                </DropdownMenuItem>
+              ))}
+              <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground border-t mt-1 pt-1">Spreadsheet (.csv)</div>
+              {INTERN_STATUSES.map(s => (
+                <DropdownMenuItem
+                  key={`csv-${s}`}
                   onClick={() => {
                     const ok = exportStatusContactCSV(interns, schoolContacts, s);
                     if (ok) toast.success(`Exported ${STATUS_CONFIG[s].label} interns with contacts`);
                     else toast.error(`No interns with status "${STATUS_CONFIG[s].label}"`);
                   }}
                 >
+                  <Download className="h-3 w-3 mr-2 text-muted-foreground" />
                   <span className={`inline-block w-2 h-2 rounded-full mr-2 ${STATUS_CONFIG[s].bgClass}`} />
                   {STATUS_CONFIG[s].label} ({statusCounts[s] || 0})
                 </DropdownMenuItem>

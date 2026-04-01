@@ -216,3 +216,84 @@ export function exportStatusContactCSV(
   URL.revokeObjectURL(url);
   return true;
 }
+
+/**
+ * Export email-ready text file: one pre-formatted email block per school contact,
+ * with student list ready to copy-paste into an email.
+ */
+export function exportEmailReadyByStatus(
+  interns: Intern[],
+  schoolContacts: SchoolContact[],
+  status: InternStatus
+) {
+  const statusLabel = STATUS_CONFIG[status].label;
+  const filtered = interns.filter(i => i.isNewest && i.status === status);
+  if (filtered.length === 0) return false;
+
+  const contactsBySchool: Record<string, SchoolContact[]> = {};
+  schoolContacts.forEach(c => {
+    const key = c.schoolName.toLowerCase().trim();
+    if (!contactsBySchool[key]) contactsBySchool[key] = [];
+    contactsBySchool[key].push(c);
+  });
+
+  const bySchool: Record<string, { displayName: string; interns: Intern[] }> = {};
+  filtered.forEach(i => {
+    const schoolDisplay = i.otherSchool || i.school || 'Unknown School';
+    const key = schoolDisplay.toLowerCase().trim();
+    if (!bySchool[key]) bySchool[key] = { displayName: schoolDisplay, interns: [] };
+    bySchool[key].interns.push(i);
+  });
+
+  const blocks: string[] = [];
+  const schoolKeys = Object.keys(bySchool).sort();
+
+  schoolKeys.forEach(key => {
+    const group = bySchool[key];
+    const contacts = contactsBySchool[key] || [];
+    const allEmails = contacts.map(c => c.contactEmail).filter(Boolean);
+
+    // Build student list
+    const studentLines = group.interns
+      .sort((a, b) => a.lastName.localeCompare(b.lastName))
+      .map((i, idx) => {
+        const email = i.studentEmail || i.emailSubmission || '';
+        const phone = i.phone || '';
+        const grade = i.grade || '';
+        return `  ${idx + 1}. ${i.firstName} ${i.lastName} — Email: ${email}, Phone: ${phone}, Grade: ${grade}`;
+      });
+
+    const contactLines = contacts.map(c => {
+      const roleLabel = c.role === 'principal' ? 'Principal' : c.role === 'guidance_counselor' ? 'Guidance Counselor' : c.role === '5c' ? '5C Career Counselor' : c.role;
+      return `  ${roleLabel}: ${c.contactName} <${c.contactEmail}>`;
+    });
+
+    let block = '';
+    block += `═══════════════════════════════════════════════════\n`;
+    block += `SCHOOL: ${group.displayName}\n`;
+    block += `TO: ${allEmails.length > 0 ? allEmails.join('; ') : '(no contacts on file)'}\n`;
+    block += `═══════════════════════════════════════════════════\n\n`;
+
+    if (contactLines.length > 0) {
+      block += `School Contacts:\n${contactLines.join('\n')}\n\n`;
+    }
+
+    block += `The following ${group.interns.length} student(s) from ${group.displayName} have status "${statusLabel}":\n\n`;
+    block += studentLines.join('\n');
+    block += '\n';
+
+    blocks.push(block);
+  });
+
+  const header = `EXPLR Internships — ${statusLabel} Students by School\nGenerated: ${new Date().toLocaleString()}\nTotal Students: ${filtered.length} across ${schoolKeys.length} school(s)\n\n`;
+  const content = header + blocks.join('\n\n');
+
+  const blob = new Blob([content], { type: 'text/plain;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `email-${status}-by-school-${new Date().toISOString().slice(0, 10)}.txt`;
+  link.click();
+  URL.revokeObjectURL(url);
+  return true;
+}
