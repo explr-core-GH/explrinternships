@@ -1,0 +1,6 @@
+
+UPDATE school_contacts SET contact_name = 'Annie Dreschler', contact_email = 'annamarie.dreschler@clevelandmetroschools.org' WHERE school_name = 'Garrett Morgan School of Engineering & Innovation' AND role = 'principal';
+UPDATE school_contacts SET contact_name = 'Annie Dreschler', contact_email = 'annamarie.dreschler@clevelandmetroschools.org' WHERE school_name = 'Garrett Morgan School of Leadership & Innovation' AND role = 'principal';
+UPDATE school_contacts SET contact_name = 'Annie Dreschler', contact_email = 'annamarie.dreschler@clevelandmetroschools.org' WHERE school_name = 'Garrett Morgan School of Engineering and Innovation' AND role = 'principal' AND NOT EXISTS (SELECT 1 FROM school_contacts WHERE school_name = 'Garrett Morgan School of Engineering and Innovation' AND role = 'principal');
+UPDATE school_contacts SET contact_name = 'Annie Dreschler', contact_email = 'annamarie.dreschler@clevelandmetroschools.org' WHERE school_name = 'Garrett Morgan School of Leadership and Innovation' AND role = 'principal' AND NOT EXISTS (SELECT 1 FROM school_contacts WHERE school_name = 'Garrett Morgan School of Leadership and Innovation' AND role = 'principal');
+DELETE FROM school_contacts WHERE school_name = 'Garrett Morgan' AND role = 'principal';
