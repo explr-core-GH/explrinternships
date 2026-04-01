@@ -310,6 +310,7 @@ export const useAppStore = create<AppState>()((set, get) => ({
       healthcare: i.healthcare, video_games: i.videoGames, cs_course_taken: i.csCourseTaken,
       specific_interests: i.specificInterests, additional_questions: i.additionalQuestions,
       timestamp: i.timestamp, is_duplicate: i.isDuplicate, is_newest: i.isNewest,
+      admin_notes: i.adminNotes || '', status: i.status || 'pending',
       source_sheet_url: 'manual-upload',
     }));
     await supabase.from('interns').delete().eq('source_sheet_url', 'manual-upload');
