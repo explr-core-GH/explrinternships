@@ -150,16 +150,31 @@ export const useAppStore = create<AppState>()((set, get) => ({
   },
 
   uploadSchoolContacts: async (contacts) => {
-    // Replace all existing contacts
-    await supabase.from('school_contacts').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+    // Merge: upsert by school_name + role (update existing, insert new)
     if (contacts.length > 0) {
-      const inserts = contacts.map(c => ({
-        school_name: c.schoolName,
-        role: c.role,
-        contact_name: c.contactName,
-        contact_email: c.contactEmail,
-      }));
-      await supabase.from('school_contacts').insert(inserts);
+      for (const c of contacts) {
+        const key = { school_name: c.schoolName.trim(), role: c.role };
+        const { data: existing } = await supabase
+          .from('school_contacts')
+          .select('id')
+          .ilike('school_name', c.schoolName.trim())
+          .eq('role', c.role)
+          .limit(1);
+
+        if (existing && existing.length > 0) {
+          await supabase.from('school_contacts').update({
+            contact_name: c.contactName,
+            contact_email: c.contactEmail,
+          }).eq('id', existing[0].id);
+        } else {
+          await supabase.from('school_contacts').insert({
+            school_name: c.schoolName.trim(),
+            role: c.role,
+            contact_name: c.contactName,
+            contact_email: c.contactEmail,
+          });
+        }
+      }
     }
     await get().fetchSchoolContacts();
   },
