@@ -154,7 +154,7 @@ export function exportStatusContactCSV(
 
   const contactsBySchool: Record<string, SchoolContact[]> = {};
   schoolContacts.forEach(c => {
-    const key = c.schoolName.toLowerCase().trim();
+    const key = normalizeSchoolName(c.schoolName);
     if (!contactsBySchool[key]) contactsBySchool[key] = [];
     contactsBySchool[key].push(c);
   });
@@ -163,7 +163,7 @@ export function exportStatusContactCSV(
   const bySchool: Record<string, { displayName: string; interns: Intern[] }> = {};
   filtered.forEach(i => {
     const schoolDisplay = i.otherSchool || i.school || 'Unknown School';
-    const key = schoolDisplay.toLowerCase().trim();
+    const key = normalizeSchoolName(schoolDisplay);
     if (!bySchool[key]) bySchool[key] = { displayName: schoolDisplay, interns: [] };
     bySchool[key].interns.push(i);
   });
@@ -234,7 +234,7 @@ export function exportEmailReadyByStatus(
 
   const contactsBySchool: Record<string, SchoolContact[]> = {};
   schoolContacts.forEach(c => {
-    const key = c.schoolName.toLowerCase().trim();
+    const key = normalizeSchoolName(c.schoolName);
     if (!contactsBySchool[key]) contactsBySchool[key] = [];
     contactsBySchool[key].push(c);
   });
@@ -242,7 +242,7 @@ export function exportEmailReadyByStatus(
   const bySchool: Record<string, { displayName: string; interns: Intern[] }> = {};
   filtered.forEach(i => {
     const schoolDisplay = i.otherSchool || i.school || 'Unknown School';
-    const key = schoolDisplay.toLowerCase().trim();
+    const key = normalizeSchoolName(schoolDisplay);
     if (!bySchool[key]) bySchool[key] = { displayName: schoolDisplay, interns: [] };
     bySchool[key].interns.push(i);
   });
