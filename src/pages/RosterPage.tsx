@@ -26,6 +26,7 @@ export default function RosterPage() {
   const [assignFilter, setAssignFilter] = useState<'all' | 'assigned' | 'unassigned'>('all');
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkMode, setBulkMode] = useState(false);
+  const [viewMode, setViewMode] = useState<'list' | 'school'>('list');
   useAutoLoadData();
 
   const activeInterns = useMemo(() => interns.filter(i => i.isNewest), [interns]);
