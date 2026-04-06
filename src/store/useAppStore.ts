@@ -63,11 +63,18 @@ function dbToWorksite(row: DbWorksite): Worksite {
   };
 }
 
+interface SchoolAlias {
+  id: string;
+  alias: string;
+  canonicalName: string;
+}
+
 interface AppState {
   interns: Intern[];
   worksites: Worksite[];
   assignments: Assignment[];
   schoolContacts: SchoolContact[];
+  schoolAliases: SchoolAlias[];
   loading: boolean;
   sheetUrl: string;
   lastSynced: string | null;
@@ -78,6 +85,9 @@ interface AppState {
   fetchWorksites: () => Promise<void>;
   fetchAssignments: () => Promise<void>;
   fetchSchoolContacts: () => Promise<void>;
+  fetchSchoolAliases: () => Promise<void>;
+  addSchoolAlias: (alias: string, canonicalName: string) => Promise<void>;
+  removeSchoolAlias: (id: string) => Promise<void>;
   uploadSchoolContacts: (contacts: { schoolName: string; role: SchoolContactRole; contactName: string; contactEmail: string }[]) => Promise<void>;
   addWorksite: (ws: Omit<Worksite, 'id'>) => Promise<void>;
   removeWorksite: (id: string) => Promise<void>;
