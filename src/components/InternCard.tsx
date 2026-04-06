@@ -1,6 +1,6 @@
 import { useState, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronDown, Mail, Phone, School, Calendar, AlertTriangle, Star, Copy, Edit2, Save, X, StickyNote, CheckCircle2, Square, CheckSquare, Users } from 'lucide-react';
+import { ChevronDown, Mail, Phone, School, Calendar, AlertTriangle, Star, Copy, Edit2, Save, X, StickyNote, CheckCircle2, Square, CheckSquare, Users, CalendarClock } from 'lucide-react';
 import type { Intern, Placement, Worksite, InternStatus } from '@/types/intern';
 import { INTEREST_LABELS, type InterestField, INTERN_STATUSES, STATUS_CONFIG, CONTACT_ROLE_LABELS, type SchoolContactRole } from '@/types/intern';
 import { generatePlacements } from '@/lib/placementEngine';
@@ -209,7 +209,10 @@ export default function InternCard({ intern, worksites, bulkMode, selected, onTo
             {intern.isDuplicate && <Copy className="h-3.5 w-3.5 text-warning shrink-0" />}
             {intern.adminNotes && <StickyNote className="h-3.5 w-3.5 text-primary shrink-0" />}
           </div>
-          <p className="text-xs text-muted-foreground truncate">{displaySchool} · {intern.grade} grade</p>
+          <p className="text-xs text-muted-foreground truncate">
+            {displaySchool} · {intern.grade} grade
+            {intern.intakeDate && <span className="ml-1.5 text-primary">· 📅 {intern.intakeDate}{intern.intakeTime ? ` ${intern.intakeTime}` : ''}</span>}
+          </p>
         </div>
         <div className="flex items-center gap-2 shrink-0">
           <StatusDropdown intern={intern} />
@@ -268,6 +271,20 @@ export default function InternCard({ intern, worksites, bulkMode, selected, onTo
                     <div className="flex items-center gap-2 text-sm"><Calendar className="h-3.5 w-3.5 text-muted-foreground" /><span className="text-muted-foreground">DOB: {intern.dob}</span></div>
                   </div>
                   <div className="text-xs text-muted-foreground">Parent/Guardian Phone: {intern.parentPhone}</div>
+
+                  {(intern.intakeDate || intern.intakeTime) && (
+                    <div className="rounded-md border border-primary/20 bg-primary/5 p-3">
+                      <div className="flex items-center gap-1.5 mb-1.5">
+                        <CalendarClock className="h-3.5 w-3.5 text-primary" />
+                        <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Intake Appointment</span>
+                      </div>
+                      <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm">
+                        {intern.intakeDate && <span className="text-foreground font-medium">{intern.intakeDate}</span>}
+                        {intern.intakeTime && <span className="text-foreground">{intern.intakeTime}</span>}
+                        {intern.intakeLocation && <span className="text-muted-foreground">@ {intern.intakeLocation}</span>}
+                      </div>
+                    </div>
+                  )}
 
                   <SchoolContactsSection schoolName={displaySchool} />
                 </>

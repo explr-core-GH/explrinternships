@@ -1,0 +1,4 @@
+ALTER TABLE public.interns 
+  ADD COLUMN IF NOT EXISTS intake_date text DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS intake_time text DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS intake_location text DEFAULT NULL;

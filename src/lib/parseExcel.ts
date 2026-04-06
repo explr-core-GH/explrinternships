@@ -266,6 +266,9 @@ export function parseExcelFile(data: ArrayBuffer): Intern[] {
       isNewest: true,
       adminNotes: '',
       status: 'pending',
+      intakeDate: '',
+      intakeTime: '',
+      intakeLocation: '',
     };
     
     interns.push(intern);

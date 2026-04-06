@@ -34,6 +34,9 @@ export type Database = {
           healthcare: string | null
           id: string
           iers_center: string | null
+          intake_date: string | null
+          intake_location: string | null
+          intake_time: string | null
           is_duplicate: boolean | null
           is_newest: boolean | null
           it_interests: string[] | null
@@ -71,6 +74,9 @@ export type Database = {
           healthcare?: string | null
           id?: string
           iers_center?: string | null
+          intake_date?: string | null
+          intake_location?: string | null
+          intake_time?: string | null
           is_duplicate?: boolean | null
           is_newest?: boolean | null
           it_interests?: string[] | null
@@ -108,6 +114,9 @@ export type Database = {
           healthcare?: string | null
           id?: string
           iers_center?: string | null
+          intake_date?: string | null
+          intake_location?: string | null
+          intake_time?: string | null
           is_duplicate?: boolean | null
           is_newest?: boolean | null
           it_interests?: string[] | null

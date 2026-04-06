@@ -46,6 +46,9 @@ export interface Intern {
   isNewest: boolean;
   adminNotes: string;
   status: InternStatus;
+  intakeDate: string;
+  intakeTime: string;
+  intakeLocation: string;
 }
 
 export interface Worksite {

@@ -41,6 +41,9 @@ function dbToIntern(row: DbIntern): Intern {
     isNewest: row.is_newest ?? true,
     adminNotes: (row as any).admin_notes || '',
     status: ((row as any).status || 'pending') as InternStatus,
+    intakeDate: (row as any).intake_date || '',
+    intakeTime: (row as any).intake_time || '',
+    intakeLocation: (row as any).intake_location || '',
   };
 }
 
@@ -257,6 +260,7 @@ export const useAppStore = create<AppState>()((set, get) => ({
       school: 'school', otherSchool: 'other_school', grade: 'grade',
       adminNotes: 'admin_notes', specificInterests: 'specific_interests',
       emailSubmission: 'email_submission', status: 'status',
+      intakeDate: 'intake_date', intakeTime: 'intake_time', intakeLocation: 'intake_location',
     };
     for (const [key, val] of Object.entries(updates)) {
       const dbKey = fieldMap[key] || key;
