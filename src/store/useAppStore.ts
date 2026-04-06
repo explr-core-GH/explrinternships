@@ -187,22 +187,40 @@ export const useAppStore = create<AppState>()((set, get) => ({
   },
 
   uploadSchoolContacts: async (contacts) => {
-    // Merge: match by normalized school name + role + contact name to allow multiple contacts per role
-    if (contacts.length > 0) {
-      for (const c of contacts) {
-        const normalizedName = normalizeSchoolName(c.schoolName);
-        // Find existing contact with same normalized school, role, AND contact name
-        const existing = (await supabase.from('school_contacts').select('*')).data || [];
-        const match = existing.find(e =>
+    if (contacts.length === 0) return;
+    // Fetch all existing contacts ONCE
+    const existing = (await supabase.from('school_contacts').select('*')).data || [];
+
+    for (const c of contacts) {
+      const normalizedName = normalizeSchoolName(c.schoolName);
+      const normalizedContact = c.contactName.toLowerCase().trim();
+
+      // Match by normalized school + role + normalized contact name
+      const match = existing.find(e =>
+        normalizeSchoolName(e.school_name) === normalizedName &&
+        e.role === c.role &&
+        e.contact_name.toLowerCase().trim() === normalizedContact
+      );
+
+      if (match) {
+        // Update email and normalize the school_name to canonical form
+        await supabase.from('school_contacts').update({
+          contact_email: c.contactEmail,
+          school_name: c.schoolName.trim(),
+        }).eq('id', match.id);
+      } else {
+        // Check if there's already a contact with same school+role+email (duplicate with different name casing)
+        const emailMatch = existing.find(e =>
           normalizeSchoolName(e.school_name) === normalizedName &&
           e.role === c.role &&
-          e.contact_name.toLowerCase().trim() === c.contactName.toLowerCase().trim()
+          e.contact_email.toLowerCase().trim() === c.contactEmail.toLowerCase().trim()
         );
-
-        if (match) {
+        if (emailMatch) {
+          // Update existing rather than creating duplicate
           await supabase.from('school_contacts').update({
-            contact_email: c.contactEmail,
-          }).eq('id', match.id);
+            contact_name: c.contactName,
+            school_name: c.schoolName.trim(),
+          }).eq('id', emailMatch.id);
         } else {
           await supabase.from('school_contacts').insert({
             school_name: c.schoolName.trim(),

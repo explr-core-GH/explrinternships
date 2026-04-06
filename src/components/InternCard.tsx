@@ -123,7 +123,15 @@ function SchoolContactsSection({ schoolName }: { schoolName: string }) {
   const contacts = useMemo(() => {
     if (!schoolName) return [];
     const normalizedSchool = normalizeSchoolName(schoolName);
-    return schoolContacts.filter(c => normalizeSchoolName(c.schoolName) === normalizedSchool);
+    const matched = schoolContacts.filter(c => normalizeSchoolName(c.schoolName) === normalizedSchool);
+    // Deduplicate by role + normalized contact name
+    const seen = new Set<string>();
+    return matched.filter(c => {
+      const key = `${c.role}|${c.contactName.toLowerCase().trim()}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
   }, [schoolContacts, schoolName]);
 
   if (contacts.length === 0) return null;
