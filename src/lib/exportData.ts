@@ -1,5 +1,6 @@
+import * as XLSX from 'xlsx';
 import type { Intern, Worksite, Assignment, SchoolContact, InternStatus } from '@/types/intern';
-import { STATUS_CONFIG, CONTACT_ROLE_LABELS } from '@/types/intern';
+import { STATUS_CONFIG, CONTACT_ROLE_LABELS, INTEREST_LABELS, type InterestField } from '@/types/intern';
 
 interface PotentialMatch {
   uploadedName: string;
@@ -296,4 +297,89 @@ export function exportEmailReadyByStatus(
   link.click();
   URL.revokeObjectURL(url);
   return true;
+}
+
+const INTEREST_FIELDS: InterestField[] = [
+  'clevelandClinic', 'constructionMgmt', 'biomedical', 'envJustice',
+  'envClimate', 'envFieldScience', 'iersCenter', 'magnetManufacturing',
+  'educationInternship', 'healthcare', 'videoGames',
+];
+
+function internToRow(
+  intern: Intern,
+  worksites: Worksite[],
+  assignments: Assignment[],
+  schoolContacts: SchoolContact[],
+) {
+  const wsMap = Object.fromEntries(worksites.map(w => [w.id, w]));
+  const assignment = assignments.find(a => a.internId === intern.id);
+  const assignedWs = assignment ? wsMap[assignment.worksiteId] : null;
+  const school = intern.otherSchool || intern.school || '';
+  const contacts = schoolContacts.filter(c => c.schoolName.toLowerCase().trim() === school.toLowerCase().trim());
+  const principal = contacts.find(c => c.role === 'principal');
+  const guidance = contacts.find(c => c.role === 'guidance_counselor');
+
+  const row: Record<string, string> = {
+    'Status': STATUS_CONFIG[intern.status]?.label || intern.status,
+    'First Name': intern.firstName,
+    'Last Name': intern.lastName,
+    'Email': intern.studentEmail || intern.emailSubmission,
+    'Phone': intern.phone,
+    'Parent Phone': intern.parentPhone,
+    'DOB': intern.dob,
+    'School': school,
+    'Grade': intern.grade,
+    'Programs': intern.programs.join('; '),
+    'IT Interests': intern.itInterests.join('; '),
+    'Intake Date': intern.intakeDate,
+    'Intake Time': intern.intakeTime,
+    'Intake Location': intern.intakeLocation,
+    'Assigned Worksite': assignedWs?.name || '',
+    'Worksite Category': assignedWs?.category || '',
+    'Admin Notes': intern.adminNotes,
+    'CS/IT Course': intern.csCourseTaken,
+    'Specific Interests': intern.specificInterests,
+    'Additional Questions': intern.additionalQuestions,
+    'Principal': principal ? `${principal.contactName} <${principal.contactEmail}>` : '',
+    'Guidance Counselor': guidance ? `${guidance.contactName} <${guidance.contactEmail}>` : '',
+  };
+
+  for (const field of INTEREST_FIELDS) {
+    row[INTEREST_LABELS[field]] = intern[field];
+  }
+
+  return row;
+}
+
+export function exportFullExcelByStatus(
+  interns: Intern[],
+  worksites: Worksite[],
+  assignments: Assignment[],
+  schoolContacts: SchoolContact[],
+) {
+  const active = interns.filter(i => i.isNewest);
+  const wb = XLSX.utils.book_new();
+
+  // "All Students" sheet
+  const allRows = active
+    .sort((a, b) => a.lastName.localeCompare(b.lastName))
+    .map(i => internToRow(i, worksites, assignments, schoolContacts));
+  if (allRows.length > 0) {
+    const ws = XLSX.utils.json_to_sheet(allRows);
+    XLSX.utils.book_append_sheet(wb, ws, 'All Students');
+  }
+
+  // One sheet per status that has students
+  for (const status of Object.keys(STATUS_CONFIG) as InternStatus[]) {
+    const filtered = active.filter(i => i.status === status);
+    if (filtered.length === 0) continue;
+    const rows = filtered
+      .sort((a, b) => a.lastName.localeCompare(b.lastName))
+      .map(i => internToRow(i, worksites, assignments, schoolContacts));
+    const ws = XLSX.utils.json_to_sheet(rows);
+    const label = STATUS_CONFIG[status].label.substring(0, 31); // Excel 31-char sheet name limit
+    XLSX.utils.book_append_sheet(wb, ws, label);
+  }
+
+  XLSX.writeFile(wb, `intern-roster-full-${new Date().toISOString().slice(0, 10)}.xlsx`);
 }
