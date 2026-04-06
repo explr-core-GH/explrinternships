@@ -125,8 +125,8 @@ function parseAppointmentFile(data: ArrayBuffer): ParsedAppointment[] {
       if (!firstName || !lastName) continue;
 
       const dobVal = dobIdx >= 0 ? parseExcelDate(row[dobIdx]) : '';
-      const emailVal = emailIdx >= 0 ? String(row[emailIdx] ?? '').trim() : '';
-      const dateVal = effectiveDateIdx >= 0 ? parseExcelDate(row[effectiveDateIdx]) : '';
+      const dobRaw = dobIdx >= 0 ? row[dobIdx] : '';
+      const normalizedApptDob = normalizeDob(dobRaw || dobVal);
 
       let timeVal = timeIdx >= 0 ? parseExcelTime(row[timeIdx]) : '';
 
