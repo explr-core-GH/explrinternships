@@ -1,6 +1,7 @@
 import * as XLSX from 'xlsx';
 import type { Intern, Worksite, Assignment, SchoolContact, InternStatus } from '@/types/intern';
 import { STATUS_CONFIG, CONTACT_ROLE_LABELS, INTEREST_LABELS, type InterestField } from '@/types/intern';
+import { normalizeSchoolName } from '@/lib/schoolNameNormalizer';
 
 interface PotentialMatch {
   uploadedName: string;
