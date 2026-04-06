@@ -186,6 +186,7 @@ export const useAppStore = create<AppState>()((set, get) => ({
     await get().fetchSchoolAliases();
   },
 
+  uploadSchoolContacts: async (contacts) => {
     // Merge: match by normalized school name + role + contact name to allow multiple contacts per role
     if (contacts.length > 0) {
       for (const c of contacts) {
