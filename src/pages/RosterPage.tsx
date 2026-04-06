@@ -6,7 +6,7 @@ import InternCard from '@/components/InternCard';
 import GoogleSheetSync from '@/components/GoogleSheetSync';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { exportRosterCSV, exportStatusContactCSV, exportEmailReadyByStatus } from '@/lib/exportData';
+import { exportRosterCSV, exportStatusContactCSV, exportEmailReadyByStatus, exportFullExcelByStatus } from '@/lib/exportData';
 import { toast } from 'sonner';
 import { INTERN_STATUSES, STATUS_CONFIG, type InternStatus } from '@/types/intern';
 import {
