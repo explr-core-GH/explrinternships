@@ -3,6 +3,7 @@ import { Search, Copy, Download, CheckSquare, Square, Mail } from 'lucide-react'
 import { useAppStore } from '@/store/useAppStore';
 import { useAutoLoadData } from '@/hooks/useAutoLoadData';
 import InternCard from '@/components/InternCard';
+import SchoolGroupedRoster from '@/components/SchoolGroupedRoster';
 import GoogleSheetSync from '@/components/GoogleSheetSync';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
