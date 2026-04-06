@@ -177,14 +177,20 @@ export default function AppointmentUpload() {
         const normDob = normalizeDob(appt.dob);
 
         // Match by name + DOB when DOB is available, otherwise fall back to name only
-        const intern = interns.find(i => {
-          const nameMatch = normalizeName(i.firstName) === normFirst && normalizeName(i.lastName) === normLast;
-          if (!nameMatch) return false;
-          if (normDob && i.dob) {
-            return normalizeDob(i.dob) === normDob;
-          }
-          return true; // name-only fallback if no DOB in upload
-        });
+        // Find all name matches, then prefer DOB match if available
+        const nameMatches = interns.filter(i =>
+          normalizeName(i.firstName) === normFirst && normalizeName(i.lastName) === normLast
+        );
+
+        let intern = null;
+        if (nameMatches.length === 1) {
+          intern = nameMatches[0];
+        } else if (nameMatches.length > 1 && normDob) {
+          // Multiple name matches — use DOB to disambiguate
+          intern = nameMatches.find(i => i.dob && normalizeDob(i.dob) === normDob) || nameMatches[0];
+        } else if (nameMatches.length > 1) {
+          intern = nameMatches[0]; // take first if no DOB to disambiguate
+        }
 
         if (intern) {
           const updateFields: Record<string, any> = {
