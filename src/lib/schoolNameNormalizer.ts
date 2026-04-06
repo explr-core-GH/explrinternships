@@ -32,26 +32,72 @@ const STRIP_SUFFIXES = [
 
 // Known alias groups — map various forms to a single canonical name
 const SCHOOL_ALIASES: Record<string, string> = {
+  // Glenville
   'glenville': 'glenville',
   'glenville high school': 'glenville',
+  // East Technical
   'east tech': 'east technical',
   'east tech high school': 'east technical',
   'east technical': 'east technical',
   'east technical high school': 'east technical',
+  // MC2STEM
   'mc2stem': 'mc2stem',
   'mc2 stem': 'mc2stem',
+  'mc2stem high school': 'mc2stem',
+  // Campus International
   'campus international': 'campus international',
   'campus international high school': 'campus international',
   'campus international hs': 'campus international',
   'campus international k8': 'campus international',
   'campus international high school - csu cole center': 'campus international',
-  // Cleveland schools that must stay distinct
+  // Cleveland schools — each is distinct
   'cleveland school of the arts': 'cleveland school of the arts',
   'cleveland school of architecture and design': 'cleveland school of architecture and design',
   'cleveland school of architecture & design': 'cleveland school of architecture and design',
   'cleveland school of science and medicine': 'cleveland school of science and medicine',
   'cleveland school of science & medicine': 'cleveland school of science and medicine',
   'cleveland high school for digital arts': 'cleveland high school for digital arts',
+  // Garrett Morgan — Engineering vs Leadership are DIFFERENT schools
+  'garrett morgan school of engineering and innovation': 'garrett morgan engineering',
+  'garrett morgan school of engineering & innovation': 'garrett morgan engineering',
+  'garrett morgan school of engineering': 'garrett morgan engineering',
+  'garrett morgan school of leadership and innovation': 'garrett morgan leadership',
+  'garrett morgan school of leadership & innovation': 'garrett morgan leadership',
+  'garrett morgan school of leadership': 'garrett morgan leadership',
+  // John Marshall — 3 different schools
+  'john marshall school of civic and business leadership': 'john marshall civic and business leadership',
+  'john marshall school of civic & business leadership': 'john marshall civic and business leadership',
+  'john marshall school of business and civic leadership': 'john marshall civic and business leadership',
+  'john marshall school of business & civic leadership': 'john marshall civic and business leadership',
+  'john marshall school of engineering': 'john marshall engineering',
+  'john marshall school of information technology': 'john marshall information technology',
+  // Lincoln-West — 2 different schools
+  'lincoln-west school of global studies': 'lincoln-west global studies',
+  'lincoln west school of global studies': 'lincoln-west global studies',
+  'lincoln-west school of science and health': 'lincoln-west science and health',
+  'lincoln-west school of science & health': 'lincoln-west science and health',
+  'lincoln west school of science and health': 'lincoln-west science and health',
+  'lincoln west school of science & health': 'lincoln-west science and health',
+  // Rhodes — 2 different schools
+  'rhodes college and career academy': 'rhodes college and career academy',
+  'rhodes college & career academy': 'rhodes college and career academy',
+  'rhodes school of environmental studies': 'rhodes environmental studies',
+  // Dike — keep distinct from other "school of the arts"
+  'dike school of the arts': 'dike school of the arts',
+  // Natividad Pagan
+  'natividad pagan international newcomers academy': 'natividad pagan international newcomers academy',
+  'natividad pagan international newcomers academy-high school': 'natividad pagan international newcomers academy',
+  // John Adams
+  'john adams college and career academy': 'john adams',
+  'john adams college & career academy': 'john adams',
+  // Davis Aerospace
+  'davis aerospace and maritime high school': 'davis aerospace and maritime',
+  'davis aerospace & maritime high school': 'davis aerospace and maritime',
+  // Stonebrook-White (prevent hyphen stripping)
+  'stonebrook-white montessori campus': 'stonebrook-white montessori',
+  // John F Kennedy (with/without period)
+  'john f. kennedy high school': 'john f kennedy',
+  'john f kennedy high school': 'john f kennedy',
 };
 
 function stripParenthetical(name: string): string {
