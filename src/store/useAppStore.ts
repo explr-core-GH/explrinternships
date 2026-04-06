@@ -164,7 +164,28 @@ export const useAppStore = create<AppState>()((set, get) => ({
     });
   },
 
-  uploadSchoolContacts: async (contacts) => {
+  fetchSchoolAliases: async () => {
+    const { data } = await supabase.from('school_aliases').select('*').order('alias');
+    const { setSchoolAliases } = await import('@/lib/schoolNameNormalizer');
+    const aliases = (data || []).map((r: any) => ({
+      id: r.id,
+      alias: r.alias,
+      canonicalName: r.canonical_name,
+    }));
+    set({ schoolAliases: aliases });
+    setSchoolAliases(aliases.map((a: any) => ({ alias: a.alias, canonicalName: a.canonicalName })));
+  },
+
+  addSchoolAlias: async (alias, canonicalName) => {
+    await supabase.from('school_aliases').insert({ alias: alias.trim(), canonical_name: canonicalName.trim() });
+    await get().fetchSchoolAliases();
+  },
+
+  removeSchoolAlias: async (id) => {
+    await supabase.from('school_aliases').delete().eq('id', id);
+    await get().fetchSchoolAliases();
+  },
+
     // Merge: match by normalized school name + role + contact name to allow multiple contacts per role
     if (contacts.length > 0) {
       for (const c of contacts) {
