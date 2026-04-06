@@ -129,7 +129,10 @@ export default function RosterPage() {
             <CheckSquare className="h-3.5 w-3.5" /> {bulkMode ? 'Exit Bulk' : 'Bulk Edit'}
           </Button>
           <Button variant="outline" size="sm" className="gap-1.5 text-xs" onClick={() => { exportRosterCSV(filtered, worksites, assignments); toast.success('Roster CSV downloaded'); }}>
-            <Download className="h-3.5 w-3.5" /> Export
+            <Download className="h-3.5 w-3.5" /> Export CSV
+          </Button>
+          <Button variant="outline" size="sm" className="gap-1.5 text-xs" onClick={() => { exportFullExcelByStatus(interns, worksites, assignments, schoolContacts); toast.success('Full Excel downloaded with sheets per status'); }}>
+            <Download className="h-3.5 w-3.5" /> Export Excel
           </Button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
