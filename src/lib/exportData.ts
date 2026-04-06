@@ -294,9 +294,15 @@ export function exportEmailReadyByStatus(
       block += `School Contacts:\n${contactLines.join('\n')}\n\n`;
     }
 
-    block += `The following ${group.interns.length} student(s) from ${group.displayName} have been accepted into our internship program, and have an upcoming intake appointment as seen below. You are receiving this email because often there are technical barriers that cause a student to miss the email, or have it blocked by their email provider, and more.\n\n`;
-    block += studentLines.join('\n');
-    block += '\n\nThank you for continuing to help us break barriers for our students.\n';
+    if (status === 'in_progress_you') {
+      block += `The following ${group.interns.length} student(s) from ${group.displayName} have been accepted into our internship program, and have an upcoming intake appointment as seen below. You are receiving this email because often there are technical barriers that cause a student to miss the email, or have it blocked by their email provider, and more.\n\n`;
+      block += studentLines.join('\n');
+      block += '\n\nThank you for continuing to help us break barriers for our students.\n';
+    } else {
+      block += `The following ${group.interns.length} student(s) from ${group.displayName} have status "${statusLabel}":\n\n`;
+      block += studentLines.join('\n');
+      block += '\n';
+    }
 
     blocks.push(block);
   });
