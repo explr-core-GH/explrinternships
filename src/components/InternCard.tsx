@@ -269,6 +269,20 @@ export default function InternCard({ intern, worksites, bulkMode, selected, onTo
                   </div>
                   <div className="text-xs text-muted-foreground">Parent/Guardian Phone: {intern.parentPhone}</div>
 
+                  {(intern.intakeDate || intern.intakeTime) && (
+                    <div className="rounded-md border border-primary/20 bg-primary/5 p-3">
+                      <div className="flex items-center gap-1.5 mb-1.5">
+                        <CalendarClock className="h-3.5 w-3.5 text-primary" />
+                        <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Intake Appointment</span>
+                      </div>
+                      <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm">
+                        {intern.intakeDate && <span className="text-foreground font-medium">{intern.intakeDate}</span>}
+                        {intern.intakeTime && <span className="text-foreground">{intern.intakeTime}</span>}
+                        {intern.intakeLocation && <span className="text-muted-foreground">@ {intern.intakeLocation}</span>}
+                      </div>
+                    </div>
+                  )}
+
                   <SchoolContactsSection schoolName={displaySchool} />
                 </>
               )}
