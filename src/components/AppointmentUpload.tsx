@@ -25,6 +25,7 @@ async function applyAppointmentToIntern(appointment: ParsedAppointment, internId
     intake_date: appointment.date || null,
     intake_time: appointment.time || null,
     intake_location: appointment.location || null,
+    status: 'in_progress_you',
   };
 
   if (appointment.email && !existingEmail) {
