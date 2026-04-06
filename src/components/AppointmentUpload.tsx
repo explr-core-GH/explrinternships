@@ -1,227 +1,141 @@
 import { useState, useCallback } from 'react';
 import { Upload, CalendarClock, CheckCircle2, AlertTriangle } from 'lucide-react';
-import * as XLSX from 'xlsx';
 import { Button } from '@/components/ui/button';
 import { useAppStore } from '@/store/useAppStore';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import AppointmentMatchReview from '@/components/AppointmentMatchReview';
+import {
+  buildAppointmentLabel,
+  findAutoAppointmentMatch,
+  findBestAppointmentSuggestion,
+  isUsefulAppointmentSuggestion,
+  parseAppointmentFile,
+  type AppointmentReviewItem,
+  type ParsedAppointment,
+} from '@/lib/appointmentMatching';
 
-interface ParsedAppointment {
-  firstName: string;
-  lastName: string;
-  dob: string;
-  email: string;
-  date: string;
-  time: string;
-  location: string;
+interface AppointmentUploadResults {
+  matched: number;
+  unmatched: string[];
 }
 
-function normalizeName(name: string): string {
-  return name.toLowerCase().replace(/[''`\-]/g, '').replace(/[^\w]/g, '').trim();
-}
+async function applyAppointmentToIntern(appointment: ParsedAppointment, internId: string, existingEmail?: string) {
+  const updateFields: Record<string, string | null> = {
+    intake_date: appointment.date || null,
+    intake_time: appointment.time || null,
+    intake_location: appointment.location || null,
+  };
 
-function normalizeDob(dob: string | number): string {
-  if (!dob && dob !== 0) return '';
-  // Handle Excel serial date numbers
-  if (typeof dob === 'number') {
-    const d = XLSX.SSF.parse_date_code(dob);
-    if (d) return `${d.m}/${d.d}/${d.y}`;
-    return '';
+  if (appointment.email && !existingEmail) {
+    updateFields.student_email = appointment.email;
   }
-  const cleaned = String(dob).trim();
-  if (!cleaned) return '';
-  // Try to parse common date formats and normalize to M/D/YYYY
-  const parts = cleaned.split(/[\/\-\.]/);
-  if (parts.length === 3) {
-    const m = parseInt(parts[0], 10);
-    const d = parseInt(parts[1], 10);
-    const y = parseInt(parts[2], 10);
-    if (!isNaN(m) && !isNaN(d) && !isNaN(y)) {
-      const fullYear = y < 100 ? (y > 50 ? 1900 + y : 2000 + y) : y;
-      return `${m}/${d}/${fullYear}`;
-    }
-  }
-  return cleaned.toLowerCase();
-}
 
-function findColumn(headers: string[], ...searches: string[]): number {
-  for (const search of searches) {
-    const idx = headers.findIndex(h => h && h.toLowerCase().includes(search.toLowerCase()));
-    if (idx >= 0) return idx;
-  }
-  return -1;
-}
-
-function parseExcelDate(raw: any): string {
-  if (raw instanceof Date) return raw.toLocaleDateString();
-  if (typeof raw === 'number') {
-    const d = XLSX.SSF.parse_date_code(raw);
-    if (d) return `${d.m}/${d.d}/${d.y}`;
-  }
-  return String(raw ?? '').trim();
-}
-
-function parseExcelTime(raw: any): string {
-  if (typeof raw === 'number' && raw < 1) {
-    const totalMinutes = Math.round(raw * 24 * 60);
-    const h = Math.floor(totalMinutes / 60);
-    const m = totalMinutes % 60;
-    const ampm = h >= 12 ? 'PM' : 'AM';
-    const h12 = h === 0 ? 12 : h > 12 ? h - 12 : h;
-    return `${h12}:${String(m).padStart(2, '0')} ${ampm}`;
-  }
-  return String(raw ?? '').trim();
-}
-
-function parseAppointmentFile(data: ArrayBuffer): ParsedAppointment[] {
-  const wb = XLSX.read(data, { type: 'array' });
-  const results: ParsedAppointment[] = [];
-
-  for (const sheetName of wb.SheetNames) {
-    const sheet = wb.Sheets[sheetName];
-    const rows: any[][] = XLSX.utils.sheet_to_json(sheet, { header: 1 });
-    if (rows.length < 2) continue;
-
-    let headerIdx = -1;
-    for (let i = 0; i < Math.min(rows.length, 15); i++) {
-      const cells = (rows[i] || []).map((c: any) => String(c ?? '').toLowerCase());
-      const rowStr = cells.join(' ');
-      if (rowStr.includes('name') && (rowStr.includes('date') || rowStr.includes('time') || rowStr.includes('appointment') || rowStr.includes('birth'))) {
-        headerIdx = i;
-        break;
-      }
-    }
-    if (headerIdx < 0) continue;
-
-    const headers = rows[headerIdx].map((h: any) => String(h ?? ''));
-    const dataRows = rows.slice(headerIdx + 1);
-
-    const firstNameIdx = findColumn(headers, 'first name');
-    const lastNameIdx = findColumn(headers, 'last name');
-    const fullNameIdx = findColumn(headers, 'full name', 'student name', 'youth name', 'name');
-    const dobIdx = findColumn(headers, 'birthdate', 'birth date', 'date of birth', 'dob', 'birthday');
-    const emailIdx = findColumn(headers, 'email', 'e-mail');
-    const dateIdx = findColumn(headers, 'appointment date', 'intake date', 'date');
-    const timeIdx = findColumn(headers, 'time', 'appointment time', 'intake time');
-    const locationIdx = findColumn(headers, 'address', 'location', 'site', 'place', 'where');
-
-    // Avoid picking the DOB column as the date column
-    const effectiveDateIdx = dateIdx === dobIdx ? -1 : dateIdx;
-
-    for (const row of dataRows) {
-      if (!row || row.every((c: any) => !String(c ?? '').trim())) continue;
-
-      let firstName = '', lastName = '';
-      if (firstNameIdx >= 0 && lastNameIdx >= 0) {
-        // Take only the first word of the first name field (ignore middle names)
-        const firstParts = String(row[firstNameIdx] ?? '').trim().split(/\s+/);
-        firstName = firstParts[0] || '';
-        lastName = String(row[lastNameIdx] ?? '').trim();
-      } else if (fullNameIdx >= 0) {
-        const full = String(row[fullNameIdx] ?? '').trim();
-        const parts = full.split(/\s+/);
-        firstName = parts[0] || '';
-        // Last word is last name, skip any middle names
-        lastName = parts.length > 1 ? parts[parts.length - 1] : '';
-      }
-
-      if (!firstName || !lastName) continue;
-
-      const dobVal = dobIdx >= 0 ? parseExcelDate(row[dobIdx]) : '';
-      const dobRaw = dobIdx >= 0 ? row[dobIdx] : '';
-      const normalizedApptDob = normalizeDob(dobRaw || dobVal);
-      const emailVal = emailIdx >= 0 ? String(row[emailIdx] ?? '').trim() : '';
-      const dateVal = effectiveDateIdx >= 0 ? parseExcelDate(row[effectiveDateIdx]) : '';
-
-      let timeVal = timeIdx >= 0 ? parseExcelTime(row[timeIdx]) : '';
-
-      results.push({
-        firstName,
-        lastName,
-        dob: dobVal,
-        email: emailVal,
-        date: dateVal,
-        time: timeVal,
-        location: locationIdx >= 0 ? String(row[locationIdx] ?? '').trim() : '',
-      });
-    }
-    if (results.length > 0) break;
-  }
-  return results;
+  await supabase.from('interns').update(updateFields).eq('id', internId);
 }
 
 export default function AppointmentUpload() {
   const { interns, fetchInterns } = useAppStore();
-  const [results, setResults] = useState<{ matched: number; unmatched: string[] } | null>(null);
+  const [results, setResults] = useState<AppointmentUploadResults | null>(null);
+  const [reviewItems, setReviewItems] = useState<AppointmentReviewItem[]>([]);
   const [uploading, setUploading] = useState(false);
+  const [applyingReview, setApplyingReview] = useState(false);
 
-  const handleFile = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
+  const handleApplyApproved = useCallback(async () => {
+    const approvedItems = reviewItems.filter((item) => item.approved === true);
+    if (approvedItems.length === 0) {
+      toast.error('Approve at least one suggested match first.');
+      return;
+    }
+
+    setApplyingReview(true);
+    try {
+      for (const item of approvedItems) {
+        const existingIntern = interns.find((intern) => intern.id === item.suggestion.internId);
+        await applyAppointmentToIntern(item.appointment, item.suggestion.internId, existingIntern?.studentEmail || existingIntern?.emailSubmission);
+      }
+
+      await fetchInterns();
+      setResults((previous) => ({
+        matched: (previous?.matched || 0) + approvedItems.length,
+        unmatched: reviewItems
+          .filter((item) => item.approved !== true)
+          .map((item) => buildAppointmentLabel(item.appointment)),
+      }));
+      setReviewItems((previous) => previous.filter((item) => item.approved !== true));
+      toast.success(`Applied ${approvedItems.length} approved appointment match${approvedItems.length === 1 ? '' : 'es'}`);
+    } catch (error: any) {
+      toast.error(`Failed to apply approved matches: ${error.message || 'Unknown error'}`);
+    }
+    setApplyingReview(false);
+  }, [fetchInterns, interns, reviewItems]);
+
+  const handleFile = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
     if (!file) return;
+
     setUploading(true);
     setResults(null);
+    setReviewItems([]);
 
     try {
       const data = await file.arrayBuffer();
       const appointments = parseAppointmentFile(data);
 
       if (appointments.length === 0) {
-        toast.error('No appointment data found. Make sure the file has columns for name, date, and time.');
+        toast.error('No appointment data found. Make sure the file has columns for name, birthdate, date, and time.');
         setUploading(false);
         return;
       }
 
+      const activeInterns = interns.filter((intern) => intern.isNewest);
       let matched = 0;
       const unmatched: string[] = [];
+      const nextReviewItems: AppointmentReviewItem[] = [];
 
-      for (const appt of appointments) {
-        const normFirst = normalizeName(appt.firstName);
-        const normLast = normalizeName(appt.lastName);
-        const normDob = normalizeDob(appt.dob);
+      for (const appointment of appointments) {
+        const autoMatch = findAutoAppointmentMatch(appointment, activeInterns);
 
-        // Match by name + DOB when DOB is available, otherwise fall back to name only
-        // Find all name matches, then prefer DOB match if available
-        const nameMatches = interns.filter(i =>
-          normalizeName(i.firstName) === normFirst && normalizeName(i.lastName) === normLast
-        );
-
-        let intern = null;
-        if (nameMatches.length === 1) {
-          intern = nameMatches[0];
-        } else if (nameMatches.length > 1 && normDob) {
-          // Multiple name matches — use DOB to disambiguate
-          intern = nameMatches.find(i => i.dob && normalizeDob(i.dob) === normDob) || nameMatches[0];
-        } else if (nameMatches.length > 1) {
-          intern = nameMatches[0]; // take first if no DOB to disambiguate
+        if (autoMatch) {
+          await applyAppointmentToIntern(appointment, autoMatch.id, autoMatch.studentEmail || autoMatch.emailSubmission);
+          matched += 1;
+          continue;
         }
 
-        if (intern) {
-          const updateFields: Record<string, any> = {
-            intake_date: appt.date || null,
-            intake_time: appt.time || null,
-            intake_location: appt.location || null,
-          };
-          // Update email from appointment file if intern doesn't have one
-          if (appt.email && !intern.studentEmail) {
-            updateFields.student_email = appt.email;
-          }
-          await supabase.from('interns').update(updateFields).eq('id', intern.id);
-          matched++;
+        const suggestion = findBestAppointmentSuggestion(appointment, activeInterns);
+        if (isUsefulAppointmentSuggestion(suggestion)) {
+          nextReviewItems.push({
+            appointment,
+            suggestion,
+            approved: suggestion.score >= 0.82 ? true : undefined,
+          });
         } else {
-          const label = `${appt.firstName} ${appt.lastName}${appt.dob ? ` (DOB: ${appt.dob})` : ''}`;
-          unmatched.push(label);
+          unmatched.push(buildAppointmentLabel(appointment));
         }
       }
 
       await fetchInterns();
-      setResults({ matched, unmatched });
-      toast.success(`Matched ${matched} of ${appointments.length} appointments`);
-    } catch (err: any) {
-      toast.error('Failed to parse file: ' + (err.message || 'Unknown error'));
+      setReviewItems(nextReviewItems);
+      setResults({
+        matched,
+        unmatched: [
+          ...unmatched,
+          ...nextReviewItems.filter((item) => item.approved === false).map((item) => buildAppointmentLabel(item.appointment)),
+        ],
+      });
+
+      if (nextReviewItems.length > 0) {
+        toast.success(`Matched ${matched} automatically. Review ${nextReviewItems.length} possible match${nextReviewItems.length === 1 ? '' : 'es'}.`);
+      } else {
+        toast.success(`Matched ${matched} of ${appointments.length} appointments`);
+      }
+    } catch (error: any) {
+      toast.error(`Failed to parse file: ${error.message || 'Unknown error'}`);
     }
+
     setUploading(false);
-    e.target.value = '';
-  }, [interns, fetchInterns]);
+    event.target.value = '';
+  }, [fetchInterns, interns]);
 
   return (
     <div className="space-y-3">
@@ -230,12 +144,12 @@ export default function AppointmentUpload() {
         <h3 className="text-sm font-medium text-foreground">Upload Intake Appointments</h3>
       </div>
       <p className="text-xs text-muted-foreground">
-        Upload an Excel file with student names, birthdates, emails, appointment dates/times, and addresses. Students are matched by name + birthdate.
+        Upload an Excel file with full names, birthdates, emails, appointment dates/times, and addresses. Exact matches are applied automatically, and uncertain matches go to manual review.
       </p>
 
       <label className="block">
-        <input type="file" accept=".xlsx,.xls,.csv" onChange={handleFile} className="hidden" disabled={uploading} />
-        <Button variant="outline" size="sm" className="gap-1.5 cursor-pointer" asChild disabled={uploading}>
+        <input type="file" accept=".xlsx,.xls,.csv" onChange={handleFile} className="hidden" disabled={uploading || applyingReview} />
+        <Button variant="outline" size="sm" className="gap-1.5 cursor-pointer" asChild disabled={uploading || applyingReview}>
           <span>
             <Upload className="h-3.5 w-3.5" />
             {uploading ? 'Processing...' : 'Choose Appointment File'}
@@ -243,12 +157,28 @@ export default function AppointmentUpload() {
         </Button>
       </label>
 
+      {reviewItems.length > 0 && (
+        <AppointmentMatchReview
+          items={reviewItems}
+          applying={applyingReview}
+          onApprove={(index) => setReviewItems((previous) => previous.map((item, itemIndex) => itemIndex === index ? { ...item, approved: true } : item))}
+          onReject={(index) => setReviewItems((previous) => previous.map((item, itemIndex) => itemIndex === index ? { ...item, approved: false } : item))}
+          onApplyApproved={handleApplyApproved}
+        />
+      )}
+
       {results && (
         <div className="rounded-md border p-3 space-y-2 bg-muted/30">
           <div className="flex items-center gap-2 text-sm">
             <CheckCircle2 className="h-4 w-4 text-success" />
-            <span className="text-foreground font-medium">{results.matched} students matched</span>
+            <span className="text-foreground font-medium">{results.matched} students matched automatically</span>
           </div>
+          {reviewItems.length > 0 && (
+            <div className="flex items-center gap-2 text-sm">
+              <AlertTriangle className="h-4 w-4 text-primary" />
+              <span className="text-foreground">{reviewItems.length} records need manual review</span>
+            </div>
+          )}
           {results.unmatched.length > 0 && (
             <div className="space-y-1">
               <div className="flex items-center gap-2 text-sm">
@@ -256,7 +186,7 @@ export default function AppointmentUpload() {
                 <span className="text-warning font-medium">{results.unmatched.length} not matched:</span>
               </div>
               <ul className="text-xs text-muted-foreground pl-6 list-disc">
-                {results.unmatched.map((name, i) => <li key={i}>{name}</li>)}
+                {results.unmatched.map((name, index) => <li key={`${name}-${index}`}>{name}</li>)}
               </ul>
             </div>
           )}
