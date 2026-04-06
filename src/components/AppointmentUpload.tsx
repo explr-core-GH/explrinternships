@@ -20,10 +20,17 @@ function normalizeName(name: string): string {
   return name.toLowerCase().replace(/[''`\-]/g, '').replace(/[^\w]/g, '').trim();
 }
 
-function normalizeDob(dob: string): string {
-  if (!dob) return '';
+function normalizeDob(dob: string | number): string {
+  if (!dob && dob !== 0) return '';
+  // Handle Excel serial date numbers
+  if (typeof dob === 'number') {
+    const d = XLSX.SSF.parse_date_code(dob);
+    if (d) return `${d.m}/${d.d}/${d.y}`;
+    return '';
+  }
+  const cleaned = String(dob).trim();
+  if (!cleaned) return '';
   // Try to parse common date formats and normalize to M/D/YYYY
-  const cleaned = dob.trim();
   const parts = cleaned.split(/[\/\-\.]/);
   if (parts.length === 3) {
     const m = parseInt(parts[0], 10);
