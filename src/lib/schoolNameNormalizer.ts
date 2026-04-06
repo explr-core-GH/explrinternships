@@ -5,7 +5,19 @@
  * - "Garrett Morgan High School"
  * - "Garrett Morgan"
  * all map to the same canonical base name for matching purposes.
+ *
+ * Also supports dynamic aliases loaded from the database.
  */
+
+// Dynamic aliases loaded from the database at runtime
+let dynamicAliases: Record<string, string> = {};
+
+export function setSchoolAliases(aliases: { alias: string; canonicalName: string }[]) {
+  dynamicAliases = {};
+  for (const { alias, canonicalName } of aliases) {
+    dynamicAliases[alias.toLowerCase().trim()] = canonicalName.toLowerCase().trim();
+  }
+}
 
 const STRIP_SUFFIXES = [
   'high school',
