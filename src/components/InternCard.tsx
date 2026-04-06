@@ -209,7 +209,10 @@ export default function InternCard({ intern, worksites, bulkMode, selected, onTo
             {intern.isDuplicate && <Copy className="h-3.5 w-3.5 text-warning shrink-0" />}
             {intern.adminNotes && <StickyNote className="h-3.5 w-3.5 text-primary shrink-0" />}
           </div>
-          <p className="text-xs text-muted-foreground truncate">{displaySchool} · {intern.grade} grade</p>
+          <p className="text-xs text-muted-foreground truncate">
+            {displaySchool} · {intern.grade} grade
+            {intern.intakeDate && <span className="ml-1.5 text-primary">· 📅 {intern.intakeDate}{intern.intakeTime ? ` ${intern.intakeTime}` : ''}</span>}
+          </p>
         </div>
         <div className="flex items-center gap-2 shrink-0">
           <StatusDropdown intern={intern} />
