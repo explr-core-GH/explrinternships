@@ -5,7 +5,19 @@
  * - "Garrett Morgan High School"
  * - "Garrett Morgan"
  * all map to the same canonical base name for matching purposes.
+ *
+ * Also supports dynamic aliases loaded from the database.
  */
+
+// Dynamic aliases loaded from the database at runtime
+let dynamicAliases: Record<string, string> = {};
+
+export function setSchoolAliases(aliases: { alias: string; canonicalName: string }[]) {
+  dynamicAliases = {};
+  for (const { alias, canonicalName } of aliases) {
+    dynamicAliases[alias.toLowerCase().trim()] = canonicalName.toLowerCase().trim();
+  }
+}
 
 const STRIP_SUFFIXES = [
   'high school',
@@ -64,7 +76,10 @@ export function normalizeSchoolName(raw: string): string {
   // Remove extra whitespace
   name = name.replace(/\s+/g, ' ').trim();
 
-  // Check direct alias first
+  // Check dynamic aliases from database first
+  if (dynamicAliases[name]) return dynamicAliases[name];
+
+  // Check hardcoded aliases
   if (SCHOOL_ALIASES[name]) return SCHOOL_ALIASES[name];
 
   // Strip suffixes longest-first to get the base name
@@ -82,7 +97,8 @@ export function normalizeSchoolName(raw: string): string {
   // Remove trailing " - " fragments (e.g. "campus international high school - csu cole center")
   name = name.replace(/\s*-\s*.*$/, '').trim();
 
-  // Check alias again after stripping
+  // Check aliases again after stripping
+  if (dynamicAliases[name]) return dynamicAliases[name];
   if (SCHOOL_ALIASES[name]) return SCHOOL_ALIASES[name];
 
   return name;

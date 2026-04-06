@@ -173,6 +173,27 @@ export type Database = {
           },
         ]
       }
+      school_aliases: {
+        Row: {
+          alias: string
+          canonical_name: string
+          created_at: string
+          id: string
+        }
+        Insert: {
+          alias: string
+          canonical_name: string
+          created_at?: string
+          id?: string
+        }
+        Update: {
+          alias?: string
+          canonical_name?: string
+          created_at?: string
+          id?: string
+        }
+        Relationships: []
+      }
       school_contacts: {
         Row: {
           contact_email: string

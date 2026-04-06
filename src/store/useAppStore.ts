@@ -63,11 +63,18 @@ function dbToWorksite(row: DbWorksite): Worksite {
   };
 }
 
+interface SchoolAlias {
+  id: string;
+  alias: string;
+  canonicalName: string;
+}
+
 interface AppState {
   interns: Intern[];
   worksites: Worksite[];
   assignments: Assignment[];
   schoolContacts: SchoolContact[];
+  schoolAliases: SchoolAlias[];
   loading: boolean;
   sheetUrl: string;
   lastSynced: string | null;
@@ -78,6 +85,9 @@ interface AppState {
   fetchWorksites: () => Promise<void>;
   fetchAssignments: () => Promise<void>;
   fetchSchoolContacts: () => Promise<void>;
+  fetchSchoolAliases: () => Promise<void>;
+  addSchoolAlias: (alias: string, canonicalName: string) => Promise<void>;
+  removeSchoolAlias: (id: string) => Promise<void>;
   uploadSchoolContacts: (contacts: { schoolName: string; role: SchoolContactRole; contactName: string; contactEmail: string }[]) => Promise<void>;
   addWorksite: (ws: Omit<Worksite, 'id'>) => Promise<void>;
   removeWorksite: (id: string) => Promise<void>;
@@ -97,6 +107,7 @@ export const useAppStore = create<AppState>()((set, get) => ({
   worksites: [],
   assignments: [],
   schoolContacts: [],
+  schoolAliases: [],
   loading: false,
   sheetUrl: '',
   lastSynced: null,
@@ -151,6 +162,28 @@ export const useAppStore = create<AppState>()((set, get) => ({
         contactEmail: r.contact_email,
       })),
     });
+  },
+
+  fetchSchoolAliases: async () => {
+    const { data } = await supabase.from('school_aliases').select('*').order('alias');
+    const { setSchoolAliases } = await import('@/lib/schoolNameNormalizer');
+    const aliases = (data || []).map((r: any) => ({
+      id: r.id,
+      alias: r.alias,
+      canonicalName: r.canonical_name,
+    }));
+    set({ schoolAliases: aliases });
+    setSchoolAliases(aliases.map((a: any) => ({ alias: a.alias, canonicalName: a.canonicalName })));
+  },
+
+  addSchoolAlias: async (alias, canonicalName) => {
+    await supabase.from('school_aliases').insert({ alias: alias.trim(), canonical_name: canonicalName.trim() });
+    await get().fetchSchoolAliases();
+  },
+
+  removeSchoolAlias: async (id) => {
+    await supabase.from('school_aliases').delete().eq('id', id);
+    await get().fetchSchoolAliases();
   },
 
   uploadSchoolContacts: async (contacts) => {
