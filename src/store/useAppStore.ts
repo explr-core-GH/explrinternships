@@ -89,6 +89,7 @@ interface AppState {
   addSchoolAlias: (alias: string, canonicalName: string) => Promise<void>;
   removeSchoolAlias: (id: string) => Promise<void>;
   uploadSchoolContacts: (contacts: { schoolName: string; role: SchoolContactRole; contactName: string; contactEmail: string }[]) => Promise<void>;
+  deleteSchoolContact: (id: string) => Promise<void>;
   addWorksite: (ws: Omit<Worksite, 'id'>) => Promise<void>;
   removeWorksite: (id: string) => Promise<void>;
   assignIntern: (internId: string, worksiteId: string) => Promise<void>;
