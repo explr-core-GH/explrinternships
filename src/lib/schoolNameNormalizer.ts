@@ -112,6 +112,9 @@ const SCHOOL_ALIASES: Record<string, string> = {
   'bard high school early college': 'bard early college',
   // Warner Girls Leadership Academy
   'warner girls leadership academy': 'warner girls leadership academy',
+  // Mary B. Martin
+  'mary b martin': 'mary b martin',
+  'mary b. martin': 'mary b martin',
 };
 
 function stripParenthetical(name: string): string {
@@ -125,8 +128,8 @@ export function normalizeSchoolName(raw: string): string {
 
   // Replace & with and for consistency
   name = name.replace(/&/g, 'and');
-  // Remove apostrophes/smart quotes for consistency
-  name = name.replace(/[''`]/g, '');
+  // Remove apostrophes/smart quotes and periods for consistency
+  name = name.replace(/[''`.]/g, '');
   // Remove extra whitespace
   name = name.replace(/\s+/g, ' ').trim();
 
