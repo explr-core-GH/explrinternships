@@ -1,6 +1,6 @@
 import { useState, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronDown, Mail, Phone, School, Calendar, AlertTriangle, Star, Copy, Edit2, Save, X, StickyNote, CheckCircle2, Square, CheckSquare, Users, CalendarClock } from 'lucide-react';
+import { ChevronDown, Mail, Phone, School, Calendar, AlertTriangle, Star, Copy, Edit2, Save, X, StickyNote, CheckCircle2, Square, CheckSquare, Users, CalendarClock, Trash2 } from 'lucide-react';
 import { normalizeSchoolName } from '@/lib/schoolNameNormalizer';
 import type { Intern, Placement, Worksite, InternStatus } from '@/types/intern';
 import { INTEREST_LABELS, type InterestField, INTERN_STATUSES, STATUS_CONFIG, CONTACT_ROLE_LABELS, type SchoolContactRole } from '@/types/intern';
@@ -119,12 +119,11 @@ function AssignmentSection({ intern, worksites }: { intern: Intern; worksites: W
 }
 
 function SchoolContactsSection({ schoolName }: { schoolName: string }) {
-  const { schoolContacts } = useAppStore();
+  const { schoolContacts, deleteSchoolContact } = useAppStore();
   const contacts = useMemo(() => {
     if (!schoolName) return [];
     const normalizedSchool = normalizeSchoolName(schoolName);
     const matched = schoolContacts.filter(c => normalizeSchoolName(c.schoolName) === normalizedSchool);
-    // Deduplicate by role + normalized contact name
     const seen = new Set<string>();
     return matched.filter(c => {
       const key = `${c.role}|${c.contactName.toLowerCase().trim()}`;
@@ -133,6 +132,13 @@ function SchoolContactsSection({ schoolName }: { schoolName: string }) {
       return true;
     });
   }, [schoolContacts, schoolName]);
+
+  const handleDelete = useCallback(async (id: string, name: string) => {
+    if (window.confirm(`Remove ${name} from school contacts?`)) {
+      await deleteSchoolContact(id);
+      toast.success(`Removed ${name}`);
+    }
+  }, [deleteSchoolContact]);
 
   if (contacts.length === 0) return null;
 
@@ -150,12 +156,20 @@ function SchoolContactsSection({ schoolName }: { schoolName: string }) {
       </div>
       <div className="space-y-1.5">
         {contacts.map(c => (
-          <div key={c.id} className="flex items-center gap-2 text-xs">
+          <div key={c.id} className="flex items-center gap-2 text-xs group">
             <Badge variant="outline" className={`text-[10px] shrink-0 ${roleBadgeColor[c.role]}`}>{CONTACT_ROLE_LABELS[c.role]}</Badge>
             <span className="font-medium text-foreground">{c.contactName}</span>
             {c.contactEmail && (
               <a href={`mailto:${c.contactEmail}`} className="text-primary hover:underline truncate">{c.contactEmail}</a>
             )}
+            <span className="text-[10px] text-muted-foreground italic shrink-0">({c.schoolName})</span>
+            <button
+              onClick={() => handleDelete(c.id, c.contactName)}
+              className="opacity-0 group-hover:opacity-100 transition-opacity ml-auto shrink-0 text-destructive hover:text-destructive/80"
+              title="Remove contact"
+            >
+              <Trash2 className="h-3 w-3" />
+            </button>
           </div>
         ))}
       </div>

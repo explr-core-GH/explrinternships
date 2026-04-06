@@ -89,6 +89,7 @@ interface AppState {
   addSchoolAlias: (alias: string, canonicalName: string) => Promise<void>;
   removeSchoolAlias: (id: string) => Promise<void>;
   uploadSchoolContacts: (contacts: { schoolName: string; role: SchoolContactRole; contactName: string; contactEmail: string }[]) => Promise<void>;
+  deleteSchoolContact: (id: string) => Promise<void>;
   addWorksite: (ws: Omit<Worksite, 'id'>) => Promise<void>;
   removeWorksite: (id: string) => Promise<void>;
   assignIntern: (internId: string, worksiteId: string) => Promise<void>;
@@ -232,6 +233,11 @@ export const useAppStore = create<AppState>()((set, get) => ({
       }
     }
     await get().fetchSchoolContacts();
+  },
+
+  deleteSchoolContact: async (id) => {
+    await supabase.from('school_contacts').delete().eq('id', id);
+    set(s => ({ schoolContacts: s.schoolContacts.filter(c => c.id !== id) }));
   },
 
   addWorksite: async (ws) => {
