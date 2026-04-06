@@ -343,8 +343,9 @@ function internToRow(
     'CS/IT Course': intern.csCourseTaken,
     'Specific Interests': intern.specificInterests,
     'Additional Questions': intern.additionalQuestions,
-    'Principal': principal ? `${principal.contactName} <${principal.contactEmail}>` : '',
-    'Guidance Counselor': guidance ? `${guidance.contactName} <${guidance.contactEmail}>` : '',
+    'Principal(s)': principals.map(p => `${p.contactName} <${p.contactEmail}>`).join('; ') || '',
+    'Guidance Counselor(s)': guidances.map(g => `${g.contactName} <${g.contactEmail}>`).join('; ') || '',
+    '5C Counselor(s)': fiveCs.map(f => `${f.contactName} <${f.contactEmail}>`).join('; ') || '',
   };
 
   for (const field of INTEREST_FIELDS) {
