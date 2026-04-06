@@ -187,7 +187,7 @@ export function exportStatusContactCSV(
     if (!principals.length && !guidances.length && !fiveCs.length) allRows.push(['', 'No school contacts on file', '', '']);
 
     // Column headers for students — include appointment info for in_progress
-    const hasAppointments = status === 'in_progress';
+    const hasAppointments = status === 'in_progress_you';
     if (hasAppointments) {
       allRows.push(['First Name', 'Last Name', 'Student Email', 'Phone', 'Parent Phone', 'Grade', 'Appt Date', 'Appt Time', 'Appt Location']);
     } else {
@@ -272,7 +272,7 @@ export function exportEmailReadyByStatus(
         const phone = i.phone || '';
         const grade = i.grade || '';
         let line = `  ${idx + 1}. ${i.firstName} ${i.lastName} — Email: ${email}, Phone: ${phone}, Grade: ${grade}`;
-        if (status === 'in_progress' && (i.intakeDate || i.intakeTime || i.intakeLocation)) {
+        if (status === 'in_progress_you' && (i.intakeDate || i.intakeTime || i.intakeLocation)) {
           const parts = [i.intakeDate, i.intakeTime, i.intakeLocation].filter(Boolean);
           line += `\n     📅 Appointment: ${parts.join(' | ')}`;
         }
