@@ -127,16 +127,10 @@ function parseAppointmentFile(data: ArrayBuffer): ParsedAppointment[] {
       const dobVal = dobIdx >= 0 ? parseExcelDate(row[dobIdx]) : '';
       const dobRaw = dobIdx >= 0 ? row[dobIdx] : '';
       const normalizedApptDob = normalizeDob(dobRaw || dobVal);
+      const emailVal = emailIdx >= 0 ? String(row[emailIdx] ?? '').trim() : '';
+      const dateVal = effectiveDateIdx >= 0 ? parseExcelDate(row[effectiveDateIdx]) : '';
 
       let timeVal = timeIdx >= 0 ? parseExcelTime(row[timeIdx]) : '';
-
-      // If date and time might be combined
-      if (!timeVal && dateVal.includes(' ')) {
-        const parts = dateVal.split(/\s+/);
-        if (parts.length >= 2 && (parts[parts.length - 1].includes('AM') || parts[parts.length - 1].includes('PM') || parts[parts.length - 1].includes(':'))) {
-          // handled below
-        }
-      }
 
       results.push({
         firstName,
