@@ -174,17 +174,17 @@ export function exportStatusContactCSV(
   schoolKeys.forEach((key, idx) => {
     const group = bySchool[key];
     const contacts = contactsBySchool[key] || [];
-    const byRole = (role: string) => contacts.find(c => c.role === role);
-    const principal = byRole('principal');
-    const guidance = byRole('guidance_counselor');
-    const fiveC = byRole('5c');
+    const byRole = (role: string) => contacts.filter(c => c.role === role);
+    const principals = byRole('principal');
+    const guidances = byRole('guidance_counselor');
+    const fiveCs = byRole('5c');
 
     // School header block
     allRows.push([`SCHOOL: ${group.displayName}`, '', '', `Students: ${group.interns.length}`]);
-    if (principal) allRows.push(['', 'Principal:', principal.contactName, principal.contactEmail]);
-    if (guidance) allRows.push(['', 'Guidance Counselor:', guidance.contactName, guidance.contactEmail]);
-    if (fiveC) allRows.push(['', '5C Career Counselor:', fiveC.contactName, fiveC.contactEmail]);
-    if (!principal && !guidance && !fiveC) allRows.push(['', 'No school contacts on file', '', '']);
+    principals.forEach(p => allRows.push(['', 'Principal:', p.contactName, p.contactEmail]));
+    guidances.forEach(g => allRows.push(['', 'Guidance Counselor:', g.contactName, g.contactEmail]));
+    fiveCs.forEach(f => allRows.push(['', '5C Career Counselor:', f.contactName, f.contactEmail]));
+    if (!principals.length && !guidances.length && !fiveCs.length) allRows.push(['', 'No school contacts on file', '', '']);
 
     // Column headers for students
     allRows.push(['First Name', 'Last Name', 'Student Email', 'Phone', 'Parent Phone', 'Grade']);
