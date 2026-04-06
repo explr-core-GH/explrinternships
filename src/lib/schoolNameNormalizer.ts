@@ -112,8 +112,6 @@ const SCHOOL_ALIASES: Record<string, string> = {
   'bard high school early college': 'bard early college',
   // Warner Girls Leadership Academy
   'warner girls leadership academy': 'warner girls leadership academy',
-  "warner girls' leadership academy": 'warner girls leadership academy',
-  'warner girls\' leadership academy': 'warner girls leadership academy',
 };
 
 function stripParenthetical(name: string): string {
