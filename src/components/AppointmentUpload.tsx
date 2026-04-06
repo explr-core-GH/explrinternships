@@ -20,10 +20,17 @@ function normalizeName(name: string): string {
   return name.toLowerCase().replace(/[''`\-]/g, '').replace(/[^\w]/g, '').trim();
 }
 
-function normalizeDob(dob: string): string {
-  if (!dob) return '';
+function normalizeDob(dob: string | number): string {
+  if (!dob && dob !== 0) return '';
+  // Handle Excel serial date numbers
+  if (typeof dob === 'number') {
+    const d = XLSX.SSF.parse_date_code(dob);
+    if (d) return `${d.m}/${d.d}/${d.y}`;
+    return '';
+  }
+  const cleaned = String(dob).trim();
+  if (!cleaned) return '';
   // Try to parse common date formats and normalize to M/D/YYYY
-  const cleaned = dob.trim();
   const parts = cleaned.split(/[\/\-\.]/);
   if (parts.length === 3) {
     const m = parseInt(parts[0], 10);
@@ -118,18 +125,12 @@ function parseAppointmentFile(data: ArrayBuffer): ParsedAppointment[] {
       if (!firstName || !lastName) continue;
 
       const dobVal = dobIdx >= 0 ? parseExcelDate(row[dobIdx]) : '';
+      const dobRaw = dobIdx >= 0 ? row[dobIdx] : '';
+      const normalizedApptDob = normalizeDob(dobRaw || dobVal);
       const emailVal = emailIdx >= 0 ? String(row[emailIdx] ?? '').trim() : '';
       const dateVal = effectiveDateIdx >= 0 ? parseExcelDate(row[effectiveDateIdx]) : '';
 
       let timeVal = timeIdx >= 0 ? parseExcelTime(row[timeIdx]) : '';
-
-      // If date and time might be combined
-      if (!timeVal && dateVal.includes(' ')) {
-        const parts = dateVal.split(/\s+/);
-        if (parts.length >= 2 && (parts[parts.length - 1].includes('AM') || parts[parts.length - 1].includes('PM') || parts[parts.length - 1].includes(':'))) {
-          // handled below
-        }
-      }
 
       results.push({
         firstName,
@@ -176,14 +177,20 @@ export default function AppointmentUpload() {
         const normDob = normalizeDob(appt.dob);
 
         // Match by name + DOB when DOB is available, otherwise fall back to name only
-        const intern = interns.find(i => {
-          const nameMatch = normalizeName(i.firstName) === normFirst && normalizeName(i.lastName) === normLast;
-          if (!nameMatch) return false;
-          if (normDob && i.dob) {
-            return normalizeDob(i.dob) === normDob;
-          }
-          return true; // name-only fallback if no DOB in upload
-        });
+        // Find all name matches, then prefer DOB match if available
+        const nameMatches = interns.filter(i =>
+          normalizeName(i.firstName) === normFirst && normalizeName(i.lastName) === normLast
+        );
+
+        let intern = null;
+        if (nameMatches.length === 1) {
+          intern = nameMatches[0];
+        } else if (nameMatches.length > 1 && normDob) {
+          // Multiple name matches — use DOB to disambiguate
+          intern = nameMatches.find(i => i.dob && normalizeDob(i.dob) === normDob) || nameMatches[0];
+        } else if (nameMatches.length > 1) {
+          intern = nameMatches[0]; // take first if no DOB to disambiguate
+        }
 
         if (intern) {
           const updateFields: Record<string, any> = {
