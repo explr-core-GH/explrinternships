@@ -132,6 +132,7 @@ function SchoolContactsSection({ schoolName }: { schoolName: string }) {
       seen.add(key);
       return true;
     });
+  }, [schoolContacts, schoolName]);
 
   if (contacts.length === 0) return null;
 
