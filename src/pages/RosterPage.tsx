@@ -250,22 +250,32 @@ export default function RosterPage() {
         </button>
       )}
 
-      <div className="space-y-2">
-        {loading ? (
+      {viewMode === 'school' ? (
+        loading ? (
           <p className="text-center text-sm text-muted-foreground py-12">Loading...</p>
         ) : filtered.length === 0 ? (
           <p className="text-center text-sm text-muted-foreground py-12">No interns match your filters.</p>
-        ) : filtered.map((intern) => (
-          <InternCard
-            key={intern.id}
-            intern={intern}
-            worksites={worksites}
-            bulkMode={bulkMode}
-            selected={selectedIds.has(intern.id)}
-            onToggleSelect={() => toggleSelect(intern.id)}
-          />
-        ))}
-      </div>
+        ) : (
+          <SchoolGroupedRoster interns={filtered} worksites={worksites} />
+        )
+      ) : (
+        <div className="space-y-2">
+          {loading ? (
+            <p className="text-center text-sm text-muted-foreground py-12">Loading...</p>
+          ) : filtered.length === 0 ? (
+            <p className="text-center text-sm text-muted-foreground py-12">No interns match your filters.</p>
+          ) : filtered.map((intern) => (
+            <InternCard
+              key={intern.id}
+              intern={intern}
+              worksites={worksites}
+              bulkMode={bulkMode}
+              selected={selectedIds.has(intern.id)}
+              onToggleSelect={() => toggleSelect(intern.id)}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 }
