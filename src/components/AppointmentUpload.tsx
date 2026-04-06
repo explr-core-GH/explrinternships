@@ -113,13 +113,16 @@ function parseAppointmentFile(data: ArrayBuffer): ParsedAppointment[] {
 
       let firstName = '', lastName = '';
       if (firstNameIdx >= 0 && lastNameIdx >= 0) {
-        firstName = String(row[firstNameIdx] ?? '').trim();
+        // Take only the first word of the first name field (ignore middle names)
+        const firstParts = String(row[firstNameIdx] ?? '').trim().split(/\s+/);
+        firstName = firstParts[0] || '';
         lastName = String(row[lastNameIdx] ?? '').trim();
       } else if (fullNameIdx >= 0) {
         const full = String(row[fullNameIdx] ?? '').trim();
         const parts = full.split(/\s+/);
         firstName = parts[0] || '';
-        lastName = parts.slice(1).join(' ') || '';
+        // Last word is last name, skip any middle names
+        lastName = parts.length > 1 ? parts[parts.length - 1] : '';
       }
 
       if (!firstName || !lastName) continue;
