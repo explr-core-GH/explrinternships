@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { Search, Copy, Download, CheckSquare, Square, Mail } from 'lucide-react';
+import { Search, Copy, Download, CheckSquare, Square, Mail, List, School } from 'lucide-react';
 import { useAppStore } from '@/store/useAppStore';
 import { useAutoLoadData } from '@/hooks/useAutoLoadData';
 import InternCard from '@/components/InternCard';
