@@ -125,6 +125,8 @@ export function normalizeSchoolName(raw: string): string {
 
   // Replace & with and for consistency
   name = name.replace(/&/g, 'and');
+  // Remove apostrophes/smart quotes for consistency
+  name = name.replace(/[''`]/g, '');
   // Remove extra whitespace
   name = name.replace(/\s+/g, ' ').trim();
 
