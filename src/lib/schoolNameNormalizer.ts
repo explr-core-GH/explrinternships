@@ -60,6 +60,13 @@ const SCHOOL_ALIASES: Record<string, string> = {
   'campus international hs': 'campus international',
   'campus international k8': 'campus international',
   'campus international high school - csu cole center': 'campus international',
+  // Cleveland schools that must stay distinct
+  'cleveland school of the arts': 'cleveland school of the arts',
+  'cleveland school of architecture and design': 'cleveland school of architecture and design',
+  'cleveland school of architecture & design': 'cleveland school of architecture and design',
+  'cleveland school of science and medicine': 'cleveland school of science and medicine',
+  'cleveland school of science & medicine': 'cleveland school of science and medicine',
+  'cleveland high school for digital arts': 'cleveland high school for digital arts',
 };
 
 function stripParenthetical(name: string): string {
