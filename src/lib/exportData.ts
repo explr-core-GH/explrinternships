@@ -186,17 +186,26 @@ export function exportStatusContactCSV(
     fiveCs.forEach(f => allRows.push(['', '5C Career Counselor:', f.contactName, f.contactEmail]));
     if (!principals.length && !guidances.length && !fiveCs.length) allRows.push(['', 'No school contacts on file', '', '']);
 
-    // Column headers for students
-    allRows.push(['First Name', 'Last Name', 'Student Email', 'Phone', 'Parent Phone', 'Grade']);
+    // Column headers for students — include appointment info for in_progress
+    const hasAppointments = status === 'in_progress_you';
+    if (hasAppointments) {
+      allRows.push(['First Name', 'Last Name', 'Student Email', 'Phone', 'Parent Phone', 'Grade', 'Appt Date', 'Appt Time', 'Appt Location']);
+    } else {
+      allRows.push(['First Name', 'Last Name', 'Student Email', 'Phone', 'Parent Phone', 'Grade']);
+    }
 
     // Student rows sorted by last name
     group.interns
       .sort((a, b) => a.lastName.localeCompare(b.lastName))
       .forEach(i => {
-        allRows.push([
+        const baseRow = [
           i.firstName, i.lastName, i.studentEmail || i.emailSubmission,
           i.phone, i.parentPhone, i.grade,
-        ]);
+        ];
+        if (hasAppointments) {
+          baseRow.push(i.intakeDate || '', i.intakeTime || '', i.intakeLocation || '');
+        }
+        allRows.push(baseRow);
       });
 
     // Blank separator between schools
@@ -262,7 +271,12 @@ export function exportEmailReadyByStatus(
         const email = i.studentEmail || i.emailSubmission || '';
         const phone = i.phone || '';
         const grade = i.grade || '';
-        return `  ${idx + 1}. ${i.firstName} ${i.lastName} — Email: ${email}, Phone: ${phone}, Grade: ${grade}`;
+        let line = `  ${idx + 1}. ${i.firstName} ${i.lastName} — Email: ${email}, Phone: ${phone}, Grade: ${grade}`;
+        if (status === 'in_progress_you' && (i.intakeDate || i.intakeTime || i.intakeLocation)) {
+          const parts = [i.intakeDate, i.intakeTime, i.intakeLocation].filter(Boolean);
+          line += `\n     📅 Appointment: ${parts.join(' | ')}`;
+        }
+        return line;
       });
 
     const contactLines = contacts.map(c => {
