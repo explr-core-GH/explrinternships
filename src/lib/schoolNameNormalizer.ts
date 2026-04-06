@@ -25,8 +25,17 @@ const STRIP_SUFFIXES = [
   'college & career academy',
   'early college',
   'academy',
+  'prek to 8 school',
+  'prek-8 school',
+  'prek to 8',
+  'prek-8',
+  'pre k-8',
+  'pre k to 8',
+  'k-8 school',
+  'k8 school',
   'k-8',
   'k8',
+  'school',
   'hs',
 ];
 
