@@ -1,6 +1,7 @@
 import { useState, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronDown, Mail, Phone, School, Calendar, AlertTriangle, Star, Copy, Edit2, Save, X, StickyNote, CheckCircle2, Square, CheckSquare, Users, CalendarClock } from 'lucide-react';
+import { normalizeSchoolName } from '@/lib/schoolNameNormalizer';
 import type { Intern, Placement, Worksite, InternStatus } from '@/types/intern';
 import { INTEREST_LABELS, type InterestField, INTERN_STATUSES, STATUS_CONFIG, CONTACT_ROLE_LABELS, type SchoolContactRole } from '@/types/intern';
 import { generatePlacements } from '@/lib/placementEngine';
@@ -121,8 +122,8 @@ function SchoolContactsSection({ schoolName }: { schoolName: string }) {
   const { schoolContacts } = useAppStore();
   const contacts = useMemo(() => {
     if (!schoolName) return [];
-    const normalizedSchool = schoolName.toLowerCase().trim();
-    return schoolContacts.filter(c => c.schoolName.toLowerCase().trim() === normalizedSchool);
+    const normalizedSchool = normalizeSchoolName(schoolName);
+    return schoolContacts.filter(c => normalizeSchoolName(c.schoolName) === normalizedSchool);
   }, [schoolContacts, schoolName]);
 
   if (contacts.length === 0) return null;

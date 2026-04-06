@@ -1,6 +1,7 @@
 import * as XLSX from 'xlsx';
 import type { Intern, Worksite, Assignment, SchoolContact, InternStatus } from '@/types/intern';
 import { STATUS_CONFIG, CONTACT_ROLE_LABELS, INTEREST_LABELS, type InterestField } from '@/types/intern';
+import { normalizeSchoolName } from '@/lib/schoolNameNormalizer';
 
 interface PotentialMatch {
   uploadedName: string;
@@ -153,7 +154,7 @@ export function exportStatusContactCSV(
 
   const contactsBySchool: Record<string, SchoolContact[]> = {};
   schoolContacts.forEach(c => {
-    const key = c.schoolName.toLowerCase().trim();
+    const key = normalizeSchoolName(c.schoolName);
     if (!contactsBySchool[key]) contactsBySchool[key] = [];
     contactsBySchool[key].push(c);
   });
@@ -162,7 +163,7 @@ export function exportStatusContactCSV(
   const bySchool: Record<string, { displayName: string; interns: Intern[] }> = {};
   filtered.forEach(i => {
     const schoolDisplay = i.otherSchool || i.school || 'Unknown School';
-    const key = schoolDisplay.toLowerCase().trim();
+    const key = normalizeSchoolName(schoolDisplay);
     if (!bySchool[key]) bySchool[key] = { displayName: schoolDisplay, interns: [] };
     bySchool[key].interns.push(i);
   });
@@ -173,17 +174,17 @@ export function exportStatusContactCSV(
   schoolKeys.forEach((key, idx) => {
     const group = bySchool[key];
     const contacts = contactsBySchool[key] || [];
-    const byRole = (role: string) => contacts.find(c => c.role === role);
-    const principal = byRole('principal');
-    const guidance = byRole('guidance_counselor');
-    const fiveC = byRole('5c');
+    const byRole = (role: string) => contacts.filter(c => c.role === role);
+    const principals = byRole('principal');
+    const guidances = byRole('guidance_counselor');
+    const fiveCs = byRole('5c');
 
     // School header block
     allRows.push([`SCHOOL: ${group.displayName}`, '', '', `Students: ${group.interns.length}`]);
-    if (principal) allRows.push(['', 'Principal:', principal.contactName, principal.contactEmail]);
-    if (guidance) allRows.push(['', 'Guidance Counselor:', guidance.contactName, guidance.contactEmail]);
-    if (fiveC) allRows.push(['', '5C Career Counselor:', fiveC.contactName, fiveC.contactEmail]);
-    if (!principal && !guidance && !fiveC) allRows.push(['', 'No school contacts on file', '', '']);
+    principals.forEach(p => allRows.push(['', 'Principal:', p.contactName, p.contactEmail]));
+    guidances.forEach(g => allRows.push(['', 'Guidance Counselor:', g.contactName, g.contactEmail]));
+    fiveCs.forEach(f => allRows.push(['', '5C Career Counselor:', f.contactName, f.contactEmail]));
+    if (!principals.length && !guidances.length && !fiveCs.length) allRows.push(['', 'No school contacts on file', '', '']);
 
     // Column headers for students
     allRows.push(['First Name', 'Last Name', 'Student Email', 'Phone', 'Parent Phone', 'Grade']);
@@ -233,7 +234,7 @@ export function exportEmailReadyByStatus(
 
   const contactsBySchool: Record<string, SchoolContact[]> = {};
   schoolContacts.forEach(c => {
-    const key = c.schoolName.toLowerCase().trim();
+    const key = normalizeSchoolName(c.schoolName);
     if (!contactsBySchool[key]) contactsBySchool[key] = [];
     contactsBySchool[key].push(c);
   });
@@ -241,7 +242,7 @@ export function exportEmailReadyByStatus(
   const bySchool: Record<string, { displayName: string; interns: Intern[] }> = {};
   filtered.forEach(i => {
     const schoolDisplay = i.otherSchool || i.school || 'Unknown School';
-    const key = schoolDisplay.toLowerCase().trim();
+    const key = normalizeSchoolName(schoolDisplay);
     if (!bySchool[key]) bySchool[key] = { displayName: schoolDisplay, interns: [] };
     bySchool[key].interns.push(i);
   });
@@ -315,9 +316,11 @@ function internToRow(
   const assignment = assignments.find(a => a.internId === intern.id);
   const assignedWs = assignment ? wsMap[assignment.worksiteId] : null;
   const school = intern.otherSchool || intern.school || '';
-  const contacts = schoolContacts.filter(c => c.schoolName.toLowerCase().trim() === school.toLowerCase().trim());
-  const principal = contacts.find(c => c.role === 'principal');
-  const guidance = contacts.find(c => c.role === 'guidance_counselor');
+  const normalizedSchool = normalizeSchoolName(school);
+  const contacts = schoolContacts.filter(c => normalizeSchoolName(c.schoolName) === normalizedSchool);
+  const principals = contacts.filter(c => c.role === 'principal');
+  const guidances = contacts.filter(c => c.role === 'guidance_counselor');
+  const fiveCs = contacts.filter(c => c.role === '5c');
 
   const row: Record<string, string> = {
     'Status': STATUS_CONFIG[intern.status]?.label || intern.status,
@@ -340,8 +343,9 @@ function internToRow(
     'CS/IT Course': intern.csCourseTaken,
     'Specific Interests': intern.specificInterests,
     'Additional Questions': intern.additionalQuestions,
-    'Principal': principal ? `${principal.contactName} <${principal.contactEmail}>` : '',
-    'Guidance Counselor': guidance ? `${guidance.contactName} <${guidance.contactEmail}>` : '',
+    'Principal(s)': principals.map(p => `${p.contactName} <${p.contactEmail}>`).join('; ') || '',
+    'Guidance Counselor(s)': guidances.map(g => `${g.contactName} <${g.contactEmail}>`).join('; ') || '',
+    '5C Counselor(s)': fiveCs.map(f => `${f.contactName} <${f.contactEmail}>`).join('; ') || '',
   };
 
   for (const field of INTEREST_FIELDS) {

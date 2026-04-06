@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { supabase } from '@/integrations/supabase/client';
 import type { Intern, Worksite, Assignment, InternStatus, SchoolContact, SchoolContactRole } from '@/types/intern';
+import { normalizeSchoolName } from '@/lib/schoolNameNormalizer';
 import { DEFAULT_WORKSITES } from '@/types/intern';
 import type { Tables } from '@/integrations/supabase/types';
 
@@ -153,22 +154,22 @@ export const useAppStore = create<AppState>()((set, get) => ({
   },
 
   uploadSchoolContacts: async (contacts) => {
-    // Merge: upsert by school_name + role (update existing, insert new)
+    // Merge: match by normalized school name + role + contact name to allow multiple contacts per role
     if (contacts.length > 0) {
       for (const c of contacts) {
-        const key = { school_name: c.schoolName.trim(), role: c.role };
-        const { data: existing } = await supabase
-          .from('school_contacts')
-          .select('id')
-          .ilike('school_name', c.schoolName.trim())
-          .eq('role', c.role)
-          .limit(1);
+        const normalizedName = normalizeSchoolName(c.schoolName);
+        // Find existing contact with same normalized school, role, AND contact name
+        const existing = (await supabase.from('school_contacts').select('*')).data || [];
+        const match = existing.find(e =>
+          normalizeSchoolName(e.school_name) === normalizedName &&
+          e.role === c.role &&
+          e.contact_name.toLowerCase().trim() === c.contactName.toLowerCase().trim()
+        );
 
-        if (existing && existing.length > 0) {
+        if (match) {
           await supabase.from('school_contacts').update({
-            contact_name: c.contactName,
             contact_email: c.contactEmail,
-          }).eq('id', existing[0].id);
+          }).eq('id', match.id);
         } else {
           await supabase.from('school_contacts').insert({
             school_name: c.schoolName.trim(),
