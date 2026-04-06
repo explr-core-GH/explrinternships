@@ -230,7 +230,7 @@ export default function InternCard({ intern, worksites, bulkMode, selected, onTo
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
             <h3 className="font-semibold text-card-foreground truncate">{intern.firstName} {intern.lastName}</h3>
-            {hasCrystalReed && <HeartPulse className="h-4 w-4 text-destructive shrink-0" title="Healthcare (Crystal Reed)" />}
+            {hasCrystalReed && <span title="Healthcare (Crystal Reed)"><HeartPulse className="h-4 w-4 text-destructive shrink-0" /></span>}
             {intern.isDuplicate && <Copy className="h-3.5 w-3.5 text-warning shrink-0" />}
             {intern.adminNotes && <StickyNote className="h-3.5 w-3.5 text-primary shrink-0" />}
           </div>
