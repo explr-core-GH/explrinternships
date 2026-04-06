@@ -316,9 +316,11 @@ function internToRow(
   const assignment = assignments.find(a => a.internId === intern.id);
   const assignedWs = assignment ? wsMap[assignment.worksiteId] : null;
   const school = intern.otherSchool || intern.school || '';
-  const contacts = schoolContacts.filter(c => c.schoolName.toLowerCase().trim() === school.toLowerCase().trim());
-  const principal = contacts.find(c => c.role === 'principal');
-  const guidance = contacts.find(c => c.role === 'guidance_counselor');
+  const normalizedSchool = normalizeSchoolName(school);
+  const contacts = schoolContacts.filter(c => normalizeSchoolName(c.schoolName) === normalizedSchool);
+  const principals = contacts.filter(c => c.role === 'principal');
+  const guidances = contacts.filter(c => c.role === 'guidance_counselor');
+  const fiveCs = contacts.filter(c => c.role === '5c');
 
   const row: Record<string, string> = {
     'Status': STATUS_CONFIG[intern.status]?.label || intern.status,
