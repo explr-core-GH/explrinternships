@@ -9,6 +9,8 @@ import { supabase } from '@/integrations/supabase/client';
 interface ParsedAppointment {
   firstName: string;
   lastName: string;
+  dob: string;
+  email: string;
   date: string;
   time: string;
   location: string;
@@ -18,12 +20,50 @@ function normalizeName(name: string): string {
   return name.toLowerCase().replace(/[''`\-]/g, '').replace(/[^\w]/g, '').trim();
 }
 
+function normalizeDob(dob: string): string {
+  if (!dob) return '';
+  // Try to parse common date formats and normalize to M/D/YYYY
+  const cleaned = dob.trim();
+  const parts = cleaned.split(/[\/\-\.]/);
+  if (parts.length === 3) {
+    const m = parseInt(parts[0], 10);
+    const d = parseInt(parts[1], 10);
+    const y = parseInt(parts[2], 10);
+    if (!isNaN(m) && !isNaN(d) && !isNaN(y)) {
+      const fullYear = y < 100 ? (y > 50 ? 1900 + y : 2000 + y) : y;
+      return `${m}/${d}/${fullYear}`;
+    }
+  }
+  return cleaned.toLowerCase();
+}
+
 function findColumn(headers: string[], ...searches: string[]): number {
   for (const search of searches) {
     const idx = headers.findIndex(h => h && h.toLowerCase().includes(search.toLowerCase()));
     if (idx >= 0) return idx;
   }
   return -1;
+}
+
+function parseExcelDate(raw: any): string {
+  if (raw instanceof Date) return raw.toLocaleDateString();
+  if (typeof raw === 'number') {
+    const d = XLSX.SSF.parse_date_code(raw);
+    if (d) return `${d.m}/${d.d}/${d.y}`;
+  }
+  return String(raw ?? '').trim();
+}
+
+function parseExcelTime(raw: any): string {
+  if (typeof raw === 'number' && raw < 1) {
+    const totalMinutes = Math.round(raw * 24 * 60);
+    const h = Math.floor(totalMinutes / 60);
+    const m = totalMinutes % 60;
+    const ampm = h >= 12 ? 'PM' : 'AM';
+    const h12 = h === 0 ? 12 : h > 12 ? h - 12 : h;
+    return `${h12}:${String(m).padStart(2, '0')} ${ampm}`;
+  }
+  return String(raw ?? '').trim();
 }
 
 function parseAppointmentFile(data: ArrayBuffer): ParsedAppointment[] {
@@ -35,12 +75,11 @@ function parseAppointmentFile(data: ArrayBuffer): ParsedAppointment[] {
     const rows: any[][] = XLSX.utils.sheet_to_json(sheet, { header: 1 });
     if (rows.length < 2) continue;
 
-    // Find header row
     let headerIdx = -1;
     for (let i = 0; i < Math.min(rows.length, 15); i++) {
       const cells = (rows[i] || []).map((c: any) => String(c ?? '').toLowerCase());
       const rowStr = cells.join(' ');
-      if (rowStr.includes('name') && (rowStr.includes('date') || rowStr.includes('time') || rowStr.includes('appointment'))) {
+      if (rowStr.includes('name') && (rowStr.includes('date') || rowStr.includes('time') || rowStr.includes('appointment') || rowStr.includes('birth'))) {
         headerIdx = i;
         break;
       }
@@ -53,9 +92,14 @@ function parseAppointmentFile(data: ArrayBuffer): ParsedAppointment[] {
     const firstNameIdx = findColumn(headers, 'first name');
     const lastNameIdx = findColumn(headers, 'last name');
     const fullNameIdx = findColumn(headers, 'full name', 'student name', 'youth name', 'name');
-    const dateIdx = findColumn(headers, 'date', 'appointment date', 'intake date');
+    const dobIdx = findColumn(headers, 'birthdate', 'birth date', 'date of birth', 'dob', 'birthday');
+    const emailIdx = findColumn(headers, 'email', 'e-mail');
+    const dateIdx = findColumn(headers, 'appointment date', 'intake date', 'date');
     const timeIdx = findColumn(headers, 'time', 'appointment time', 'intake time');
-    const locationIdx = findColumn(headers, 'location', 'site', 'place', 'where', 'notes');
+    const locationIdx = findColumn(headers, 'address', 'location', 'site', 'place', 'where');
+
+    // Avoid picking the DOB column as the date column
+    const effectiveDateIdx = dateIdx === dobIdx ? -1 : dateIdx;
 
     for (const row of dataRows) {
       if (!row || row.every((c: any) => !String(c ?? '').trim())) continue;
@@ -73,51 +117,25 @@ function parseAppointmentFile(data: ArrayBuffer): ParsedAppointment[] {
 
       if (!firstName || !lastName) continue;
 
-      let dateVal = '';
-      if (dateIdx >= 0) {
-        const raw = row[dateIdx];
-        if (raw instanceof Date) {
-          dateVal = raw.toLocaleDateString();
-        } else if (typeof raw === 'number') {
-          // Excel serial date
-          const d = XLSX.SSF.parse_date_code(raw);
-          if (d) dateVal = `${d.m}/${d.d}/${d.y}`;
-        } else {
-          dateVal = String(raw ?? '').trim();
-        }
-      }
+      const dobVal = dobIdx >= 0 ? parseExcelDate(row[dobIdx]) : '';
+      const emailVal = emailIdx >= 0 ? String(row[emailIdx] ?? '').trim() : '';
+      const dateVal = effectiveDateIdx >= 0 ? parseExcelDate(row[effectiveDateIdx]) : '';
 
-      let timeVal = '';
-      if (timeIdx >= 0) {
-        const raw = row[timeIdx];
-        if (typeof raw === 'number' && raw < 1) {
-          // Excel fractional time
-          const totalMinutes = Math.round(raw * 24 * 60);
-          const h = Math.floor(totalMinutes / 60);
-          const m = totalMinutes % 60;
-          const ampm = h >= 12 ? 'PM' : 'AM';
-          const h12 = h === 0 ? 12 : h > 12 ? h - 12 : h;
-          timeVal = `${h12}:${String(m).padStart(2, '0')} ${ampm}`;
-        } else {
-          timeVal = String(raw ?? '').trim();
-        }
-      }
+      let timeVal = timeIdx >= 0 ? parseExcelTime(row[timeIdx]) : '';
 
-      // If date and time might be combined in one column
+      // If date and time might be combined
       if (!timeVal && dateVal.includes(' ')) {
         const parts = dateVal.split(/\s+/);
         if (parts.length >= 2 && (parts[parts.length - 1].includes('AM') || parts[parts.length - 1].includes('PM') || parts[parts.length - 1].includes(':'))) {
-          // Last part(s) look like time
-          const dateP = parts.slice(0, -2).join(' ') || parts[0];
-          const timeP = parts.slice(-2).join(' ') || parts.slice(-1).join(' ');
-          dateVal = dateP;
-          timeVal = timeP;
+          // handled below
         }
       }
 
       results.push({
         firstName,
         lastName,
+        dob: dobVal,
+        email: emailVal,
         date: dateVal,
         time: timeVal,
         location: locationIdx >= 0 ? String(row[locationIdx] ?? '').trim() : '',
@@ -155,21 +173,33 @@ export default function AppointmentUpload() {
       for (const appt of appointments) {
         const normFirst = normalizeName(appt.firstName);
         const normLast = normalizeName(appt.lastName);
+        const normDob = normalizeDob(appt.dob);
 
-        const intern = interns.find(i =>
-          normalizeName(i.firstName) === normFirst &&
-          normalizeName(i.lastName) === normLast
-        );
+        // Match by name + DOB when DOB is available, otherwise fall back to name only
+        const intern = interns.find(i => {
+          const nameMatch = normalizeName(i.firstName) === normFirst && normalizeName(i.lastName) === normLast;
+          if (!nameMatch) return false;
+          if (normDob && i.dob) {
+            return normalizeDob(i.dob) === normDob;
+          }
+          return true; // name-only fallback if no DOB in upload
+        });
 
         if (intern) {
-          await supabase.from('interns').update({
+          const updateFields: Record<string, any> = {
             intake_date: appt.date || null,
             intake_time: appt.time || null,
             intake_location: appt.location || null,
-          }).eq('id', intern.id);
+          };
+          // Update email from appointment file if intern doesn't have one
+          if (appt.email && !intern.studentEmail) {
+            updateFields.student_email = appt.email;
+          }
+          await supabase.from('interns').update(updateFields).eq('id', intern.id);
           matched++;
         } else {
-          unmatched.push(`${appt.firstName} ${appt.lastName}`);
+          const label = `${appt.firstName} ${appt.lastName}${appt.dob ? ` (DOB: ${appt.dob})` : ''}`;
+          unmatched.push(label);
         }
       }
 
@@ -190,7 +220,7 @@ export default function AppointmentUpload() {
         <h3 className="text-sm font-medium text-foreground">Upload Intake Appointments</h3>
       </div>
       <p className="text-xs text-muted-foreground">
-        Upload an Excel file with student names, appointment dates, times, and locations. Students are matched by first + last name.
+        Upload an Excel file with student names, birthdates, emails, appointment dates/times, and addresses. Students are matched by name + birthdate.
       </p>
 
       <label className="block">
