@@ -3,6 +3,7 @@ import { Undo2 } from 'lucide-react';
 import FileUpload from '@/components/FileUpload';
 import GoogleSheetSync from '@/components/GoogleSheetSync';
 import SchoolContactUpload from '@/components/SchoolContactUpload';
+import AppointmentUpload from '@/components/AppointmentUpload';
 import { useAppStore } from '@/store/useAppStore';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
@@ -69,6 +70,10 @@ export default function UploadPage() {
 
       <div className="border-t pt-6">
         <SchoolContactUpload />
+      </div>
+
+      <div className="border-t pt-6">
+        <AppointmentUpload />
       </div>
 
       {interns.length > 0 && (
