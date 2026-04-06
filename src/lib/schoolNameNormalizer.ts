@@ -98,6 +98,9 @@ const SCHOOL_ALIASES: Record<string, string> = {
   // John F Kennedy (with/without period)
   'john f. kennedy high school': 'john f kennedy',
   'john f kennedy high school': 'john f kennedy',
+  // Bard Early College
+  'bard high school early college cleveland': 'bard early college',
+  'bard high school early college': 'bard early college',
 };
 
 function stripParenthetical(name: string): string {
