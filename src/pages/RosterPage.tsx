@@ -37,7 +37,8 @@ export default function RosterPage() {
       list = list.filter(i =>
         `${i.firstName} ${i.lastName}`.toLowerCase().includes(q) ||
         i.school.toLowerCase().includes(q) ||
-        i.studentEmail.toLowerCase().includes(q)
+        i.studentEmail.toLowerCase().includes(q) ||
+        i.itInterests.some(interest => interest.toLowerCase().includes(q))
       );
     }
     if (gradeFilter !== 'all') list = list.filter(i => i.grade === gradeFilter);
