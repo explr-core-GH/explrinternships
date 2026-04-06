@@ -1,8 +1,9 @@
 import { useState, useMemo } from 'react';
-import { Search, Copy, Download, CheckSquare, Square, Mail } from 'lucide-react';
+import { Search, Copy, Download, CheckSquare, Square, Mail, List, School } from 'lucide-react';
 import { useAppStore } from '@/store/useAppStore';
 import { useAutoLoadData } from '@/hooks/useAutoLoadData';
 import InternCard from '@/components/InternCard';
+import SchoolGroupedRoster from '@/components/SchoolGroupedRoster';
 import GoogleSheetSync from '@/components/GoogleSheetSync';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -25,6 +26,7 @@ export default function RosterPage() {
   const [assignFilter, setAssignFilter] = useState<'all' | 'assigned' | 'unassigned'>('all');
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkMode, setBulkMode] = useState(false);
+  const [viewMode, setViewMode] = useState<'list' | 'school'>('list');
   useAutoLoadData();
 
   const activeInterns = useMemo(() => interns.filter(i => i.isNewest), [interns]);
@@ -121,6 +123,20 @@ export default function RosterPage() {
           </p>
         </div>
         <div className="flex gap-2">
+          <div className="flex rounded-md border border-input overflow-hidden">
+            <button
+              onClick={() => setViewMode('list')}
+              className={`h-8 px-2.5 flex items-center gap-1 text-xs font-medium transition-colors ${viewMode === 'list' ? 'bg-primary text-primary-foreground' : 'bg-background text-muted-foreground hover:text-foreground'}`}
+            >
+              <List className="h-3.5 w-3.5" /> List
+            </button>
+            <button
+              onClick={() => setViewMode('school')}
+              className={`h-8 px-2.5 flex items-center gap-1 text-xs font-medium transition-colors ${viewMode === 'school' ? 'bg-primary text-primary-foreground' : 'bg-background text-muted-foreground hover:text-foreground'}`}
+            >
+              <School className="h-3.5 w-3.5" /> By School
+            </button>
+          </div>
           <Button
             variant={bulkMode ? 'default' : 'outline'}
             size="sm"
@@ -234,22 +250,32 @@ export default function RosterPage() {
         </button>
       )}
 
-      <div className="space-y-2">
-        {loading ? (
+      {viewMode === 'school' ? (
+        loading ? (
           <p className="text-center text-sm text-muted-foreground py-12">Loading...</p>
         ) : filtered.length === 0 ? (
           <p className="text-center text-sm text-muted-foreground py-12">No interns match your filters.</p>
-        ) : filtered.map((intern) => (
-          <InternCard
-            key={intern.id}
-            intern={intern}
-            worksites={worksites}
-            bulkMode={bulkMode}
-            selected={selectedIds.has(intern.id)}
-            onToggleSelect={() => toggleSelect(intern.id)}
-          />
-        ))}
-      </div>
+        ) : (
+          <SchoolGroupedRoster interns={filtered} worksites={worksites} />
+        )
+      ) : (
+        <div className="space-y-2">
+          {loading ? (
+            <p className="text-center text-sm text-muted-foreground py-12">Loading...</p>
+          ) : filtered.length === 0 ? (
+            <p className="text-center text-sm text-muted-foreground py-12">No interns match your filters.</p>
+          ) : filtered.map((intern) => (
+            <InternCard
+              key={intern.id}
+              intern={intern}
+              worksites={worksites}
+              bulkMode={bulkMode}
+              selected={selectedIds.has(intern.id)}
+              onToggleSelect={() => toggleSelect(intern.id)}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 }
