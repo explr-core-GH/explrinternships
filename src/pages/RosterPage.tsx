@@ -123,6 +123,20 @@ export default function RosterPage() {
           </p>
         </div>
         <div className="flex gap-2">
+          <div className="flex rounded-md border border-input overflow-hidden">
+            <button
+              onClick={() => setViewMode('list')}
+              className={`h-8 px-2.5 flex items-center gap-1 text-xs font-medium transition-colors ${viewMode === 'list' ? 'bg-primary text-primary-foreground' : 'bg-background text-muted-foreground hover:text-foreground'}`}
+            >
+              <List className="h-3.5 w-3.5" /> List
+            </button>
+            <button
+              onClick={() => setViewMode('school')}
+              className={`h-8 px-2.5 flex items-center gap-1 text-xs font-medium transition-colors ${viewMode === 'school' ? 'bg-primary text-primary-foreground' : 'bg-background text-muted-foreground hover:text-foreground'}`}
+            >
+              <School className="h-3.5 w-3.5" /> By School
+            </button>
+          </div>
           <Button
             variant={bulkMode ? 'default' : 'outline'}
             size="sm"
