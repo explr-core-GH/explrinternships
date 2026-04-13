@@ -60,6 +60,7 @@
     --status-not-matched: 38 92% 50%;
     --status-matched: 152 60% 40%;
     --status-assigned: 152 70% 30%;
+    --status-ready-to-place: 280 60% 55%;
     --status-in-progress: 48 96% 53%;
     --status-intake-complete: 200 70% 45%;
     --status-issue: 24 95% 53%;

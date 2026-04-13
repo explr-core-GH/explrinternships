@@ -1,10 +1,11 @@
-export const INTERN_STATUSES = ['pending', 'not_matched', 'matched', 'assigned', 'in_progress_you', 'intake_complete', 'intake_issue', 'selected_different_partner', 'removed'] as const;
+export const INTERN_STATUSES = ['pending', 'not_matched', 'matched', 'ready_to_place', 'assigned', 'in_progress_you', 'intake_complete', 'intake_issue', 'selected_different_partner', 'removed'] as const;
 export type InternStatus = typeof INTERN_STATUSES[number];
 
 export const STATUS_CONFIG: Record<InternStatus, { label: string; color: string; bgClass: string; textClass: string; borderClass: string }> = {
   pending:                 { label: 'Pending',                        color: 'hsl(var(--status-pending))',           bgClass: 'bg-muted',                            textClass: 'text-muted-foreground',             borderClass: 'border-status-pending' },
   not_matched:             { label: 'Not Matched',                    color: 'hsl(var(--status-not-matched))',       bgClass: 'bg-status-not-matched/10',           textClass: 'text-status-not-matched',           borderClass: 'border-status-not-matched' },
   matched:                 { label: 'Matched',                        color: 'hsl(var(--status-matched))',           bgClass: 'bg-status-matched/10',               textClass: 'text-status-matched',               borderClass: 'border-status-matched' },
+  ready_to_place:          { label: 'Ready to Place',                 color: 'hsl(var(--status-ready-to-place))',    bgClass: 'bg-status-ready-to-place/10',        textClass: 'text-status-ready-to-place',        borderClass: 'border-status-ready-to-place' },
   assigned:                { label: 'Assigned',                       color: 'hsl(var(--status-assigned))',          bgClass: 'bg-status-assigned/10',              textClass: 'text-status-assigned',              borderClass: 'border-status-assigned' },
   in_progress_you:         { label: 'In Progress (YOU)',              color: 'hsl(var(--status-in-progress))',       bgClass: 'bg-status-in-progress/10',           textClass: 'text-status-in-progress',           borderClass: 'border-status-in-progress' },
   intake_complete:         { label: 'Intake Complete',                color: 'hsl(var(--status-intake-complete))',   bgClass: 'bg-status-intake-complete/10',       textClass: 'text-status-intake-complete',       borderClass: 'border-status-intake-complete' },

@@ -70,6 +70,7 @@ export default {
           "not-matched": "hsl(var(--status-not-matched))",
           matched: "hsl(var(--status-matched))",
           assigned: "hsl(var(--status-assigned))",
+          "ready-to-place": "hsl(var(--status-ready-to-place))",
           "in-progress": "hsl(var(--status-in-progress))",
           issue: "hsl(var(--status-issue))",
           "selected-partner": "hsl(var(--status-selected-partner))",
