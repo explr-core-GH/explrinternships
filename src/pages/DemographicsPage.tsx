@@ -37,6 +37,7 @@ export default function DemographicsPage() {
     const grades: Record<string, number> = {};
     const schools: Record<string, number> = {};
     const programs: Record<string, number> = {};
+    const genders: Record<string, number> = {};
     const interestCounts: Record<string, { yes: number; maybe: number; no: number }> = {};
 
     for (const f of interestFields) {
@@ -47,6 +48,8 @@ export default function DemographicsPage() {
       grades[intern.grade] = (grades[intern.grade] || 0) + 1;
       const school = intern.otherSchool || intern.school;
       schools[school] = (schools[school] || 0) + 1;
+      const g = intern.gender || 'Not specified';
+      genders[g] = (genders[g] || 0) + 1;
       for (const p of intern.programs) {
         if (p !== 'Not Applicable/None') programs[p] = (programs[p] || 0) + 1;
       }
@@ -58,7 +61,7 @@ export default function DemographicsPage() {
       }
     }
 
-    return { grades, schools, programs, interestCounts };
+    return { grades, schools, programs, genders, interestCounts };
   }, [active]);
 
   const sortedGrades = useMemo(() => {
