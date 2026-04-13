@@ -1,7 +1,11 @@
 import { useMemo, useState } from 'react';
+import { FileSpreadsheet, FileText } from 'lucide-react';
 import { useAppStore } from '@/store/useAppStore';
 import { useAutoLoadData } from '@/hooks/useAutoLoadData';
 import { INTEREST_LABELS, type InterestField, INTERN_STATUSES, STATUS_CONFIG, type InternStatus } from '@/types/intern';
+import { exportDemographicsExcel, exportDemographicsPDF } from '@/lib/exportDemographics';
+import { Button } from '@/components/ui/button';
+import { toast } from 'sonner';
 import {
   Select,
   SelectContent,
