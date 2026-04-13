@@ -1,4 +1,4 @@
-export const INTERN_STATUSES = ['pending', 'not_matched', 'matched', 'assigned', 'in_progress_you', 'intake_issue', 'selected_different_partner', 'removed'] as const;
+export const INTERN_STATUSES = ['pending', 'not_matched', 'matched', 'assigned', 'in_progress_you', 'intake_complete', 'intake_issue', 'selected_different_partner', 'removed'] as const;
 export type InternStatus = typeof INTERN_STATUSES[number];
 
 export const STATUS_CONFIG: Record<InternStatus, { label: string; color: string; bgClass: string; textClass: string; borderClass: string }> = {
@@ -7,6 +7,7 @@ export const STATUS_CONFIG: Record<InternStatus, { label: string; color: string;
   matched:                 { label: 'Matched',                        color: 'hsl(var(--status-matched))',           bgClass: 'bg-status-matched/10',               textClass: 'text-status-matched',               borderClass: 'border-status-matched' },
   assigned:                { label: 'Assigned',                       color: 'hsl(var(--status-assigned))',          bgClass: 'bg-status-assigned/10',              textClass: 'text-status-assigned',              borderClass: 'border-status-assigned' },
   in_progress_you:         { label: 'In Progress (YOU)',              color: 'hsl(var(--status-in-progress))',       bgClass: 'bg-status-in-progress/10',           textClass: 'text-status-in-progress',           borderClass: 'border-status-in-progress' },
+  intake_complete:         { label: 'Intake Complete',                color: 'hsl(var(--status-intake-complete))',   bgClass: 'bg-status-intake-complete/10',       textClass: 'text-status-intake-complete',       borderClass: 'border-status-intake-complete' },
   intake_issue:            { label: 'Intake Issue',                   color: 'hsl(var(--status-issue))',             bgClass: 'bg-status-issue/10',                 textClass: 'text-status-issue',                 borderClass: 'border-status-issue' },
   selected_different_partner: { label: 'Selected with Different Partner', color: 'hsl(var(--status-selected-partner))',  bgClass: 'bg-status-selected-partner/10',      textClass: 'text-status-selected-partner',      borderClass: 'border-status-selected-partner' },
   removed:                 { label: 'Removed',                        color: 'hsl(var(--status-removed))',           bgClass: 'bg-status-removed/10',               textClass: 'text-status-removed',               borderClass: 'border-status-removed' },
