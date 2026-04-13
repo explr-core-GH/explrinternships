@@ -16,6 +16,7 @@ interface DemoStats {
   grades: Record<string, number>;
   schools: Record<string, number>;
   programs: Record<string, number>;
+  genders: Record<string, number>;
   interestCounts: Record<string, { yes: number; maybe: number; no: number }>;
   itInterests: [string, number][];
   duplicates: number;
@@ -25,6 +26,7 @@ function computeStats(interns: Intern[]): DemoStats {
   const grades: Record<string, number> = {};
   const schools: Record<string, number> = {};
   const programs: Record<string, number> = {};
+  const genders: Record<string, number> = {};
   const interestCounts: Record<string, { yes: number; maybe: number; no: number }> = {};
   const itCounts: Record<string, number> = {};
 
@@ -34,6 +36,8 @@ function computeStats(interns: Intern[]): DemoStats {
     grades[intern.grade] = (grades[intern.grade] || 0) + 1;
     const school = intern.otherSchool || intern.school;
     schools[school] = (schools[school] || 0) + 1;
+    const g = intern.gender || 'Not Specified';
+    genders[g] = (genders[g] || 0) + 1;
     for (const p of intern.programs) {
       if (p !== 'Not Applicable/None') programs[p] = (programs[p] || 0) + 1;
     }
@@ -52,6 +56,7 @@ function computeStats(interns: Intern[]): DemoStats {
     total: interns.length,
     grades,
     schools,
+    genders,
     programs,
     interestCounts,
     itInterests: Object.entries(itCounts).sort((a, b) => b[1] - a[1]),
@@ -99,6 +104,13 @@ export function exportDemographicsExcel(interns: Intern[], status: InternStatus 
     gradeRows.push([grade, String(count), `${Math.round((count / totalGrade) * 100)}%`]);
   });
   XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(gradeRows), 'By Grade');
+
+  // Gender sheet
+  const genderRows: (string | number)[][] = [['Gender', 'Count', 'Percentage']];
+  Object.entries(stats.genders).sort((a, b) => b[1] - a[1]).forEach(([g, c]) => {
+    genderRows.push([g, c, `${Math.round((c / stats.total) * 100)}%`]);
+  });
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(genderRows), 'By Gender');
 
   // Schools sheet
   const schoolRows: (string | number)[][] = [['School', 'Count']];
@@ -212,6 +224,26 @@ export function exportDemographicsPDF(interns: Intern[], status: InternStatus | 
     doc.text(grade, margin + 2, y);
     const barX = margin + 20;
     const barW = contentW - 45;
+    const fillW = barW * (pct / 100);
+    doc.setFillColor(230, 230, 230);
+    doc.roundedRect(barX, y - 3.5, barW, 4.5, 1, 1, 'F');
+    doc.setFillColor(22, 135, 120);
+    if (fillW > 1) doc.roundedRect(barX, y - 3.5, fillW, 4.5, 1, 1, 'F');
+    doc.text(`${count} (${pct}%)`, pageW - margin - 2, y, { align: 'right' });
+    y += 7;
+  });
+
+  // Gender
+  const genderEntries = Object.entries(stats.genders).sort((a, b) => b[1] - a[1]);
+  drawSectionHeader('By Gender');
+  genderEntries.forEach(([gender, count]) => {
+    const pct = Math.round((count / stats.total) * 100);
+    checkPage(8);
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'normal');
+    doc.text(gender, margin + 2, y);
+    const barX = margin + 35;
+    const barW = contentW - 60;
     const fillW = barW * (pct / 100);
     doc.setFillColor(230, 230, 230);
     doc.roundedRect(barX, y - 3.5, barW, 4.5, 1, 1, 'F');
