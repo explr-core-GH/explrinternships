@@ -5,6 +5,7 @@ import GoogleSheetSync from '@/components/GoogleSheetSync';
 import SchoolContactUpload from '@/components/SchoolContactUpload';
 import AppointmentUpload from '@/components/AppointmentUpload';
 import { useAppStore } from '@/store/useAppStore';
+import { useAutoLoadData } from '@/hooks/useAutoLoadData';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import {
@@ -13,6 +14,7 @@ import {
 } from '@/components/ui/alert-dialog';
 
 export default function UploadPage() {
+  useAutoLoadData();
   const { interns, canUndoUpload, undoLastUpload } = useAppStore();
   const [undoing, setUndoing] = useState(false);
 

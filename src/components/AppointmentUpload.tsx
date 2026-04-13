@@ -80,6 +80,8 @@ export default function AppointmentUpload() {
     setReviewItems([]);
 
     try {
+      await fetchInterns();
+      const activeInterns = useAppStore.getState().interns.filter((intern) => intern.isNewest);
       const data = await file.arrayBuffer();
       const appointments = parseAppointmentFile(data);
 
@@ -89,7 +91,6 @@ export default function AppointmentUpload() {
         return;
       }
 
-      const activeInterns = interns.filter((intern) => intern.isNewest);
       let matched = 0;
       const unmatched: string[] = [];
       const nextReviewItems: AppointmentReviewItem[] = [];
@@ -136,7 +137,7 @@ export default function AppointmentUpload() {
 
     setUploading(false);
     event.target.value = '';
-  }, [fetchInterns, interns]);
+  }, [fetchInterns]);
 
   return (
     <div className="space-y-3">
