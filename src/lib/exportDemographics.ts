@@ -16,6 +16,7 @@ interface DemoStats {
   grades: Record<string, number>;
   schools: Record<string, number>;
   programs: Record<string, number>;
+  genders: Record<string, number>;
   interestCounts: Record<string, { yes: number; maybe: number; no: number }>;
   itInterests: [string, number][];
   duplicates: number;
@@ -25,6 +26,7 @@ function computeStats(interns: Intern[]): DemoStats {
   const grades: Record<string, number> = {};
   const schools: Record<string, number> = {};
   const programs: Record<string, number> = {};
+  const genders: Record<string, number> = {};
   const interestCounts: Record<string, { yes: number; maybe: number; no: number }> = {};
   const itCounts: Record<string, number> = {};
 
@@ -34,6 +36,8 @@ function computeStats(interns: Intern[]): DemoStats {
     grades[intern.grade] = (grades[intern.grade] || 0) + 1;
     const school = intern.otherSchool || intern.school;
     schools[school] = (schools[school] || 0) + 1;
+    const g = intern.gender || 'Not Specified';
+    genders[g] = (genders[g] || 0) + 1;
     for (const p of intern.programs) {
       if (p !== 'Not Applicable/None') programs[p] = (programs[p] || 0) + 1;
     }
@@ -52,6 +56,7 @@ function computeStats(interns: Intern[]): DemoStats {
     total: interns.length,
     grades,
     schools,
+    genders,
     programs,
     interestCounts,
     itInterests: Object.entries(itCounts).sort((a, b) => b[1] - a[1]),
