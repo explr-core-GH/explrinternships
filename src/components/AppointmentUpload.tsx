@@ -32,7 +32,7 @@ async function applyAppointmentToIntern(appointment: ParsedAppointment, internId
     updateFields.student_email = appointment.email;
   }
 
-  await supabase.from('interns').update(updateFields).eq('id', internId);
+  await supabase.from('interns').update(updateFields as any).eq('id', internId);
 }
 
 export default function AppointmentUpload() {
