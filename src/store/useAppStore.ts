@@ -292,7 +292,7 @@ export const useAppStore = create<AppState>()((set, get) => ({
       const dbKey = fieldMap[key] || key;
       dbUpdates[dbKey] = val;
     }
-    await supabase.from('worksites').update(dbUpdates).eq('id', id);
+    await supabase.from('worksites').update(dbUpdates as any).eq('id', id);
     set(s => ({
       worksites: s.worksites.map(w => w.id === id ? { ...w, ...updates } as Worksite : w),
     }));
@@ -324,7 +324,7 @@ export const useAppStore = create<AppState>()((set, get) => ({
       const dbKey = fieldMap[key] || key;
       dbUpdates[dbKey] = val;
     }
-    await supabase.from('interns').update(dbUpdates).eq('id', id);
+    await supabase.from('interns').update(dbUpdates as any).eq('id', id);
     // Update local state
     set(s => ({
       interns: s.interns.map(i => i.id === id ? { ...i, ...updates } as Intern : i),
