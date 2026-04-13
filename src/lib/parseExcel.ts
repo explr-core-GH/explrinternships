@@ -246,6 +246,7 @@ export function parseExcelFile(data: ArrayBuffer): Intern[] {
       school: getVal(row, headers, 'Which CMSD school'),
       otherSchool: otherSchoolStr,
       grade: getVal(row, headers, 'What grade are you currently'),
+      gender: '',
       programs: programsStr ? programsStr.split(',').map(s => s.trim()).filter(Boolean) : [],
       itInterests: itStr ? itStr.split(',').map(s => s.trim()).filter(Boolean) : [],
       clevelandClinic: getVal(row, headers, 'Cleveland Clinic'),
