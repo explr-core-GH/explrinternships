@@ -196,9 +196,11 @@ export function parseAppointmentFile(data: ArrayBuffer): ParsedAppointment[] {
     if (headerIndex < 0) continue;
 
     const headers = rows[headerIndex].map((header) => String(header ?? ''));
-    const firstNameIndex = findColumn(headers, 'first name');
-    const lastNameIndex = findColumn(headers, 'last name');
-    const fullNameIndex = findColumn(headers, 'full name', 'student name', 'youth name', 'name');
+    const firstNameIndex = findColumn(headers, 'first name', 'yp first name');
+    const lastNameIndex = findColumn(headers, 'last name', 'yp last name');
+    const fullNameIndex = (firstNameIndex >= 0 && lastNameIndex >= 0)
+      ? -1
+      : findColumn(headers, 'full name', 'student name', 'youth name', 'name');
     const dobIndex = findColumn(headers, 'birthdate', 'birth date', 'date of birth', 'dob', 'birthday');
     const emailIndex = findColumn(headers, 'email', 'e-mail');
     const dateIndex = findColumn(headers, 'appointment date', 'intake date', 'date');
