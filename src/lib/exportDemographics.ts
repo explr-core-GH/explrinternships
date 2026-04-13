@@ -233,6 +233,26 @@ export function exportDemographicsPDF(interns: Intern[], status: InternStatus | 
     y += 7;
   });
 
+  // Gender
+  const genderEntries = Object.entries(stats.genders).sort((a, b) => b[1] - a[1]);
+  drawSectionHeader('By Gender');
+  genderEntries.forEach(([gender, count]) => {
+    const pct = Math.round((count / stats.total) * 100);
+    checkPage(8);
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'normal');
+    doc.text(gender, margin + 2, y);
+    const barX = margin + 35;
+    const barW = contentW - 60;
+    const fillW = barW * (pct / 100);
+    doc.setFillColor(230, 230, 230);
+    doc.roundedRect(barX, y - 3.5, barW, 4.5, 1, 1, 'F');
+    doc.setFillColor(22, 135, 120);
+    if (fillW > 1) doc.roundedRect(barX, y - 3.5, fillW, 4.5, 1, 1, 'F');
+    doc.text(`${count} (${pct}%)`, pageW - margin - 2, y, { align: 'right' });
+    y += 7;
+  });
+
   // Schools
   const schoolEntries = Object.entries(stats.schools).sort((a, b) => b[1] - a[1]);
   drawSectionHeader(`By School (${schoolEntries.length})`);
