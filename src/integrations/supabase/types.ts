@@ -30,6 +30,7 @@ export type Database = {
           env_field_science: string | null
           env_justice: string | null
           first_name: string
+          gender: string | null
           grade: string | null
           healthcare: string | null
           id: string
@@ -70,6 +71,7 @@ export type Database = {
           env_field_science?: string | null
           env_justice?: string | null
           first_name: string
+          gender?: string | null
           grade?: string | null
           healthcare?: string | null
           id?: string
@@ -110,6 +112,7 @@ export type Database = {
           env_field_science?: string | null
           env_justice?: string | null
           first_name?: string
+          gender?: string | null
           grade?: string | null
           healthcare?: string | null
           id?: string

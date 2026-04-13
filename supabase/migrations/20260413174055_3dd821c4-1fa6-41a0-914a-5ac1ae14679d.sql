@@ -1,0 +1,1 @@
+ALTER TABLE public.interns ADD COLUMN gender text DEFAULT NULL;
