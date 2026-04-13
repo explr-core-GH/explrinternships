@@ -204,7 +204,41 @@ export default function DemographicsPage() {
             </div>
           </div>
 
-          {/* Interest breakdown */}
+          {/* Gender breakdown */}
+          {Object.keys(stats.genders).length > 0 && (
+            <div className="rounded-lg border bg-card p-4 shadow-card">
+              <h3 className="text-sm font-semibold text-card-foreground mb-3">By Gender</h3>
+              <div className="flex items-center gap-6 flex-wrap">
+                {Object.entries(stats.genders)
+                  .sort((a, b) => b[1] - a[1])
+                  .map(([gender, count]) => {
+                    const pct = Math.round((count / active.length) * 100);
+                    return (
+                      <div key={gender} className="flex flex-col items-center">
+                        <div className="relative h-16 w-16 mb-1.5">
+                          <svg className="h-16 w-16 -rotate-90" viewBox="0 0 36 36">
+                            <circle cx="18" cy="18" r="15.9" fill="none" className="stroke-muted" strokeWidth="3" />
+                            <circle
+                              cx="18" cy="18" r="15.9" fill="none"
+                              className="stroke-primary"
+                              strokeWidth="3"
+                              strokeDasharray={`${pct} ${100 - pct}`}
+                              strokeLinecap="round"
+                            />
+                          </svg>
+                          <div className="absolute inset-0 flex items-center justify-center">
+                            <span className="text-sm font-bold text-foreground">{count}</span>
+                          </div>
+                        </div>
+                        <span className="text-xs font-medium text-muted-foreground">{gender}</span>
+                        <span className="text-[10px] text-muted-foreground">{pct}%</span>
+                      </div>
+                    );
+                  })}
+              </div>
+            </div>
+          )}
+
           <div className="rounded-lg border bg-card p-4 shadow-card">
             <h3 className="text-sm font-semibold text-card-foreground mb-3">Internship Interest Levels</h3>
             <div className="space-y-2">
