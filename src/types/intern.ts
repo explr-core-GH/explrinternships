@@ -26,6 +26,7 @@ export interface Intern {
   school: string;
   otherSchool: string;
   grade: string;
+  gender: string;
   programs: string[];
   itInterests: string[];
   clevelandClinic: string;
