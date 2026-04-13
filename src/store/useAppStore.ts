@@ -22,7 +22,7 @@ function dbToIntern(row: DbIntern): Intern {
     school: row.school || '',
     otherSchool: row.other_school || '',
     grade: row.grade || '',
-    programs: row.programs || [],
+    gender: (row as any).gender || '',
     itInterests: row.it_interests || [],
     clevelandClinic: row.cleveland_clinic || '',
     constructionMgmt: row.construction_mgmt || '',
