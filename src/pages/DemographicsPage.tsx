@@ -1,7 +1,11 @@
 import { useMemo, useState } from 'react';
+import { FileSpreadsheet, FileText } from 'lucide-react';
 import { useAppStore } from '@/store/useAppStore';
 import { useAutoLoadData } from '@/hooks/useAutoLoadData';
 import { INTEREST_LABELS, type InterestField, INTERN_STATUSES, STATUS_CONFIG, type InternStatus } from '@/types/intern';
+import { exportDemographicsExcel, exportDemographicsPDF } from '@/lib/exportDemographics';
+import { Button } from '@/components/ui/button';
+import { toast } from 'sonner';
 import {
   Select,
   SelectContent,
@@ -90,22 +94,50 @@ export default function DemographicsPage() {
           <h2 className="text-xl font-bold text-foreground">Demographics & Data Overview</h2>
           <p className="text-xs text-muted-foreground">{active.length} interns{statusFilter !== 'all' ? ` · ${STATUS_CONFIG[statusFilter].label}` : ''}</p>
         </div>
-        <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as InternStatus | 'all')}>
-          <SelectTrigger className="w-52">
-            <SelectValue placeholder="Filter by status" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Statuses</SelectItem>
-            {INTERN_STATUSES.map(s => (
-              <SelectItem key={s} value={s}>
-                <span className="flex items-center gap-2">
-                  <span className={`inline-block w-2 h-2 rounded-full`} style={{ backgroundColor: STATUS_CONFIG[s].color }} />
-                  {STATUS_CONFIG[s].label}
-                </span>
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <div className="flex items-center gap-2 flex-wrap">
+          <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as InternStatus | 'all')}>
+            <SelectTrigger className="w-52">
+              <SelectValue placeholder="Filter by status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Statuses</SelectItem>
+              {INTERN_STATUSES.map(s => (
+                <SelectItem key={s} value={s}>
+                  <span className="flex items-center gap-2">
+                    <span className="inline-block w-2 h-2 rounded-full" style={{ backgroundColor: STATUS_CONFIG[s].color }} />
+                    {STATUS_CONFIG[s].label}
+                  </span>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Button
+            variant="outline"
+            size="sm"
+            className="gap-1.5"
+            onClick={() => {
+              exportDemographicsExcel(interns, statusFilter);
+              toast.success('Excel exported');
+            }}
+            disabled={active.length === 0}
+          >
+            <FileSpreadsheet className="h-3.5 w-3.5" />
+            Excel
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="gap-1.5"
+            onClick={() => {
+              exportDemographicsPDF(interns, statusFilter);
+              toast.success('PDF exported');
+            }}
+            disabled={active.length === 0}
+          >
+            <FileText className="h-3.5 w-3.5" />
+            PDF
+          </Button>
+        </div>
       </div>
 
       {active.length === 0 ? (
