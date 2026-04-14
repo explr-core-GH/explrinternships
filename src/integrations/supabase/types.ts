@@ -39,6 +39,7 @@ export type Database = {
           intake_location: string | null
           intake_time: string | null
           is_duplicate: boolean | null
+          is_ell: boolean | null
           is_newest: boolean | null
           it_interests: string[] | null
           last_name: string
@@ -83,6 +84,7 @@ export type Database = {
           intake_location?: string | null
           intake_time?: string | null
           is_duplicate?: boolean | null
+          is_ell?: boolean | null
           is_newest?: boolean | null
           it_interests?: string[] | null
           last_name: string
@@ -127,6 +129,7 @@ export type Database = {
           intake_location?: string | null
           intake_time?: string | null
           is_duplicate?: boolean | null
+          is_ell?: boolean | null
           is_newest?: boolean | null
           it_interests?: string[] | null
           last_name?: string

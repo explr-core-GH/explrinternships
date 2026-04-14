@@ -49,6 +49,7 @@ function dbToIntern(row: DbIntern): Intern {
     raceEthnicity: (row as any).race_ethnicity || '',
     parentGuardianEmail: (row as any).parent_guardian_email || '',
     parentGuardianPhone: (row as any).parent_guardian_phone || '',
+    isEll: (row as any).is_ell || false,
   };
 }
 

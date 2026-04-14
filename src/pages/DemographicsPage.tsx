@@ -70,7 +70,10 @@ export default function DemographicsPage() {
       }
     }
 
-    return { grades, schools, programs, genders, races, interestCounts };
+    const ellCount = active.filter(i => i.isEll).length;
+    const nonEllCount = active.length - ellCount;
+
+    return { grades, schools, programs, genders, races, interestCounts, ellCount, nonEllCount };
   }, [active]);
 
   const sortedGrades = useMemo(() => {
@@ -213,77 +216,34 @@ export default function DemographicsPage() {
             </div>
           </div>
 
-          {/* Gender breakdown */}
-          {Object.keys(stats.genders).length > 0 && (
-            <div className="rounded-lg border bg-card p-4 shadow-card">
-              <h3 className="text-sm font-semibold text-card-foreground mb-3">By Gender</h3>
-              <div className="flex items-center gap-6 flex-wrap">
-                {Object.entries(stats.genders)
-                  .sort((a, b) => b[1] - a[1])
-                  .map(([gender, count]) => {
-                    const pct = Math.round((count / active.length) * 100);
-                    return (
-                      <div key={gender} className="flex flex-col items-center">
-                        <div className="relative h-16 w-16 mb-1.5">
-                          <svg className="h-16 w-16 -rotate-90" viewBox="0 0 36 36">
-                            <circle cx="18" cy="18" r="15.9" fill="none" className="stroke-muted" strokeWidth="3" />
-                            <circle
-                              cx="18" cy="18" r="15.9" fill="none"
-                              className="stroke-primary"
-                              strokeWidth="3"
-                              strokeDasharray={`${pct} ${100 - pct}`}
-                              strokeLinecap="round"
-                            />
-                          </svg>
-                          <div className="absolute inset-0 flex items-center justify-center">
-                            <span className="text-sm font-bold text-foreground">{count}</span>
-                          </div>
-                        </div>
-                        <span className="text-xs font-medium text-muted-foreground">{gender}</span>
-                        <span className="text-[10px] text-muted-foreground">{pct}%</span>
-                      </div>
-                    );
-                  })}
+          {/* Pie charts row */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {/* Gender Pie */}
+            {Object.keys(stats.genders).length > 0 && (
+              <div className="rounded-lg border bg-card p-4 shadow-card">
+                <h3 className="text-sm font-semibold text-card-foreground mb-3">By Gender</h3>
+                <PieChart data={Object.entries(stats.genders).sort((a, b) => b[1] - a[1])} />
+                <p className="text-[10px] text-muted-foreground mt-2 italic">Students without intake data on file are not included in gender demographics.</p>
               </div>
-              <p className="text-[10px] text-muted-foreground mt-2 italic">Students without intake data on file are not included in gender demographics.</p>
-            </div>
-          )}
+            )}
 
-          {/* Race/Ethnicity breakdown */}
-          {Object.keys(stats.races).length > 0 && (
-            <div className="rounded-lg border bg-card p-4 shadow-card">
-              <h3 className="text-sm font-semibold text-card-foreground mb-3">By Race / Ethnicity</h3>
-              <div className="flex items-center gap-6 flex-wrap">
-                {Object.entries(stats.races)
-                  .sort((a, b) => b[1] - a[1])
-                  .map(([race, count]) => {
-                    const pct = Math.round((count / active.length) * 100);
-                    return (
-                      <div key={race} className="flex flex-col items-center">
-                        <div className="relative h-16 w-16 mb-1.5">
-                          <svg className="h-16 w-16 -rotate-90" viewBox="0 0 36 36">
-                            <circle cx="18" cy="18" r="15.9" fill="none" className="stroke-muted" strokeWidth="3" />
-                            <circle
-                              cx="18" cy="18" r="15.9" fill="none"
-                              className="stroke-primary"
-                              strokeWidth="3"
-                              strokeDasharray={`${pct} ${100 - pct}`}
-                              strokeLinecap="round"
-                            />
-                          </svg>
-                          <div className="absolute inset-0 flex items-center justify-center">
-                            <span className="text-sm font-bold text-foreground">{count}</span>
-                          </div>
-                        </div>
-                        <span className="text-xs font-medium text-muted-foreground text-center max-w-20">{race}</span>
-                        <span className="text-[10px] text-muted-foreground">{pct}%</span>
-                      </div>
-                    );
-                  })}
+            {/* Race/Ethnicity Pie */}
+            {Object.keys(stats.races).length > 0 && (
+              <div className="rounded-lg border bg-card p-4 shadow-card">
+                <h3 className="text-sm font-semibold text-card-foreground mb-3">By Race / Ethnicity</h3>
+                <PieChart data={Object.entries(stats.races).sort((a, b) => b[1] - a[1])} />
+                <p className="text-[10px] text-muted-foreground mt-2 italic">Students without intake data on file are not included in race/ethnicity demographics.</p>
               </div>
-              <p className="text-[10px] text-muted-foreground mt-2 italic">Students without intake data on file are not included in race/ethnicity demographics.</p>
-            </div>
-          )}
+            )}
+
+            {/* ELL Pie */}
+            {stats.ellCount > 0 && (
+              <div className="rounded-lg border bg-card p-4 shadow-card">
+                <h3 className="text-sm font-semibold text-card-foreground mb-3">English Language Learners (ELL)</h3>
+                <PieChart data={[['ELL', stats.ellCount], ['Non-ELL', stats.nonEllCount]]} />
+              </div>
+            )}
+          </div>
           <div className="rounded-lg border bg-card p-4 shadow-card">
             <h3 className="text-sm font-semibold text-card-foreground mb-3">Internship Interest Levels</h3>
             <div className="space-y-2">
@@ -348,6 +308,65 @@ function StatCard({ label, value }: { label: string; value: number }) {
     <div className="rounded-lg border bg-card p-3 shadow-card">
       <p className="text-2xl font-bold text-foreground">{value}</p>
       <p className="text-xs text-muted-foreground">{label}</p>
+    </div>
+  );
+}
+
+const PIE_COLORS = [
+  'hsl(168, 72%, 31%)', 'hsl(200, 70%, 50%)', 'hsl(340, 65%, 55%)', 'hsl(45, 85%, 50%)',
+  'hsl(270, 55%, 55%)', 'hsl(120, 45%, 45%)', 'hsl(15, 75%, 55%)', 'hsl(195, 60%, 40%)',
+  'hsl(300, 40%, 50%)', 'hsl(60, 60%, 45%)', 'hsl(220, 60%, 55%)', 'hsl(0, 55%, 50%)',
+];
+
+function PieChart({ data }: { data: [string, number][] }) {
+  const total = data.reduce((s, [, v]) => s + v, 0);
+  if (total === 0) return null;
+
+  const slices: { label: string; count: number; pct: number; startAngle: number; endAngle: number; color: string }[] = [];
+  let cumAngle = -90; // start from top
+  data.forEach(([label, count], i) => {
+    const pct = (count / total) * 100;
+    const angle = (count / total) * 360;
+    slices.push({ label, count, pct, startAngle: cumAngle, endAngle: cumAngle + angle, color: PIE_COLORS[i % PIE_COLORS.length] });
+    cumAngle += angle;
+  });
+
+  const r = 80;
+  const cx = 100;
+  const cy = 100;
+
+  function arcPath(startAngle: number, endAngle: number) {
+    const startRad = (startAngle * Math.PI) / 180;
+    const endRad = (endAngle * Math.PI) / 180;
+    const x1 = cx + r * Math.cos(startRad);
+    const y1 = cy + r * Math.sin(startRad);
+    const x2 = cx + r * Math.cos(endRad);
+    const y2 = cy + r * Math.sin(endRad);
+    const largeArc = endAngle - startAngle > 180 ? 1 : 0;
+    return `M ${cx} ${cy} L ${x1} ${y1} A ${r} ${r} 0 ${largeArc} 1 ${x2} ${y2} Z`;
+  }
+
+  return (
+    <div className="flex flex-col items-center gap-3">
+      <svg viewBox="0 0 200 200" className="w-40 h-40">
+        {slices.map((s, i) =>
+          s.pct >= 100 ? (
+            <circle key={i} cx={cx} cy={cy} r={r} fill={s.color} />
+          ) : (
+            <path key={i} d={arcPath(s.startAngle, s.endAngle)} fill={s.color} stroke="hsl(var(--card))" strokeWidth="1" />
+          )
+        )}
+      </svg>
+      <div className="flex flex-wrap gap-x-3 gap-y-1 justify-center">
+        {slices.map((s, i) => (
+          <div key={i} className="flex items-center gap-1 text-[10px] text-muted-foreground">
+            <span className="inline-block w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: s.color }} />
+            <span className="truncate max-w-24">{s.label}</span>
+            <span className="font-semibold text-foreground">{s.count}</span>
+            <span>({Math.round(s.pct)}%)</span>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

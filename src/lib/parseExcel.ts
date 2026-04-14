@@ -273,6 +273,7 @@ export function parseExcelFile(data: ArrayBuffer): Intern[] {
       raceEthnicity: '',
       parentGuardianEmail: '',
       parentGuardianPhone: '',
+      isEll: false,
     };
     
     interns.push(intern);
