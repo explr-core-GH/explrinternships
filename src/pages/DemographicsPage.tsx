@@ -279,7 +279,7 @@ export default function DemographicsPage() {
                   })}
               </div>
             </div>
-
+          )}
           <div className="rounded-lg border bg-card p-4 shadow-card">
             <h3 className="text-sm font-semibold text-card-foreground mb-3">Internship Interest Levels</h3>
             <div className="space-y-2">
