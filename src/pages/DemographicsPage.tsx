@@ -311,3 +311,62 @@ function StatCard({ label, value }: { label: string; value: number }) {
     </div>
   );
 }
+
+const PIE_COLORS = [
+  'hsl(168, 72%, 31%)', 'hsl(200, 70%, 50%)', 'hsl(340, 65%, 55%)', 'hsl(45, 85%, 50%)',
+  'hsl(270, 55%, 55%)', 'hsl(120, 45%, 45%)', 'hsl(15, 75%, 55%)', 'hsl(195, 60%, 40%)',
+  'hsl(300, 40%, 50%)', 'hsl(60, 60%, 45%)', 'hsl(220, 60%, 55%)', 'hsl(0, 55%, 50%)',
+];
+
+function PieChart({ data }: { data: [string, number][] }) {
+  const total = data.reduce((s, [, v]) => s + v, 0);
+  if (total === 0) return null;
+
+  const slices: { label: string; count: number; pct: number; startAngle: number; endAngle: number; color: string }[] = [];
+  let cumAngle = -90; // start from top
+  data.forEach(([label, count], i) => {
+    const pct = (count / total) * 100;
+    const angle = (count / total) * 360;
+    slices.push({ label, count, pct, startAngle: cumAngle, endAngle: cumAngle + angle, color: PIE_COLORS[i % PIE_COLORS.length] });
+    cumAngle += angle;
+  });
+
+  const r = 80;
+  const cx = 100;
+  const cy = 100;
+
+  function arcPath(startAngle: number, endAngle: number) {
+    const startRad = (startAngle * Math.PI) / 180;
+    const endRad = (endAngle * Math.PI) / 180;
+    const x1 = cx + r * Math.cos(startRad);
+    const y1 = cy + r * Math.sin(startRad);
+    const x2 = cx + r * Math.cos(endRad);
+    const y2 = cy + r * Math.sin(endRad);
+    const largeArc = endAngle - startAngle > 180 ? 1 : 0;
+    return `M ${cx} ${cy} L ${x1} ${y1} A ${r} ${r} 0 ${largeArc} 1 ${x2} ${y2} Z`;
+  }
+
+  return (
+    <div className="flex flex-col items-center gap-3">
+      <svg viewBox="0 0 200 200" className="w-40 h-40">
+        {slices.map((s, i) =>
+          s.pct >= 100 ? (
+            <circle key={i} cx={cx} cy={cy} r={r} fill={s.color} />
+          ) : (
+            <path key={i} d={arcPath(s.startAngle, s.endAngle)} fill={s.color} stroke="hsl(var(--card))" strokeWidth="1" />
+          )
+        )}
+      </svg>
+      <div className="flex flex-wrap gap-x-3 gap-y-1 justify-center">
+        {slices.map((s, i) => (
+          <div key={i} className="flex items-center gap-1 text-[10px] text-muted-foreground">
+            <span className="inline-block w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: s.color }} />
+            <span className="truncate max-w-24">{s.label}</span>
+            <span className="font-semibold text-foreground">{s.count}</span>
+            <span>({Math.round(s.pct)}%)</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
