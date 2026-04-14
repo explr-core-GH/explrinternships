@@ -52,6 +52,9 @@ export interface Intern {
   intakeDate: string;
   intakeTime: string;
   intakeLocation: string;
+  raceEthnicity: string;
+  parentGuardianEmail: string;
+  parentGuardianPhone: string;
 }
 
 export interface Worksite {

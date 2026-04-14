@@ -46,6 +46,9 @@ function dbToIntern(row: DbIntern): Intern {
     intakeDate: (row as any).intake_date || '',
     intakeTime: (row as any).intake_time || '',
     intakeLocation: (row as any).intake_location || '',
+    raceEthnicity: (row as any).race_ethnicity || '',
+    parentGuardianEmail: (row as any).parent_guardian_email || '',
+    parentGuardianPhone: (row as any).parent_guardian_phone || '',
   };
 }
 
