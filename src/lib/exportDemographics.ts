@@ -120,6 +120,13 @@ export function exportDemographicsExcel(interns: Intern[], status: InternStatus 
   });
   XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(genderRows), 'By Gender');
 
+  // Race/Ethnicity sheet
+  const raceRows: (string | number)[][] = [['Race / Ethnicity', 'Count', 'Percentage']];
+  Object.entries(stats.races).sort((a, b) => b[1] - a[1]).forEach(([r, c]) => {
+    raceRows.push([r, c, `${Math.round((c / stats.total) * 100)}%`]);
+  });
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(raceRows), 'By Race Ethnicity');
+
   // Schools sheet
   const schoolRows: (string | number)[][] = [['School', 'Count']];
   Object.entries(stats.schools).sort((a, b) => b[1] - a[1]).forEach(([s, c]) => schoolRows.push([s, c]));
