@@ -216,77 +216,34 @@ export default function DemographicsPage() {
             </div>
           </div>
 
-          {/* Gender breakdown */}
-          {Object.keys(stats.genders).length > 0 && (
-            <div className="rounded-lg border bg-card p-4 shadow-card">
-              <h3 className="text-sm font-semibold text-card-foreground mb-3">By Gender</h3>
-              <div className="flex items-center gap-6 flex-wrap">
-                {Object.entries(stats.genders)
-                  .sort((a, b) => b[1] - a[1])
-                  .map(([gender, count]) => {
-                    const pct = Math.round((count / active.length) * 100);
-                    return (
-                      <div key={gender} className="flex flex-col items-center">
-                        <div className="relative h-16 w-16 mb-1.5">
-                          <svg className="h-16 w-16 -rotate-90" viewBox="0 0 36 36">
-                            <circle cx="18" cy="18" r="15.9" fill="none" className="stroke-muted" strokeWidth="3" />
-                            <circle
-                              cx="18" cy="18" r="15.9" fill="none"
-                              className="stroke-primary"
-                              strokeWidth="3"
-                              strokeDasharray={`${pct} ${100 - pct}`}
-                              strokeLinecap="round"
-                            />
-                          </svg>
-                          <div className="absolute inset-0 flex items-center justify-center">
-                            <span className="text-sm font-bold text-foreground">{count}</span>
-                          </div>
-                        </div>
-                        <span className="text-xs font-medium text-muted-foreground">{gender}</span>
-                        <span className="text-[10px] text-muted-foreground">{pct}%</span>
-                      </div>
-                    );
-                  })}
+          {/* Pie charts row */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {/* Gender Pie */}
+            {Object.keys(stats.genders).length > 0 && (
+              <div className="rounded-lg border bg-card p-4 shadow-card">
+                <h3 className="text-sm font-semibold text-card-foreground mb-3">By Gender</h3>
+                <PieChart data={Object.entries(stats.genders).sort((a, b) => b[1] - a[1])} />
+                <p className="text-[10px] text-muted-foreground mt-2 italic">Students without intake data on file are not included in gender demographics.</p>
               </div>
-              <p className="text-[10px] text-muted-foreground mt-2 italic">Students without intake data on file are not included in gender demographics.</p>
-            </div>
-          )}
+            )}
 
-          {/* Race/Ethnicity breakdown */}
-          {Object.keys(stats.races).length > 0 && (
-            <div className="rounded-lg border bg-card p-4 shadow-card">
-              <h3 className="text-sm font-semibold text-card-foreground mb-3">By Race / Ethnicity</h3>
-              <div className="flex items-center gap-6 flex-wrap">
-                {Object.entries(stats.races)
-                  .sort((a, b) => b[1] - a[1])
-                  .map(([race, count]) => {
-                    const pct = Math.round((count / active.length) * 100);
-                    return (
-                      <div key={race} className="flex flex-col items-center">
-                        <div className="relative h-16 w-16 mb-1.5">
-                          <svg className="h-16 w-16 -rotate-90" viewBox="0 0 36 36">
-                            <circle cx="18" cy="18" r="15.9" fill="none" className="stroke-muted" strokeWidth="3" />
-                            <circle
-                              cx="18" cy="18" r="15.9" fill="none"
-                              className="stroke-primary"
-                              strokeWidth="3"
-                              strokeDasharray={`${pct} ${100 - pct}`}
-                              strokeLinecap="round"
-                            />
-                          </svg>
-                          <div className="absolute inset-0 flex items-center justify-center">
-                            <span className="text-sm font-bold text-foreground">{count}</span>
-                          </div>
-                        </div>
-                        <span className="text-xs font-medium text-muted-foreground text-center max-w-20">{race}</span>
-                        <span className="text-[10px] text-muted-foreground">{pct}%</span>
-                      </div>
-                    );
-                  })}
+            {/* Race/Ethnicity Pie */}
+            {Object.keys(stats.races).length > 0 && (
+              <div className="rounded-lg border bg-card p-4 shadow-card">
+                <h3 className="text-sm font-semibold text-card-foreground mb-3">By Race / Ethnicity</h3>
+                <PieChart data={Object.entries(stats.races).sort((a, b) => b[1] - a[1])} />
+                <p className="text-[10px] text-muted-foreground mt-2 italic">Students without intake data on file are not included in race/ethnicity demographics.</p>
               </div>
-              <p className="text-[10px] text-muted-foreground mt-2 italic">Students without intake data on file are not included in race/ethnicity demographics.</p>
-            </div>
-          )}
+            )}
+
+            {/* ELL Pie */}
+            {stats.ellCount > 0 && (
+              <div className="rounded-lg border bg-card p-4 shadow-card">
+                <h3 className="text-sm font-semibold text-card-foreground mb-3">English Language Learners (ELL)</h3>
+                <PieChart data={[['ELL', stats.ellCount], ['Non-ELL', stats.nonEllCount]]} />
+              </div>
+            )}
+          </div>
           <div className="rounded-lg border bg-card p-4 shadow-card">
             <h3 className="text-sm font-semibold text-card-foreground mb-3">Internship Interest Levels</h3>
             <div className="space-y-2">
