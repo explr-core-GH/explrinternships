@@ -290,12 +290,34 @@ export default function InternCard({ intern, worksites, bulkMode, selected, onTo
               ) : (
                 <>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div className="flex items-center gap-2 text-sm"><Mail className="h-3.5 w-3.5 text-muted-foreground" /><span className="text-muted-foreground truncate">{intern.studentEmail || intern.emailSubmission}</span></div>
-                    <div className="flex items-center gap-2 text-sm"><Phone className="h-3.5 w-3.5 text-muted-foreground" /><span className="text-muted-foreground">{intern.phone}</span></div>
-                    <div className="flex items-center gap-2 text-sm"><School className="h-3.5 w-3.5 text-muted-foreground" /><span className="text-muted-foreground truncate">{displaySchool}</span></div>
-                    <div className="flex items-center gap-2 text-sm"><Calendar className="h-3.5 w-3.5 text-muted-foreground" /><span className="text-muted-foreground">DOB: {intern.dob}</span></div>
+                    <div className="flex items-center gap-2 text-sm"><Mail className="h-3.5 w-3.5 text-muted-foreground" /><span className="text-muted-foreground truncate">{intern.studentEmail || intern.emailSubmission || '—'}</span></div>
+                    <div className="flex items-center gap-2 text-sm"><Phone className="h-3.5 w-3.5 text-muted-foreground" /><span className="text-muted-foreground">{intern.phone || '—'}</span></div>
+                    <div className="flex items-center gap-2 text-sm"><School className="h-3.5 w-3.5 text-muted-foreground" /><span className="text-muted-foreground truncate">{displaySchool || '—'}</span></div>
+                    <div className="flex items-center gap-2 text-sm"><Calendar className="h-3.5 w-3.5 text-muted-foreground" /><span className="text-muted-foreground">DOB: {intern.dob || '—'}</span></div>
                   </div>
-                  <div className="text-xs text-muted-foreground">Parent/Guardian Phone: {intern.parentPhone}</div>
+
+                  {(intern.gender || intern.raceEthnicity || intern.parentGuardianEmail || intern.parentGuardianPhone || intern.parentPhone) && (
+                    <div className="rounded-md border border-border p-3 bg-muted/30">
+                      <div className="flex items-center gap-1.5 mb-2">
+                        <Users className="h-3.5 w-3.5 text-primary" />
+                        <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Demographics & Guardian Info</span>
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
+                        {intern.gender && (
+                          <div><span className="text-[10px] text-muted-foreground uppercase">Gender</span><p className="text-foreground">{intern.gender}</p></div>
+                        )}
+                        {intern.raceEthnicity && (
+                          <div><span className="text-[10px] text-muted-foreground uppercase">Race / Ethnicity</span><p className="text-foreground">{intern.raceEthnicity}</p></div>
+                        )}
+                        {(intern.parentGuardianPhone || intern.parentPhone) && (
+                          <div><span className="text-[10px] text-muted-foreground uppercase">Parent/Guardian Phone</span><p className="text-foreground">{intern.parentGuardianPhone || intern.parentPhone}</p></div>
+                        )}
+                        {intern.parentGuardianEmail && (
+                          <div><span className="text-[10px] text-muted-foreground uppercase">Parent/Guardian Email</span><p className="text-foreground truncate">{intern.parentGuardianEmail}</p></div>
+                        )}
+                      </div>
+                    </div>
+                  )}
 
                   {(intern.intakeDate || intern.intakeTime) && (
                     <div className="rounded-md border border-primary/20 bg-primary/5 p-3">
