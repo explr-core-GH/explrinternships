@@ -70,7 +70,10 @@ export default function DemographicsPage() {
       }
     }
 
-    return { grades, schools, programs, genders, races, interestCounts };
+    const ellCount = active.filter(i => i.isEll).length;
+    const nonEllCount = active.length - ellCount;
+
+    return { grades, schools, programs, genders, races, interestCounts, ellCount, nonEllCount };
   }, [active]);
 
   const sortedGrades = useMemo(() => {
