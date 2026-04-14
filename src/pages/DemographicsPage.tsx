@@ -38,6 +38,7 @@ export default function DemographicsPage() {
     const schools: Record<string, number> = {};
     const programs: Record<string, number> = {};
     const genders: Record<string, number> = {};
+    const races: Record<string, number> = {};
     const interestCounts: Record<string, { yes: number; maybe: number; no: number }> = {};
 
     for (const f of interestFields) {
@@ -50,6 +51,12 @@ export default function DemographicsPage() {
       schools[school] = (schools[school] || 0) + 1;
       const g = intern.gender || 'Not specified';
       genders[g] = (genders[g] || 0) + 1;
+      // Race/ethnicity — may contain multiple separated by semicolons
+      const raceRaw = intern.raceEthnicity || 'Not specified';
+      const raceParts = raceRaw.includes(';') ? raceRaw.split(';').map(r => r.trim()).filter(Boolean) : [raceRaw];
+      for (const rp of raceParts) {
+        races[rp] = (races[rp] || 0) + 1;
+      }
       for (const p of intern.programs) {
         if (p !== 'Not Applicable/None') programs[p] = (programs[p] || 0) + 1;
       }
@@ -61,7 +68,7 @@ export default function DemographicsPage() {
       }
     }
 
-    return { grades, schools, programs, genders, interestCounts };
+    return { grades, schools, programs, genders, races, interestCounts };
   }, [active]);
 
   const sortedGrades = useMemo(() => {
