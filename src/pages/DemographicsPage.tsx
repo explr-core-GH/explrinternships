@@ -38,6 +38,7 @@ export default function DemographicsPage() {
     const schools: Record<string, number> = {};
     const programs: Record<string, number> = {};
     const genders: Record<string, number> = {};
+    const races: Record<string, number> = {};
     const interestCounts: Record<string, { yes: number; maybe: number; no: number }> = {};
 
     for (const f of interestFields) {
@@ -50,6 +51,12 @@ export default function DemographicsPage() {
       schools[school] = (schools[school] || 0) + 1;
       const g = intern.gender || 'Not specified';
       genders[g] = (genders[g] || 0) + 1;
+      // Race/ethnicity — may contain multiple separated by semicolons
+      const raceRaw = intern.raceEthnicity || 'Not specified';
+      const raceParts = raceRaw.includes(';') ? raceRaw.split(';').map(r => r.trim()).filter(Boolean) : [raceRaw];
+      for (const rp of raceParts) {
+        races[rp] = (races[rp] || 0) + 1;
+      }
       for (const p of intern.programs) {
         if (p !== 'Not Applicable/None') programs[p] = (programs[p] || 0) + 1;
       }
@@ -61,7 +68,7 @@ export default function DemographicsPage() {
       }
     }
 
-    return { grades, schools, programs, genders, interestCounts };
+    return { grades, schools, programs, genders, races, interestCounts };
   }, [active]);
 
   const sortedGrades = useMemo(() => {
@@ -239,6 +246,40 @@ export default function DemographicsPage() {
             </div>
           )}
 
+          {/* Race/Ethnicity breakdown */}
+          {Object.keys(stats.races).length > 0 && (
+            <div className="rounded-lg border bg-card p-4 shadow-card">
+              <h3 className="text-sm font-semibold text-card-foreground mb-3">By Race / Ethnicity</h3>
+              <div className="flex items-center gap-6 flex-wrap">
+                {Object.entries(stats.races)
+                  .sort((a, b) => b[1] - a[1])
+                  .map(([race, count]) => {
+                    const pct = Math.round((count / active.length) * 100);
+                    return (
+                      <div key={race} className="flex flex-col items-center">
+                        <div className="relative h-16 w-16 mb-1.5">
+                          <svg className="h-16 w-16 -rotate-90" viewBox="0 0 36 36">
+                            <circle cx="18" cy="18" r="15.9" fill="none" className="stroke-muted" strokeWidth="3" />
+                            <circle
+                              cx="18" cy="18" r="15.9" fill="none"
+                              className="stroke-primary"
+                              strokeWidth="3"
+                              strokeDasharray={`${pct} ${100 - pct}`}
+                              strokeLinecap="round"
+                            />
+                          </svg>
+                          <div className="absolute inset-0 flex items-center justify-center">
+                            <span className="text-sm font-bold text-foreground">{count}</span>
+                          </div>
+                        </div>
+                        <span className="text-xs font-medium text-muted-foreground text-center max-w-20">{race}</span>
+                        <span className="text-[10px] text-muted-foreground">{pct}%</span>
+                      </div>
+                    );
+                  })}
+              </div>
+            </div>
+          )}
           <div className="rounded-lg border bg-card p-4 shadow-card">
             <h3 className="text-sm font-semibold text-card-foreground mb-3">Internship Interest Levels</h3>
             <div className="space-y-2">

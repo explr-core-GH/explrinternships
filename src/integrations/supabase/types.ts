@@ -44,9 +44,12 @@ export type Database = {
           last_name: string
           magnet_manufacturing: string | null
           other_school: string | null
+          parent_guardian_email: string | null
+          parent_guardian_phone: string | null
           parent_phone: string | null
           phone: string | null
           programs: string[] | null
+          race_ethnicity: string | null
           school: string | null
           source_sheet_url: string | null
           specific_interests: string | null
@@ -85,9 +88,12 @@ export type Database = {
           last_name: string
           magnet_manufacturing?: string | null
           other_school?: string | null
+          parent_guardian_email?: string | null
+          parent_guardian_phone?: string | null
           parent_phone?: string | null
           phone?: string | null
           programs?: string[] | null
+          race_ethnicity?: string | null
           school?: string | null
           source_sheet_url?: string | null
           specific_interests?: string | null
@@ -126,9 +132,12 @@ export type Database = {
           last_name?: string
           magnet_manufacturing?: string | null
           other_school?: string | null
+          parent_guardian_email?: string | null
+          parent_guardian_phone?: string | null
           parent_phone?: string | null
           phone?: string | null
           programs?: string[] | null
+          race_ethnicity?: string | null
           school?: string | null
           source_sheet_url?: string | null
           specific_interests?: string | null

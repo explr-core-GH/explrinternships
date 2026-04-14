@@ -270,6 +270,9 @@ export function parseExcelFile(data: ArrayBuffer): Intern[] {
       intakeDate: '',
       intakeTime: '',
       intakeLocation: '',
+      raceEthnicity: '',
+      parentGuardianEmail: '',
+      parentGuardianPhone: '',
     };
     
     interns.push(intern);

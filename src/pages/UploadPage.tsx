@@ -5,6 +5,7 @@ import GoogleSheetSync from '@/components/GoogleSheetSync';
 import SchoolContactUpload from '@/components/SchoolContactUpload';
 import AppointmentUpload from '@/components/AppointmentUpload';
 import GenderUpload from '@/components/GenderUpload';
+import IntakeUpload from '@/components/IntakeUpload';
 import { useAppStore } from '@/store/useAppStore';
 import { useAutoLoadData } from '@/hooks/useAutoLoadData';
 import { Button } from '@/components/ui/button';
@@ -81,6 +82,10 @@ export default function UploadPage() {
 
       <div className="border-t pt-6">
         <GenderUpload />
+      </div>
+
+      <div className="border-t pt-6">
+        <IntakeUpload />
       </div>
 
       {interns.length > 0 && (
