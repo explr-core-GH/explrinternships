@@ -55,6 +55,7 @@ export interface Intern {
   raceEthnicity: string;
   parentGuardianEmail: string;
   parentGuardianPhone: string;
+  isEll: boolean;
 }
 
 export interface Worksite {
