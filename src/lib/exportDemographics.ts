@@ -38,12 +38,14 @@ function computeStats(interns: Intern[]): DemoStats {
     grades[intern.grade] = (grades[intern.grade] || 0) + 1;
     const school = intern.otherSchool || intern.school;
     schools[school] = (schools[school] || 0) + 1;
-    const g = intern.gender || 'Not Specified';
-    genders[g] = (genders[g] || 0) + 1;
-    const raceRaw = intern.raceEthnicity || 'Not Specified';
-    const raceParts = raceRaw.includes(';') ? raceRaw.split(';').map(r => r.trim()).filter(Boolean) : [raceRaw];
-    for (const rp of raceParts) {
-      races[rp] = (races[rp] || 0) + 1;
+    if (intern.gender) {
+      genders[intern.gender] = (genders[intern.gender] || 0) + 1;
+    }
+    if (intern.raceEthnicity) {
+      const raceParts = intern.raceEthnicity.includes(';') ? intern.raceEthnicity.split(';').map(r => r.trim()).filter(Boolean) : [intern.raceEthnicity];
+      for (const rp of raceParts) {
+        races[rp] = (races[rp] || 0) + 1;
+      }
     }
     for (const p of intern.programs) {
       if (p !== 'Not Applicable/None') programs[p] = (programs[p] || 0) + 1;
