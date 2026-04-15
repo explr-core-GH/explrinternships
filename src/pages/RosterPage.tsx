@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { isEligibleForPreApprenticeship } from '@/lib/preApprenticeship';
-import { Search, Copy, Download, CheckSquare, Square, Mail, List, School } from 'lucide-react';
+import { Search, Copy, Download, CheckSquare, Square, Mail, List, School, Award } from 'lucide-react';
 import { useAppStore } from '@/store/useAppStore';
 import { useAutoLoadData } from '@/hooks/useAutoLoadData';
 import InternCard from '@/components/InternCard';
@@ -25,6 +25,8 @@ export default function RosterPage() {
   const [statusFilter, setStatusFilter] = useState<InternStatus | 'all'>('all');
   const [showDupesOnly, setShowDupesOnly] = useState(false);
   const [assignFilter, setAssignFilter] = useState<'all' | 'assigned' | 'unassigned'>('all');
+  const [ellFilter, setEllFilter] = useState(false);
+  const [preAppFilter, setPreAppFilter] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkMode, setBulkMode] = useState(false);
   const [viewMode, setViewMode] = useState<'list' | 'school'>('list');
@@ -52,6 +54,8 @@ export default function RosterPage() {
     if (showDupesOnly) list = list.filter(i => i.isDuplicate);
     if (assignFilter === 'assigned') list = list.filter(i => assignedIds.has(i.id));
     if (assignFilter === 'unassigned') list = list.filter(i => !assignedIds.has(i.id));
+    if (ellFilter) list = list.filter(i => i.isEll);
+    if (preAppFilter) list = list.filter(i => isEligibleForPreApprenticeship(i.dob));
 
     // Sort: status priority, then last name
     const statusOrder: Record<InternStatus, number> = {
@@ -63,7 +67,7 @@ export default function RosterPage() {
       if (sa !== sb) return sa - sb;
       return a.lastName.localeCompare(b.lastName);
     });
-  }, [activeInterns, search, gradeFilter, statusFilter, showDupesOnly, assignFilter, assignedIds]);
+  }, [activeInterns, search, gradeFilter, statusFilter, showDupesOnly, assignFilter, assignedIds, ellFilter, preAppFilter]);
 
   const grades = useMemo(() => {
     const set = new Set(activeInterns.map(i => i.grade));
@@ -244,6 +248,19 @@ export default function RosterPage() {
             Duplicates ({dupeCount})
           </button>
         )}
+        <button
+          onClick={() => setEllFilter(!ellFilter)}
+          className={`h-9 px-3 rounded-md border text-xs font-medium flex items-center gap-1.5 transition-colors ${ellFilter ? 'bg-green-500/10 border-green-500/30 text-green-600' : 'bg-card text-muted-foreground hover:text-foreground'}`}
+        >
+          🟢 ELL ({activeInterns.filter(i => i.isEll).length})
+        </button>
+        <button
+          onClick={() => setPreAppFilter(!preAppFilter)}
+          className={`h-9 px-3 rounded-md border text-xs font-medium flex items-center gap-1.5 transition-colors ${preAppFilter ? 'bg-amber-500/10 border-amber-500/30 text-amber-600' : 'bg-card text-muted-foreground hover:text-foreground'}`}
+        >
+          <Award className="h-3.5 w-3.5" />
+          PreApp ({activeInterns.filter(i => isEligibleForPreApprenticeship(i.dob)).length})
+        </button>
       </div>
 
       {/* Select all in bulk mode */}
