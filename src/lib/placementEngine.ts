@@ -7,15 +7,13 @@ interface ScoredPlacement {
   reasons: string[];
 }
 
-const INTEREST_TO_WORKSITE: Record<InterestField, string[]> = {
-  clevelandClinic: ['Cleveland Clinic'],
+const INTEREST_TO_WORKSITE: Record<string, string[]> = {
   constructionMgmt: ['Construction Management Program'],
   biomedical: ['Biomedical Science & Engineering Lab'],
   envJustice: ['Environmental Justice Initiative'],
   envClimate: ['Climate Adaptation & Resilience Program'],
   envFieldScience: ['Field Science & Data Analytics'],
-  iersCenter: ['CSU IERS Center'],
-  magnetManufacturing: ["MAGNET Summer Manufacturing Academy"],
+  magnetManufacturing: ["MAGNET Summer Manufacturing Academy", 'CSU IERS Center'],
   educationInternship: ['STEM Education Internship'],
   healthcare: ['Healthcare Careers Program', 'Cleveland Clinic'],
   videoGames: ['Game & App Design Studio'],
