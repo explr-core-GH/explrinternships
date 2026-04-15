@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { isEligibleForPreApprenticeship } from '@/lib/preApprenticeship';
-import { Search, Copy, Download, CheckSquare, Square, Mail, List, School } from 'lucide-react';
+import { Search, Copy, Download, CheckSquare, Square, Mail, List, School, Award } from 'lucide-react';
 import { useAppStore } from '@/store/useAppStore';
 import { useAutoLoadData } from '@/hooks/useAutoLoadData';
 import InternCard from '@/components/InternCard';
@@ -248,6 +248,19 @@ export default function RosterPage() {
             Duplicates ({dupeCount})
           </button>
         )}
+        <button
+          onClick={() => setEllFilter(!ellFilter)}
+          className={`h-9 px-3 rounded-md border text-xs font-medium flex items-center gap-1.5 transition-colors ${ellFilter ? 'bg-green-500/10 border-green-500/30 text-green-600' : 'bg-card text-muted-foreground hover:text-foreground'}`}
+        >
+          🟢 ELL ({activeInterns.filter(i => i.isEll).length})
+        </button>
+        <button
+          onClick={() => setPreAppFilter(!preAppFilter)}
+          className={`h-9 px-3 rounded-md border text-xs font-medium flex items-center gap-1.5 transition-colors ${preAppFilter ? 'bg-amber-500/10 border-amber-500/30 text-amber-600' : 'bg-card text-muted-foreground hover:text-foreground'}`}
+        >
+          <Award className="h-3.5 w-3.5" />
+          PreApp ({activeInterns.filter(i => isEligibleForPreApprenticeship(i.dob)).length})
+        </button>
       </div>
 
       {/* Select all in bulk mode */}
