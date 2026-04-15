@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { isEligibleForPreApprenticeship } from '@/lib/preApprenticeship';
 import { Search, Copy, Download, CheckSquare, Square, Mail, List, School, Award, HeartPulse } from 'lucide-react';
 import { useAppStore } from '@/store/useAppStore';
@@ -36,6 +36,16 @@ export default function RosterPage() {
   const activeInterns = useMemo(() => interns.filter(i => i.isNewest), [interns]);
   const assignedIds = useMemo(() => new Set(assignments.map(a => a.internId)), [assignments]);
 
+  const isHealthcareInterested = useCallback((i: typeof interns[0]) => {
+    const keywords = ['healthcare', 'medical', 'nursing', 'crystal reed', 'cleveland clinic', 'biomedical', 'health'];
+    const check = (s: string) => keywords.some(k => s.toLowerCase().includes(k));
+    return i.itInterests.some(check) ||
+      check(i.healthcare || '') ||
+      check(i.clevelandClinic || '') ||
+      check(i.biomedical || '') ||
+      check(i.specificInterests || '');
+  }, []);
+
   const filtered = useMemo(() => {
     let list = activeInterns;
     if (search) {
@@ -57,7 +67,7 @@ export default function RosterPage() {
     if (assignFilter === 'unassigned') list = list.filter(i => !assignedIds.has(i.id));
     if (ellFilter) list = list.filter(i => i.isEll);
     if (preAppFilter) list = list.filter(i => isEligibleForPreApprenticeship(i.dob));
-    if (healthcareFilter) list = list.filter(i => i.itInterests.some(interest => interest.toLowerCase().includes('healthcare') || interest.toLowerCase().includes('crystal reed')));
+    if (healthcareFilter) list = list.filter(i => isHealthcareInterested(i));
 
     // Sort: status priority, then last name
     const statusOrder: Record<InternStatus, number> = {
@@ -271,7 +281,7 @@ export default function RosterPage() {
           className={`h-9 px-3 rounded-md border text-xs font-medium flex items-center gap-1.5 transition-colors ${healthcareFilter ? 'bg-red-500/10 border-red-500/30 text-red-600' : 'bg-card text-muted-foreground hover:text-foreground'}`}
         >
           <HeartPulse className="h-3.5 w-3.5" />
-          Healthcare ({activeInterns.filter(i => i.itInterests.some(interest => interest.toLowerCase().includes('healthcare') || interest.toLowerCase().includes('crystal reed'))).length})
+          Healthcare ({activeInterns.filter(i => isHealthcareInterested(i)).length})
         </button>
       </div>
 
