@@ -193,8 +193,11 @@ export default function DemographicsPage() {
 
           {/* Grade breakdown */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="rounded-lg border bg-card p-4 shadow-card">
-              <h3 className="text-sm font-semibold text-card-foreground mb-4">By Grade</h3>
+            <div ref={gradeRef} className="rounded-lg border bg-card p-4 shadow-card">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-sm font-semibold text-card-foreground">By Grade</h3>
+                <button onClick={() => gradeRef.current && downloadPng(gradeRef.current, 'grade-breakdown')} className="text-muted-foreground hover:text-foreground"><Download className="h-3.5 w-3.5" /></button>
+              </div>
               <div className="grid grid-cols-5 gap-2">
                 {sortedGrades.map(({ grade, count }) => {
                   const pct = Math.round((count / totalGradeStudents) * 100);
@@ -223,8 +226,11 @@ export default function DemographicsPage() {
               </div>
             </div>
 
-            <div className="rounded-lg border bg-card p-4 shadow-card">
-              <h3 className="text-sm font-semibold text-card-foreground mb-3">By School</h3>
+            <div ref={schoolRef} className="rounded-lg border bg-card p-4 shadow-card">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-sm font-semibold text-card-foreground">By School</h3>
+                <button onClick={() => schoolRef.current && downloadPng(schoolRef.current, 'school-breakdown')} className="text-muted-foreground hover:text-foreground"><Download className="h-3.5 w-3.5" /></button>
+              </div>
               <div className="space-y-1.5 max-h-64 overflow-auto">
                 {Object.entries(stats.schools)
                   .sort((a, b) => b[1] - a[1])
