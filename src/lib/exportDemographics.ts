@@ -107,6 +107,7 @@ export function exportDemographicsExcel(interns: Intern[], status: InternStatus 
     ['Schools', Object.keys(stats.schools).length],
     ['Grade Levels', Object.keys(stats.grades).length],
     ['Duplicates', stats.duplicates],
+    ['Eligible for PreApprenticeship', stats.preAppCount],
   ];
   const summaryWs = XLSX.utils.aoa_to_sheet(summaryRows);
   XLSX.utils.book_append_sheet(wb, summaryWs, 'Summary');
@@ -232,6 +233,7 @@ export function exportDemographicsPDF(interns: Intern[], status: InternStatus | 
   drawRow('Schools', String(Object.keys(stats.schools).length));
   drawRow('Grade Levels', String(Object.keys(stats.grades).length));
   drawRow('Duplicates', String(stats.duplicates));
+  drawRow('Eligible for PreApprenticeship', String(stats.preAppCount));
 
   // Grades
   const sortedGrades = GRADE_ORDER.filter(g => stats.grades[g]).map(g => ({ grade: g, count: stats.grades[g] }));
