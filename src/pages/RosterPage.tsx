@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { isEligibleForPreApprenticeship } from '@/lib/preApprenticeship';
 import { Search, Copy, Download, CheckSquare, Square, Mail, List, School, Award, HeartPulse } from 'lucide-react';
 import { useAppStore } from '@/store/useAppStore';
