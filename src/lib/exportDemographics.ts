@@ -5,8 +5,8 @@ import { INTEREST_LABELS, STATUS_CONFIG, type InterestField, type InternStatus }
 import { isEligibleForPreApprenticeship } from '@/lib/preApprenticeship';
 
 const INTEREST_FIELDS: InterestField[] = [
-  'clevelandClinic', 'constructionMgmt', 'biomedical', 'envJustice',
-  'envClimate', 'envFieldScience', 'iersCenter', 'magnetManufacturing',
+  'constructionMgmt', 'biomedical', 'envJustice',
+  'envClimate', 'envFieldScience', 'magnetManufacturing',
   'educationInternship', 'healthcare', 'videoGames',
 ];
 

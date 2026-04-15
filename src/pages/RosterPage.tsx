@@ -1,6 +1,6 @@
 import { useState, useMemo, useCallback } from 'react';
 import { isEligibleForPreApprenticeship } from '@/lib/preApprenticeship';
-import { Search, Copy, Download, CheckSquare, Square, Mail, List, School, Award, HeartPulse, Hammer, Microscope, Leaf, CloudSun, FlaskConical, Building2, Factory, GraduationCap, Gamepad2, Stethoscope } from 'lucide-react';
+import { Search, Copy, Download, CheckSquare, Square, Mail, List, School, Award, HeartPulse, Hammer, Microscope, Leaf, CloudSun, FlaskConical, Wrench, GraduationCap, Gamepad2, Music, Palette, Briefcase, Scale, Dumbbell, UtensilsCrossed } from 'lucide-react';
 import { useAppStore } from '@/store/useAppStore';
 import { useAutoLoadData } from '@/hooks/useAutoLoadData';
 import InternCard from '@/components/InternCard';
@@ -10,7 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { exportRosterCSV, exportStatusContactCSV, exportEmailReadyByStatus, exportFullExcelByStatus } from '@/lib/exportData';
 import { toast } from 'sonner';
-import { INTERN_STATUSES, STATUS_CONFIG, type InternStatus, type InterestField, INTEREST_LABELS } from '@/types/intern';
+import { INTERN_STATUSES, STATUS_CONFIG, type InternStatus, type InterestField, INTEREST_LABELS, INTERN_INTEREST_FIELDS } from '@/types/intern';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -38,30 +38,38 @@ export default function RosterPage() {
 
   const INTEREST_ICON_MAP: Record<InterestField, React.ReactNode> = {
     healthcare: <HeartPulse className="h-3.5 w-3.5" />,
-    clevelandClinic: <Stethoscope className="h-3.5 w-3.5" />,
     constructionMgmt: <Hammer className="h-3.5 w-3.5" />,
     biomedical: <Microscope className="h-3.5 w-3.5" />,
     envJustice: <Leaf className="h-3.5 w-3.5" />,
     envClimate: <CloudSun className="h-3.5 w-3.5" />,
     envFieldScience: <FlaskConical className="h-3.5 w-3.5" />,
-    iersCenter: <Building2 className="h-3.5 w-3.5" />,
-    magnetManufacturing: <Factory className="h-3.5 w-3.5" />,
+    magnetManufacturing: <Wrench className="h-3.5 w-3.5" />,
     educationInternship: <GraduationCap className="h-3.5 w-3.5" />,
     videoGames: <Gamepad2 className="h-3.5 w-3.5" />,
+    music: <Music className="h-3.5 w-3.5" />,
+    art: <Palette className="h-3.5 w-3.5" />,
+    business: <Briefcase className="h-3.5 w-3.5" />,
+    law: <Scale className="h-3.5 w-3.5" />,
+    sports: <Dumbbell className="h-3.5 w-3.5" />,
+    culinary: <UtensilsCrossed className="h-3.5 w-3.5" />,
   };
 
   const INTEREST_KEYWORDS: Record<InterestField, string[]> = {
-    healthcare: ['healthcare', 'medical', 'nursing', 'crystal reed', 'health', 'hospital', 'doctor', 'nurse', 'pharmacy', 'physical therapy', 'dental', 'veterinar'],
-    clevelandClinic: ['cleveland clinic'],
+    healthcare: ['healthcare', 'medical', 'nursing', 'crystal reed', 'health', 'hospital', 'doctor', 'nurse', 'pharmacy', 'physical therapy', 'dental', 'veterinar', 'cleveland clinic'],
     constructionMgmt: ['construction', 'building', 'carpentry', 'architecture', 'architect'],
     biomedical: ['biomedical', 'biotech', 'biology', 'lab research', 'laboratory'],
     envJustice: ['environmental justice', 'env justice', 'social justice', 'community health'],
     envClimate: ['climate', 'resilience', 'sustainability', 'renewable', 'solar', 'wind energy', 'green energy'],
     envFieldScience: ['field science', 'data analytics', 'data science', 'ecology', 'wildlife', 'nature'],
-    iersCenter: ['iers', 'csu', 'cleveland state'],
-    magnetManufacturing: ['magnet', 'manufacturing', 'machining', 'welding', 'fabricat'],
+    magnetManufacturing: ['magnet', 'manufacturing', 'machining', 'welding', 'fabricat', 'engineering', 'engineer', 'mechanical', 'electrical', 'robotics', 'iers', 'csu', 'cleveland state'],
     educationInternship: ['education', 'teaching', 'stem teaching', 'tutoring', 'mentor', 'camp counselor', 'counselor'],
     videoGames: ['video game', 'game design', 'app design', 'web design', 'website', 'coding', 'programming', 'software', 'animation', 'graphic design', 'ui design', 'ux design'],
+    music: ['music', 'musician', 'band', 'instrument', 'singing', 'song', 'audio', 'sound engineer', 'dj', 'producer', 'rap', 'hip hop'],
+    art: ['art', 'drawing', 'painting', 'sculpture', 'photography', 'film', 'creative', 'fashion', 'theater', 'theatre', 'drama', 'visual art'],
+    business: ['business', 'entrepreneur', 'marketing', 'finance', 'accounting', 'economics', 'management', 'real estate', 'banking'],
+    law: ['law', 'legal', 'attorney', 'lawyer', 'criminal justice', 'justice system', 'forensic', 'court', 'paralegal', 'police', 'detective'],
+    sports: ['sports', 'athletic', 'fitness', 'coach', 'personal train', 'physical education', 'kinesiology', 'exercise'],
+    culinary: ['culinary', 'cooking', 'chef', 'baking', 'food', 'restaurant', 'pastry', 'nutrition'],
   };
 
   const YES_MAYBE = ['yes', 'maybe'];
@@ -69,11 +77,12 @@ export default function RosterPage() {
   const isInterestedIn = useCallback((intern: typeof interns[0], field: InterestField): boolean => {
     const keywords = INTEREST_KEYWORDS[field];
     const check = (s: string) => keywords.some(k => s.toLowerCase().includes(k));
-    // Check the dedicated field for Yes/Maybe responses
-    const fieldValue = (intern[field] || '').trim().toLowerCase();
-    if (fieldValue && YES_MAYBE.includes(fieldValue)) return true;
-    // Also check if the field value contains keywords (for free-text responses)
-    if (fieldValue && check(fieldValue)) return true;
+    // For DB-backed fields, check Yes/Maybe and keyword matches in the dedicated field
+    if (INTERN_INTEREST_FIELDS.has(field)) {
+      const fieldValue = ((intern as any)[field] || '').trim().toLowerCase();
+      if (fieldValue && YES_MAYBE.includes(fieldValue)) return true;
+      if (fieldValue && check(fieldValue)) return true;
+    }
     // Check itInterests array
     if (intern.itInterests.some(check)) return true;
     // Check specificInterests

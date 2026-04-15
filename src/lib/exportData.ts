@@ -326,8 +326,8 @@ export function exportEmailReadyByStatus(
 }
 
 const INTEREST_FIELDS: InterestField[] = [
-  'clevelandClinic', 'constructionMgmt', 'biomedical', 'envJustice',
-  'envClimate', 'envFieldScience', 'iersCenter', 'magnetManufacturing',
+  'constructionMgmt', 'biomedical', 'envJustice',
+  'envClimate', 'envFieldScience', 'magnetManufacturing',
   'educationInternship', 'healthcare', 'videoGames',
 ];
 

@@ -22,8 +22,8 @@ interface InternCardProps {
 }
 
 const interestFields: InterestField[] = [
-  'clevelandClinic', 'constructionMgmt', 'biomedical', 'envJustice',
-  'envClimate', 'envFieldScience', 'iersCenter', 'magnetManufacturing',
+  'constructionMgmt', 'biomedical', 'envJustice',
+  'envClimate', 'envFieldScience', 'magnetManufacturing',
   'educationInternship', 'healthcare', 'videoGames',
 ];
 
