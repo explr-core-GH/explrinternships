@@ -54,6 +54,8 @@ export default function RosterPage() {
     if (showDupesOnly) list = list.filter(i => i.isDuplicate);
     if (assignFilter === 'assigned') list = list.filter(i => assignedIds.has(i.id));
     if (assignFilter === 'unassigned') list = list.filter(i => !assignedIds.has(i.id));
+    if (ellFilter) list = list.filter(i => i.isEll);
+    if (preAppFilter) list = list.filter(i => isEligibleForPreApprenticeship(i.dob));
 
     // Sort: status priority, then last name
     const statusOrder: Record<InternStatus, number> = {
@@ -65,7 +67,7 @@ export default function RosterPage() {
       if (sa !== sb) return sa - sb;
       return a.lastName.localeCompare(b.lastName);
     });
-  }, [activeInterns, search, gradeFilter, statusFilter, showDupesOnly, assignFilter, assignedIds]);
+  }, [activeInterns, search, gradeFilter, statusFilter, showDupesOnly, assignFilter, assignedIds, ellFilter, preAppFilter]);
 
   const grades = useMemo(() => {
     const set = new Set(activeInterns.map(i => i.grade));
