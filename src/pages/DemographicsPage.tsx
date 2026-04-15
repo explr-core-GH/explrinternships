@@ -1,5 +1,6 @@
-import { useMemo, useState } from 'react';
-import { FileSpreadsheet, FileText } from 'lucide-react';
+import { useCallback, useMemo, useRef, useState } from 'react';
+import { Download, FileSpreadsheet, FileText } from 'lucide-react';
+import { toPng } from 'html-to-image';
 import { useAppStore } from '@/store/useAppStore';
 import { useAutoLoadData } from '@/hooks/useAutoLoadData';
 import { INTEREST_LABELS, type InterestField, INTERN_STATUSES, STATUS_CONFIG, type InternStatus } from '@/types/intern';
@@ -14,6 +15,18 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 
+function downloadPng(node: HTMLElement, filename: string) {
+  toPng(node, { backgroundColor: '#ffffff', pixelRatio: 2 })
+    .then((dataUrl) => {
+      const link = document.createElement('a');
+      link.download = `${filename}.png`;
+      link.href = dataUrl;
+      link.click();
+      toast.success('PNG downloaded');
+    })
+    .catch(() => toast.error('Failed to generate PNG'));
+}
+
 const interestFields: InterestField[] = [
   'clevelandClinic', 'constructionMgmt', 'biomedical', 'envJustice',
   'envClimate', 'envFieldScience', 'iersCenter', 'magnetManufacturing',
@@ -25,6 +38,15 @@ const GRADE_ORDER = ['8th', '9th', '10th', '11th', '12th'];
 export default function DemographicsPage() {
   useAutoLoadData();
   const { interns } = useAppStore();
+  const gradeRef = useRef<HTMLDivElement>(null);
+  const schoolRef = useRef<HTMLDivElement>(null);
+  const genderRef = useRef<HTMLDivElement>(null);
+  const raceRef = useRef<HTMLDivElement>(null);
+  const ellRef = useRef<HTMLDivElement>(null);
+  const interestRef = useRef<HTMLDivElement>(null);
+  const itRef = useRef<HTMLDivElement>(null);
+  const programRef = useRef<HTMLDivElement>(null);
+
   const [statusFilter, setStatusFilter] = useState<InternStatus | 'all'>('all');
 
   const active = useMemo(() => {
@@ -171,8 +193,11 @@ export default function DemographicsPage() {
 
           {/* Grade breakdown */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="rounded-lg border bg-card p-4 shadow-card">
-              <h3 className="text-sm font-semibold text-card-foreground mb-4">By Grade</h3>
+            <div ref={gradeRef} className="rounded-lg border bg-card p-4 shadow-card">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-sm font-semibold text-card-foreground">By Grade</h3>
+                <button onClick={() => gradeRef.current && downloadPng(gradeRef.current, 'grade-breakdown')} className="text-muted-foreground hover:text-foreground"><Download className="h-3.5 w-3.5" /></button>
+              </div>
               <div className="grid grid-cols-5 gap-2">
                 {sortedGrades.map(({ grade, count }) => {
                   const pct = Math.round((count / totalGradeStudents) * 100);
@@ -201,8 +226,11 @@ export default function DemographicsPage() {
               </div>
             </div>
 
-            <div className="rounded-lg border bg-card p-4 shadow-card">
-              <h3 className="text-sm font-semibold text-card-foreground mb-3">By School</h3>
+            <div ref={schoolRef} className="rounded-lg border bg-card p-4 shadow-card">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-sm font-semibold text-card-foreground">By School</h3>
+                <button onClick={() => schoolRef.current && downloadPng(schoolRef.current, 'school-breakdown')} className="text-muted-foreground hover:text-foreground"><Download className="h-3.5 w-3.5" /></button>
+              </div>
               <div className="space-y-1.5 max-h-64 overflow-auto">
                 {Object.entries(stats.schools)
                   .sort((a, b) => b[1] - a[1])
@@ -220,32 +248,43 @@ export default function DemographicsPage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {/* Gender Pie */}
             {Object.keys(stats.genders).length > 0 && (
-              <div className="rounded-lg border bg-card p-4 shadow-card">
-                <h3 className="text-sm font-semibold text-card-foreground mb-3">By Gender</h3>
+              <div ref={genderRef} className="rounded-lg border bg-card p-4 shadow-card">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-sm font-semibold text-card-foreground">By Gender</h3>
+                  <button onClick={() => genderRef.current && downloadPng(genderRef.current, 'gender-breakdown')} className="text-muted-foreground hover:text-foreground"><Download className="h-3.5 w-3.5" /></button>
+                </div>
                 <PieChart data={Object.entries(stats.genders).sort((a, b) => b[1] - a[1])} />
                 <p className="text-[10px] text-muted-foreground mt-2 italic">Students without intake data on file are not included in gender demographics.</p>
               </div>
             )}
 
-            {/* Race/Ethnicity Pie */}
             {Object.keys(stats.races).length > 0 && (
-              <div className="rounded-lg border bg-card p-4 shadow-card">
-                <h3 className="text-sm font-semibold text-card-foreground mb-3">By Race / Ethnicity</h3>
+              <div ref={raceRef} className="rounded-lg border bg-card p-4 shadow-card">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-sm font-semibold text-card-foreground">By Race / Ethnicity</h3>
+                  <button onClick={() => raceRef.current && downloadPng(raceRef.current, 'race-ethnicity-breakdown')} className="text-muted-foreground hover:text-foreground"><Download className="h-3.5 w-3.5" /></button>
+                </div>
                 <PieChart data={Object.entries(stats.races).sort((a, b) => b[1] - a[1])} />
                 <p className="text-[10px] text-muted-foreground mt-2 italic">Students without intake data on file are not included in race/ethnicity demographics.</p>
               </div>
             )}
 
-            {/* ELL Pie */}
             {stats.ellCount > 0 && (
-              <div className="rounded-lg border bg-card p-4 shadow-card">
-                <h3 className="text-sm font-semibold text-card-foreground mb-3">English Language Learners (ELL)</h3>
+              <div ref={ellRef} className="rounded-lg border bg-card p-4 shadow-card">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-sm font-semibold text-card-foreground">English Language Learners (ELL)</h3>
+                  <button onClick={() => ellRef.current && downloadPng(ellRef.current, 'ell-breakdown')} className="text-muted-foreground hover:text-foreground"><Download className="h-3.5 w-3.5" /></button>
+                </div>
                 <PieChart data={[['ELL', stats.ellCount], ['Non-ELL', stats.nonEllCount]]} />
               </div>
             )}
+
           </div>
-          <div className="rounded-lg border bg-card p-4 shadow-card">
-            <h3 className="text-sm font-semibold text-card-foreground mb-3">Internship Interest Levels</h3>
+          <div ref={interestRef} className="rounded-lg border bg-card p-4 shadow-card">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-sm font-semibold text-card-foreground">Internship Interest Levels</h3>
+              <button onClick={() => interestRef.current && downloadPng(interestRef.current, 'interest-levels')} className="text-muted-foreground hover:text-foreground"><Download className="h-3.5 w-3.5" /></button>
+            </div>
             <div className="space-y-2">
               {interestFields.map(f => {
                 const { yes, maybe, no } = stats.interestCounts[f];
@@ -269,8 +308,11 @@ export default function DemographicsPage() {
           </div>
 
           {/* IT interests */}
-          <div className="rounded-lg border bg-card p-4 shadow-card">
-            <h3 className="text-sm font-semibold text-card-foreground mb-3">Top IT Interests</h3>
+          <div ref={itRef} className="rounded-lg border bg-card p-4 shadow-card">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-sm font-semibold text-card-foreground">Top IT Interests</h3>
+              <button onClick={() => itRef.current && downloadPng(itRef.current, 'it-interests')} className="text-muted-foreground hover:text-foreground"><Download className="h-3.5 w-3.5" /></button>
+            </div>
             <div className="flex flex-wrap gap-2">
               {itInterests.slice(0, 20).map(([interest, count]) => (
                 <div key={interest} className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-accent text-accent-foreground text-xs">
@@ -283,8 +325,11 @@ export default function DemographicsPage() {
 
           {/* Programs */}
           {Object.keys(stats.programs).length > 0 && (
-            <div className="rounded-lg border bg-card p-4 shadow-card">
-              <h3 className="text-sm font-semibold text-card-foreground mb-3">Prior Program Participation</h3>
+            <div ref={programRef} className="rounded-lg border bg-card p-4 shadow-card">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-sm font-semibold text-card-foreground">Prior Program Participation</h3>
+                <button onClick={() => programRef.current && downloadPng(programRef.current, 'program-participation')} className="text-muted-foreground hover:text-foreground"><Download className="h-3.5 w-3.5" /></button>
+              </div>
               <div className="space-y-1.5">
                 {Object.entries(stats.programs)
                   .sort((a, b) => b[1] - a[1])
