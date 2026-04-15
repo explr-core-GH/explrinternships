@@ -1,6 +1,6 @@
 import { useState, useMemo, useCallback } from 'react';
 import { isEligibleForPreApprenticeship } from '@/lib/preApprenticeship';
-import { Search, Copy, Download, CheckSquare, Square, Mail, List, School, Award, HeartPulse } from 'lucide-react';
+import { Search, Copy, Download, CheckSquare, Square, Mail, List, School, Award, HeartPulse, Hammer, Microscope, Leaf, CloudSun, FlaskConical, Building2, Factory, GraduationCap, Gamepad2, Stethoscope } from 'lucide-react';
 import { useAppStore } from '@/store/useAppStore';
 import { useAutoLoadData } from '@/hooks/useAutoLoadData';
 import InternCard from '@/components/InternCard';
@@ -10,7 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { exportRosterCSV, exportStatusContactCSV, exportEmailReadyByStatus, exportFullExcelByStatus } from '@/lib/exportData';
 import { toast } from 'sonner';
-import { INTERN_STATUSES, STATUS_CONFIG, type InternStatus } from '@/types/intern';
+import { INTERN_STATUSES, STATUS_CONFIG, type InternStatus, type InterestField, INTEREST_LABELS } from '@/types/intern';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -27,7 +27,7 @@ export default function RosterPage() {
   const [assignFilter, setAssignFilter] = useState<'all' | 'assigned' | 'unassigned'>('all');
   const [ellFilter, setEllFilter] = useState(false);
   const [preAppFilter, setPreAppFilter] = useState(false);
-  const [healthcareFilter, setHealthcareFilter] = useState(false);
+  const [activeInterestFilters, setActiveInterestFilters] = useState<Set<InterestField>>(new Set());
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkMode, setBulkMode] = useState(false);
   const [viewMode, setViewMode] = useState<'list' | 'school'>('list');
@@ -36,15 +36,62 @@ export default function RosterPage() {
   const activeInterns = useMemo(() => interns.filter(i => i.isNewest), [interns]);
   const assignedIds = useMemo(() => new Set(assignments.map(a => a.internId)), [assignments]);
 
-  const isHealthcareInterested = useCallback((i: typeof interns[0]) => {
-    const keywords = ['healthcare', 'medical', 'nursing', 'crystal reed', 'cleveland clinic', 'biomedical', 'health'];
+  const INTEREST_ICON_MAP: Record<InterestField, React.ReactNode> = {
+    healthcare: <HeartPulse className="h-3.5 w-3.5" />,
+    clevelandClinic: <Stethoscope className="h-3.5 w-3.5" />,
+    constructionMgmt: <Hammer className="h-3.5 w-3.5" />,
+    biomedical: <Microscope className="h-3.5 w-3.5" />,
+    envJustice: <Leaf className="h-3.5 w-3.5" />,
+    envClimate: <CloudSun className="h-3.5 w-3.5" />,
+    envFieldScience: <FlaskConical className="h-3.5 w-3.5" />,
+    iersCenter: <Building2 className="h-3.5 w-3.5" />,
+    magnetManufacturing: <Factory className="h-3.5 w-3.5" />,
+    educationInternship: <GraduationCap className="h-3.5 w-3.5" />,
+    videoGames: <Gamepad2 className="h-3.5 w-3.5" />,
+  };
+
+  const INTEREST_KEYWORDS: Record<InterestField, string[]> = {
+    healthcare: ['healthcare', 'medical', 'nursing', 'crystal reed', 'health'],
+    clevelandClinic: ['cleveland clinic'],
+    constructionMgmt: ['construction'],
+    biomedical: ['biomedical', 'biotech'],
+    envJustice: ['environmental justice', 'env justice'],
+    envClimate: ['climate', 'resilience'],
+    envFieldScience: ['field science', 'data analytics'],
+    iersCenter: ['iers', 'csu'],
+    magnetManufacturing: ['magnet', 'manufacturing'],
+    educationInternship: ['education', 'teaching', 'stem teaching'],
+    videoGames: ['video game', 'game design', 'app design'],
+  };
+
+  const isInterestedIn = useCallback((intern: typeof interns[0], field: InterestField): boolean => {
+    const keywords = INTEREST_KEYWORDS[field];
     const check = (s: string) => keywords.some(k => s.toLowerCase().includes(k));
-    return i.itInterests.some(check) ||
-      check(i.healthcare || '') ||
-      check(i.clevelandClinic || '') ||
-      check(i.biomedical || '') ||
-      check(i.specificInterests || '');
+    // Check the dedicated field
+    const fieldValue = intern[field] || '';
+    if (fieldValue && check(fieldValue)) return true;
+    // Check itInterests array
+    if (intern.itInterests.some(check)) return true;
+    // Check specificInterests
+    if (check(intern.specificInterests || '')) return true;
+    return false;
   }, []);
+
+  const toggleInterestFilter = (field: InterestField) => {
+    setActiveInterestFilters(prev => {
+      const next = new Set(prev);
+      next.has(field) ? next.delete(field) : next.add(field);
+      return next;
+    });
+  };
+
+  const interestCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    (Object.keys(INTEREST_LABELS) as InterestField[]).forEach(field => {
+      counts[field] = activeInterns.filter(i => isInterestedIn(i, field)).length;
+    });
+    return counts;
+  }, [activeInterns, isInterestedIn]);
 
   const filtered = useMemo(() => {
     let list = activeInterns;
@@ -67,9 +114,11 @@ export default function RosterPage() {
     if (assignFilter === 'unassigned') list = list.filter(i => !assignedIds.has(i.id));
     if (ellFilter) list = list.filter(i => i.isEll);
     if (preAppFilter) list = list.filter(i => isEligibleForPreApprenticeship(i.dob));
-    if (healthcareFilter) list = list.filter(i => isHealthcareInterested(i));
+    // Apply all active interest filters (AND logic)
+    activeInterestFilters.forEach(field => {
+      list = list.filter(i => isInterestedIn(i, field));
+    });
 
-    // Sort: status priority, then last name
     const statusOrder: Record<InternStatus, number> = {
       removed: 9, selected_different_partner: 8, intake_issue: 7, intake_complete: 6, in_progress_you: 5, not_matched: 4, pending: 3, ready_to_place: 2, matched: 1, assigned: 0,
     };
@@ -79,7 +128,7 @@ export default function RosterPage() {
       if (sa !== sb) return sa - sb;
       return a.lastName.localeCompare(b.lastName);
     });
-  }, [activeInterns, search, gradeFilter, statusFilter, showDupesOnly, assignFilter, assignedIds, ellFilter, preAppFilter, healthcareFilter]);
+  }, [activeInterns, search, gradeFilter, statusFilter, showDupesOnly, assignFilter, assignedIds, ellFilter, preAppFilter, activeInterestFilters, isInterestedIn]);
 
   const grades = useMemo(() => {
     const set = new Set(activeInterns.map(i => i.grade));
@@ -276,13 +325,19 @@ export default function RosterPage() {
           <Award className="h-3.5 w-3.5" />
           PreApp ({activeInterns.filter(i => isEligibleForPreApprenticeship(i.dob)).length})
         </button>
-        <button
-          onClick={() => setHealthcareFilter(!healthcareFilter)}
-          className={`h-9 px-3 rounded-md border text-xs font-medium flex items-center gap-1.5 transition-colors ${healthcareFilter ? 'bg-red-500/10 border-red-500/30 text-red-600' : 'bg-card text-muted-foreground hover:text-foreground'}`}
-        >
-          <HeartPulse className="h-3.5 w-3.5" />
-          Healthcare ({activeInterns.filter(i => isHealthcareInterested(i)).length})
-        </button>
+        {(Object.keys(INTEREST_LABELS) as InterestField[]).map(field => {
+          const active = activeInterestFilters.has(field);
+          return (
+            <button
+              key={field}
+              onClick={() => toggleInterestFilter(field)}
+              className={`h-9 px-3 rounded-md border text-xs font-medium flex items-center gap-1.5 transition-colors ${active ? 'bg-primary/10 border-primary/30 text-primary' : 'bg-card text-muted-foreground hover:text-foreground'}`}
+            >
+              {INTEREST_ICON_MAP[field]}
+              {INTEREST_LABELS[field]} ({interestCounts[field] || 0})
+            </button>
+          );
+        })}
       </div>
 
       {/* Select all in bulk mode */}
