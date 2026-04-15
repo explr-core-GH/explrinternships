@@ -103,30 +103,44 @@ export interface Assignment {
 }
 
 export type InterestField = 
-  | 'clevelandClinic'
   | 'constructionMgmt'
   | 'biomedical'
   | 'envJustice'
   | 'envClimate'
   | 'envFieldScience'
-  | 'iersCenter'
   | 'magnetManufacturing'
   | 'educationInternship'
   | 'healthcare'
-  | 'videoGames';
+  | 'videoGames'
+  | 'music'
+  | 'art'
+  | 'business'
+  | 'law'
+  | 'sports'
+  | 'culinary';
+
+// Fields that correspond to actual DB columns on the intern record
+export const INTERN_INTEREST_FIELDS: Set<string> = new Set([
+  'constructionMgmt', 'biomedical', 'envJustice', 'envClimate', 'envFieldScience',
+  'magnetManufacturing', 'educationInternship', 'healthcare', 'videoGames',
+]);
 
 export const INTEREST_LABELS: Record<InterestField, string> = {
-  clevelandClinic: 'Cleveland Clinic',
+  healthcare: 'Healthcare',
   constructionMgmt: 'Construction Management',
   biomedical: 'Biomedical Science & Engineering',
+  magnetManufacturing: 'Engineering',
   envJustice: 'Environmental Justice',
   envClimate: 'Climate Adaptation & Resilience',
   envFieldScience: 'Field Science & Data Analytics',
-  iersCenter: 'CSU IERS Center',
-  magnetManufacturing: "MAGNET Manufacturing Academy",
   educationInternship: 'Education / STEM Teaching',
-  healthcare: 'Healthcare',
   videoGames: 'Video Game / App Design',
+  music: 'Music',
+  art: 'Art & Creative',
+  business: 'Business',
+  law: 'Law & Legal',
+  sports: 'Sports & Fitness',
+  culinary: 'Culinary / Food',
 };
 
 export const WORKSITE_CATEGORIES = [
