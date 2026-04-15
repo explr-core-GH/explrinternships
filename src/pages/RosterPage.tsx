@@ -1,6 +1,6 @@
 import { useState, useMemo, useCallback } from 'react';
 import { isEligibleForPreApprenticeship } from '@/lib/preApprenticeship';
-import { Search, Copy, Download, CheckSquare, Square, Mail, List, School, Award, HeartPulse } from 'lucide-react';
+import { Search, Copy, Download, CheckSquare, Square, Mail, List, School, Award, HeartPulse, Hammer, Microscope, Leaf, CloudSun, FlaskConical, Building2, Factory, GraduationCap, Gamepad2, Stethoscope } from 'lucide-react';
 import { useAppStore } from '@/store/useAppStore';
 import { useAutoLoadData } from '@/hooks/useAutoLoadData';
 import InternCard from '@/components/InternCard';
@@ -10,7 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { exportRosterCSV, exportStatusContactCSV, exportEmailReadyByStatus, exportFullExcelByStatus } from '@/lib/exportData';
 import { toast } from 'sonner';
-import { INTERN_STATUSES, STATUS_CONFIG, type InternStatus } from '@/types/intern';
+import { INTERN_STATUSES, STATUS_CONFIG, type InternStatus, type InterestField, INTEREST_LABELS } from '@/types/intern';
 import {
   DropdownMenu,
   DropdownMenuContent,
