@@ -190,9 +190,9 @@ export function exportStatusContactCSV(
     // Column headers for students — include appointment info for in_progress
     const hasAppointments = status === 'in_progress_you';
     if (hasAppointments) {
-      allRows.push(['First Name', 'Last Name', 'Student Email', 'Phone', 'Parent Phone', 'Grade', 'Appt Date', 'Appt Time', 'Appt Location']);
+      allRows.push(['First Name', 'Last Name', 'Student Email', 'Phone', 'Parent Phone', 'Grade', 'PreApp Eligible', 'Appt Date', 'Appt Time', 'Appt Location']);
     } else {
-      allRows.push(['First Name', 'Last Name', 'Student Email', 'Phone', 'Parent Phone', 'Grade']);
+      allRows.push(['First Name', 'Last Name', 'Student Email', 'Phone', 'Parent Phone', 'Grade', 'PreApp Eligible']);
     }
 
     // Student rows sorted by last name
@@ -202,6 +202,7 @@ export function exportStatusContactCSV(
         const baseRow = [
           i.firstName, i.lastName, i.studentEmail || i.emailSubmission,
           i.phone, i.parentPhone, i.grade,
+          isEligibleForPreApprenticeship(i.dob) ? 'Yes' : 'No',
         ];
         if (hasAppointments) {
           baseRow.push(i.intakeDate || '', i.intakeTime || '', i.intakeLocation || '');
