@@ -51,29 +51,35 @@ export default function RosterPage() {
   };
 
   const INTEREST_KEYWORDS: Record<InterestField, string[]> = {
-    healthcare: ['healthcare', 'medical', 'nursing', 'crystal reed', 'health'],
+    healthcare: ['healthcare', 'medical', 'nursing', 'crystal reed', 'health', 'hospital', 'doctor', 'nurse', 'pharmacy', 'physical therapy', 'dental', 'veterinar'],
     clevelandClinic: ['cleveland clinic'],
-    constructionMgmt: ['construction'],
-    biomedical: ['biomedical', 'biotech'],
-    envJustice: ['environmental justice', 'env justice'],
-    envClimate: ['climate', 'resilience'],
-    envFieldScience: ['field science', 'data analytics'],
-    iersCenter: ['iers', 'csu'],
-    magnetManufacturing: ['magnet', 'manufacturing'],
-    educationInternship: ['education', 'teaching', 'stem teaching'],
-    videoGames: ['video game', 'game design', 'app design'],
+    constructionMgmt: ['construction', 'building', 'carpentry', 'architecture', 'architect'],
+    biomedical: ['biomedical', 'biotech', 'biology', 'lab research', 'laboratory'],
+    envJustice: ['environmental justice', 'env justice', 'social justice', 'community health'],
+    envClimate: ['climate', 'resilience', 'sustainability', 'renewable', 'solar', 'wind energy', 'green energy'],
+    envFieldScience: ['field science', 'data analytics', 'data science', 'ecology', 'wildlife', 'nature'],
+    iersCenter: ['iers', 'csu', 'cleveland state'],
+    magnetManufacturing: ['magnet', 'manufacturing', 'machining', 'welding', 'fabricat'],
+    educationInternship: ['education', 'teaching', 'stem teaching', 'tutoring', 'mentor', 'camp counselor', 'counselor'],
+    videoGames: ['video game', 'game design', 'app design', 'web design', 'website', 'coding', 'programming', 'software', 'animation', 'graphic design', 'ui design', 'ux design'],
   };
+
+  const YES_MAYBE = ['yes', 'maybe'];
 
   const isInterestedIn = useCallback((intern: typeof interns[0], field: InterestField): boolean => {
     const keywords = INTEREST_KEYWORDS[field];
     const check = (s: string) => keywords.some(k => s.toLowerCase().includes(k));
-    // Check the dedicated field
-    const fieldValue = intern[field] || '';
+    // Check the dedicated field for Yes/Maybe responses
+    const fieldValue = (intern[field] || '').trim().toLowerCase();
+    if (fieldValue && YES_MAYBE.includes(fieldValue)) return true;
+    // Also check if the field value contains keywords (for free-text responses)
     if (fieldValue && check(fieldValue)) return true;
     // Check itInterests array
     if (intern.itInterests.some(check)) return true;
     // Check specificInterests
     if (check(intern.specificInterests || '')) return true;
+    // Check additionalQuestions for keyword matches
+    if (check(intern.additionalQuestions || '')) return true;
     return false;
   }, []);
 
