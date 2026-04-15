@@ -308,8 +308,11 @@ export default function DemographicsPage() {
           </div>
 
           {/* IT interests */}
-          <div className="rounded-lg border bg-card p-4 shadow-card">
-            <h3 className="text-sm font-semibold text-card-foreground mb-3">Top IT Interests</h3>
+          <div ref={itRef} className="rounded-lg border bg-card p-4 shadow-card">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-sm font-semibold text-card-foreground">Top IT Interests</h3>
+              <button onClick={() => itRef.current && downloadPng(itRef.current, 'it-interests')} className="text-muted-foreground hover:text-foreground"><Download className="h-3.5 w-3.5" /></button>
+            </div>
             <div className="flex flex-wrap gap-2">
               {itInterests.slice(0, 20).map(([interest, count]) => (
                 <div key={interest} className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-accent text-accent-foreground text-xs">
@@ -322,8 +325,11 @@ export default function DemographicsPage() {
 
           {/* Programs */}
           {Object.keys(stats.programs).length > 0 && (
-            <div className="rounded-lg border bg-card p-4 shadow-card">
-              <h3 className="text-sm font-semibold text-card-foreground mb-3">Prior Program Participation</h3>
+            <div ref={programRef} className="rounded-lg border bg-card p-4 shadow-card">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-sm font-semibold text-card-foreground">Prior Program Participation</h3>
+                <button onClick={() => programRef.current && downloadPng(programRef.current, 'program-participation')} className="text-muted-foreground hover:text-foreground"><Download className="h-3.5 w-3.5" /></button>
+              </div>
               <div className="space-y-1.5">
                 {Object.entries(stats.programs)
                   .sort((a, b) => b[1] - a[1])
