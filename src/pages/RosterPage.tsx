@@ -27,6 +27,7 @@ export default function RosterPage() {
   const [assignFilter, setAssignFilter] = useState<'all' | 'assigned' | 'unassigned'>('all');
   const [ellFilter, setEllFilter] = useState(false);
   const [preAppFilter, setPreAppFilter] = useState(false);
+  const [healthcareFilter, setHealthcareFilter] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkMode, setBulkMode] = useState(false);
   const [viewMode, setViewMode] = useState<'list' | 'school'>('list');
