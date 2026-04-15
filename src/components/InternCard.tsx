@@ -1,6 +1,7 @@
 import { useState, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronDown, Mail, Phone, School, Calendar, AlertTriangle, Star, Copy, Edit2, Save, X, StickyNote, CheckCircle2, Square, CheckSquare, Users, CalendarClock, Trash2, HeartPulse } from 'lucide-react';
+import { ChevronDown, Mail, Phone, School, Calendar, AlertTriangle, Star, Copy, Edit2, Save, X, StickyNote, CheckCircle2, Square, CheckSquare, Users, CalendarClock, Trash2, HeartPulse, Award } from 'lucide-react';
+import { isEligibleForPreApprenticeship } from '@/lib/preApprenticeship';
 import { normalizeSchoolName } from '@/lib/schoolNameNormalizer';
 import type { Intern, Placement, Worksite, InternStatus } from '@/types/intern';
 import { INTEREST_LABELS, type InterestField, INTERN_STATUSES, STATUS_CONFIG, CONTACT_ROLE_LABELS, type SchoolContactRole } from '@/types/intern';
@@ -197,6 +198,7 @@ export default function InternCard({ intern, worksites, bulkMode, selected, onTo
   const isAssigned = assignments.some(a => a.internId === intern.id);
   const statusConfig = STATUS_CONFIG[intern.status];
   const hasCrystalReed = intern.itInterests.some(i => i.toLowerCase().includes('crystal reed'));
+  const preAppEligible = isEligibleForPreApprenticeship(intern.dob);
 
   const handleSaveEdit = async () => {
     await updateIntern(intern.id, editForm);
@@ -232,6 +234,11 @@ export default function InternCard({ intern, worksites, bulkMode, selected, onTo
             <h3 className="font-semibold text-card-foreground truncate">{intern.firstName} {intern.lastName}</h3>
             {intern.isEll && <span title="English Language Learner (ELL)">🟢</span>}
             {hasCrystalReed && <span title="Healthcare (Crystal Reed)"><HeartPulse className="h-4 w-4 text-destructive shrink-0" /></span>}
+            {preAppEligible && (
+              <span title="Eligible for Pre-Apprenticeship (16+ by June 5)" className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-warning/20 text-warning text-[10px] font-semibold shrink-0">
+                <Award className="h-3 w-3" /> PreApp
+              </span>
+            )}
             {intern.isDuplicate && <Copy className="h-3.5 w-3.5 text-warning shrink-0" />}
             {intern.adminNotes && <StickyNote className="h-3.5 w-3.5 text-primary shrink-0" />}
           </div>

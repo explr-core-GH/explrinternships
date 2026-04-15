@@ -2,6 +2,7 @@ import * as XLSX from 'xlsx';
 import type { Intern, Worksite, Assignment, SchoolContact, InternStatus } from '@/types/intern';
 import { STATUS_CONFIG, CONTACT_ROLE_LABELS, INTEREST_LABELS, type InterestField } from '@/types/intern';
 import { normalizeSchoolName } from '@/lib/schoolNameNormalizer';
+import { isEligibleForPreApprenticeship } from '@/lib/preApprenticeship';
 
 interface PotentialMatch {
   uploadedName: string;
@@ -189,9 +190,9 @@ export function exportStatusContactCSV(
     // Column headers for students — include appointment info for in_progress
     const hasAppointments = status === 'in_progress_you';
     if (hasAppointments) {
-      allRows.push(['First Name', 'Last Name', 'Student Email', 'Phone', 'Parent Phone', 'Grade', 'Appt Date', 'Appt Time', 'Appt Location']);
+      allRows.push(['First Name', 'Last Name', 'Student Email', 'Phone', 'Parent Phone', 'Grade', 'PreApp Eligible', 'Appt Date', 'Appt Time', 'Appt Location']);
     } else {
-      allRows.push(['First Name', 'Last Name', 'Student Email', 'Phone', 'Parent Phone', 'Grade']);
+      allRows.push(['First Name', 'Last Name', 'Student Email', 'Phone', 'Parent Phone', 'Grade', 'PreApp Eligible']);
     }
 
     // Student rows sorted by last name
@@ -201,6 +202,7 @@ export function exportStatusContactCSV(
         const baseRow = [
           i.firstName, i.lastName, i.studentEmail || i.emailSubmission,
           i.phone, i.parentPhone, i.grade,
+          isEligibleForPreApprenticeship(i.dob) ? 'Yes' : 'No',
         ];
         if (hasAppointments) {
           baseRow.push(i.intakeDate || '', i.intakeTime || '', i.intakeLocation || '');
@@ -272,6 +274,9 @@ export function exportEmailReadyByStatus(
         const phone = i.phone || '';
         const grade = i.grade || '';
         let line = `  ${idx + 1}. ${i.firstName} ${i.lastName} — Email: ${email}, Phone: ${phone}, Grade: ${grade}`;
+        if (isEligibleForPreApprenticeship(i.dob)) {
+          line += ` ⭐ PreApp Eligible`;
+        }
         if (status === 'in_progress_you' && (i.intakeDate || i.intakeTime || i.intakeLocation)) {
           const parts = [i.intakeDate, i.intakeTime, i.intakeLocation].filter(Boolean);
           line += `\n     📅 Appointment: ${parts.join(' | ')}`;
@@ -349,9 +354,15 @@ function internToRow(
     'Email': intern.studentEmail || intern.emailSubmission,
     'Phone': intern.phone,
     'Parent Phone': intern.parentPhone,
+    'Parent/Guardian Phone': intern.parentGuardianPhone || '',
+    'Parent/Guardian Email': intern.parentGuardianEmail || '',
     'DOB': intern.dob,
     'School': school,
     'Grade': intern.grade,
+    'Gender': intern.gender || '',
+    'Race/Ethnicity': intern.raceEthnicity || '',
+    'ELL': intern.isEll ? 'Yes' : 'No',
+    'Eligible for PreApprenticeship': isEligibleForPreApprenticeship(intern.dob) ? 'Yes' : 'No',
     'Programs': intern.programs.join('; '),
     'IT Interests': intern.itInterests.join('; '),
     'Intake Date': intern.intakeDate,

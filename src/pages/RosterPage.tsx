@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { isEligibleForPreApprenticeship } from '@/lib/preApprenticeship';
 import { Search, Copy, Download, CheckSquare, Square, Mail, List, School } from 'lucide-react';
 import { useAppStore } from '@/store/useAppStore';
 import { useAutoLoadData } from '@/hooks/useAutoLoadData';
@@ -41,7 +42,9 @@ export default function RosterPage() {
         i.school.toLowerCase().includes(q) ||
         i.studentEmail.toLowerCase().includes(q) ||
         i.itInterests.some(interest => interest.toLowerCase().includes(q)) ||
-        (q === 'ell' && i.isEll)
+        (q === 'ell' && i.isEll) ||
+        (q === 'preapp' && isEligibleForPreApprenticeship(i.dob)) ||
+        (q === 'pre-apprenticeship' && isEligibleForPreApprenticeship(i.dob))
       );
     }
     if (gradeFilter !== 'all') list = list.filter(i => i.grade === gradeFilter);

@@ -2,6 +2,7 @@ import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import type { Intern } from '@/types/intern';
 import { INTEREST_LABELS, STATUS_CONFIG, type InterestField, type InternStatus } from '@/types/intern';
+import { isEligibleForPreApprenticeship } from '@/lib/preApprenticeship';
 
 const INTEREST_FIELDS: InterestField[] = [
   'clevelandClinic', 'constructionMgmt', 'biomedical', 'envJustice',
@@ -21,6 +22,7 @@ interface DemoStats {
   interestCounts: Record<string, { yes: number; maybe: number; no: number }>;
   itInterests: [string, number][];
   duplicates: number;
+  preAppCount: number;
 }
 
 function computeStats(interns: Intern[]): DemoStats {
@@ -61,6 +63,8 @@ function computeStats(interns: Intern[]): DemoStats {
     }
   }
 
+  const preAppCount = interns.filter(i => isEligibleForPreApprenticeship(i.dob)).length;
+
   return {
     total: interns.length,
     grades,
@@ -71,6 +75,7 @@ function computeStats(interns: Intern[]): DemoStats {
     interestCounts,
     itInterests: Object.entries(itCounts).sort((a, b) => b[1] - a[1]),
     duplicates: interns.filter(i => i.isDuplicate).length,
+    preAppCount,
   };
 }
 
@@ -102,6 +107,7 @@ export function exportDemographicsExcel(interns: Intern[], status: InternStatus 
     ['Schools', Object.keys(stats.schools).length],
     ['Grade Levels', Object.keys(stats.grades).length],
     ['Duplicates', stats.duplicates],
+    ['Eligible for PreApprenticeship', stats.preAppCount],
   ];
   const summaryWs = XLSX.utils.aoa_to_sheet(summaryRows);
   XLSX.utils.book_append_sheet(wb, summaryWs, 'Summary');
@@ -227,6 +233,7 @@ export function exportDemographicsPDF(interns: Intern[], status: InternStatus | 
   drawRow('Schools', String(Object.keys(stats.schools).length));
   drawRow('Grade Levels', String(Object.keys(stats.grades).length));
   drawRow('Duplicates', String(stats.duplicates));
+  drawRow('Eligible for PreApprenticeship', String(stats.preAppCount));
 
   // Grades
   const sortedGrades = GRADE_ORDER.filter(g => stats.grades[g]).map(g => ({ grade: g, count: stats.grades[g] }));
