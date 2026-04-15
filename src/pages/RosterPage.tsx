@@ -69,7 +69,7 @@ export default function RosterPage() {
       if (sa !== sb) return sa - sb;
       return a.lastName.localeCompare(b.lastName);
     });
-  }, [activeInterns, search, gradeFilter, statusFilter, showDupesOnly, assignFilter, assignedIds, ellFilter, preAppFilter]);
+  }, [activeInterns, search, gradeFilter, statusFilter, showDupesOnly, assignFilter, assignedIds, ellFilter, preAppFilter, healthcareFilter]);
 
   const grades = useMemo(() => {
     const set = new Set(activeInterns.map(i => i.grade));
