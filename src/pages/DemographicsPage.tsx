@@ -248,19 +248,34 @@ export default function DemographicsPage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {/* Gender Pie */}
             {Object.keys(stats.genders).length > 0 && (
-              <div className="rounded-lg border bg-card p-4 shadow-card">
-                <h3 className="text-sm font-semibold text-card-foreground mb-3">By Gender</h3>
+              <div ref={genderRef} className="rounded-lg border bg-card p-4 shadow-card">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-sm font-semibold text-card-foreground">By Gender</h3>
+                  <button onClick={() => genderRef.current && downloadPng(genderRef.current, 'gender-breakdown')} className="text-muted-foreground hover:text-foreground"><Download className="h-3.5 w-3.5" /></button>
+                </div>
                 <PieChart data={Object.entries(stats.genders).sort((a, b) => b[1] - a[1])} />
                 <p className="text-[10px] text-muted-foreground mt-2 italic">Students without intake data on file are not included in gender demographics.</p>
               </div>
             )}
 
-            {/* Race/Ethnicity Pie */}
             {Object.keys(stats.races).length > 0 && (
-              <div className="rounded-lg border bg-card p-4 shadow-card">
-                <h3 className="text-sm font-semibold text-card-foreground mb-3">By Race / Ethnicity</h3>
+              <div ref={raceRef} className="rounded-lg border bg-card p-4 shadow-card">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-sm font-semibold text-card-foreground">By Race / Ethnicity</h3>
+                  <button onClick={() => raceRef.current && downloadPng(raceRef.current, 'race-ethnicity-breakdown')} className="text-muted-foreground hover:text-foreground"><Download className="h-3.5 w-3.5" /></button>
+                </div>
                 <PieChart data={Object.entries(stats.races).sort((a, b) => b[1] - a[1])} />
                 <p className="text-[10px] text-muted-foreground mt-2 italic">Students without intake data on file are not included in race/ethnicity demographics.</p>
+              </div>
+            )}
+
+            {stats.ellCount > 0 && (
+              <div ref={ellRef} className="rounded-lg border bg-card p-4 shadow-card">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-sm font-semibold text-card-foreground">English Language Learners (ELL)</h3>
+                  <button onClick={() => ellRef.current && downloadPng(ellRef.current, 'ell-breakdown')} className="text-muted-foreground hover:text-foreground"><Download className="h-3.5 w-3.5" /></button>
+                </div>
+                <PieChart data={[['ELL', stats.ellCount], ['Non-ELL', stats.nonEllCount]]} />
               </div>
             )}
 
