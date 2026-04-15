@@ -279,16 +279,12 @@ export default function DemographicsPage() {
               </div>
             )}
 
-            {/* ELL Pie */}
-            {stats.ellCount > 0 && (
-              <div className="rounded-lg border bg-card p-4 shadow-card">
-                <h3 className="text-sm font-semibold text-card-foreground mb-3">English Language Learners (ELL)</h3>
-                <PieChart data={[['ELL', stats.ellCount], ['Non-ELL', stats.nonEllCount]]} />
-              </div>
-            )}
           </div>
-          <div className="rounded-lg border bg-card p-4 shadow-card">
-            <h3 className="text-sm font-semibold text-card-foreground mb-3">Internship Interest Levels</h3>
+          <div ref={interestRef} className="rounded-lg border bg-card p-4 shadow-card">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-sm font-semibold text-card-foreground">Internship Interest Levels</h3>
+              <button onClick={() => interestRef.current && downloadPng(interestRef.current, 'interest-levels')} className="text-muted-foreground hover:text-foreground"><Download className="h-3.5 w-3.5" /></button>
+            </div>
             <div className="space-y-2">
               {interestFields.map(f => {
                 const { yes, maybe, no } = stats.interestCounts[f];
