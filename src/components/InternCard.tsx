@@ -235,7 +235,7 @@ export default function InternCard({ intern, worksites, bulkMode, selected, onTo
             {intern.isEll && <span title="English Language Learner (ELL)">🟢</span>}
             {hasCrystalReed && <span title="Healthcare (Crystal Reed)"><HeartPulse className="h-4 w-4 text-destructive shrink-0" /></span>}
             {preAppEligible && (
-              <span title="Eligible for Pre-Apprenticeship (16+ by June 5)" className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-800 text-[10px] font-semibold shrink-0">
+              <span title="Eligible for Pre-Apprenticeship (16+ by June 5)" className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-warning/20 text-warning text-[10px] font-semibold shrink-0">
                 <Award className="h-3 w-3" /> PreApp
               </span>
             )}
