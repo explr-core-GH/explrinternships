@@ -1,5 +1,6 @@
-import { useMemo, useState } from 'react';
-import { FileSpreadsheet, FileText } from 'lucide-react';
+import { useCallback, useMemo, useRef, useState } from 'react';
+import { Download, FileSpreadsheet, FileText } from 'lucide-react';
+import { toPng } from 'html-to-image';
 import { useAppStore } from '@/store/useAppStore';
 import { useAutoLoadData } from '@/hooks/useAutoLoadData';
 import { INTEREST_LABELS, type InterestField, INTERN_STATUSES, STATUS_CONFIG, type InternStatus } from '@/types/intern';
@@ -13,6 +14,18 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+
+function downloadPng(node: HTMLElement, filename: string) {
+  toPng(node, { backgroundColor: '#ffffff', pixelRatio: 2 })
+    .then((dataUrl) => {
+      const link = document.createElement('a');
+      link.download = `${filename}.png`;
+      link.href = dataUrl;
+      link.click();
+      toast.success('PNG downloaded');
+    })
+    .catch(() => toast.error('Failed to generate PNG'));
+}
 
 const interestFields: InterestField[] = [
   'clevelandClinic', 'constructionMgmt', 'biomedical', 'envJustice',
