@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { isEligibleForPreApprenticeship } from '@/lib/preApprenticeship';
-import { Search, Copy, Download, CheckSquare, Square, Mail, List, School, Award } from 'lucide-react';
+import { Search, Copy, Download, CheckSquare, Square, Mail, List, School, Award, HeartPulse } from 'lucide-react';
 import { useAppStore } from '@/store/useAppStore';
 import { useAutoLoadData } from '@/hooks/useAutoLoadData';
 import InternCard from '@/components/InternCard';
@@ -262,6 +262,13 @@ export default function RosterPage() {
         >
           <Award className="h-3.5 w-3.5" />
           PreApp ({activeInterns.filter(i => isEligibleForPreApprenticeship(i.dob)).length})
+        </button>
+        <button
+          onClick={() => setHealthcareFilter(!healthcareFilter)}
+          className={`h-9 px-3 rounded-md border text-xs font-medium flex items-center gap-1.5 transition-colors ${healthcareFilter ? 'bg-red-500/10 border-red-500/30 text-red-600' : 'bg-card text-muted-foreground hover:text-foreground'}`}
+        >
+          <HeartPulse className="h-3.5 w-3.5" />
+          Healthcare ({activeInterns.filter(i => i.itInterests.some(interest => interest.toLowerCase().includes('healthcare') || interest.toLowerCase().includes('crystal reed'))).length})
         </button>
       </div>
 
