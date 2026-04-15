@@ -38,6 +38,15 @@ const GRADE_ORDER = ['8th', '9th', '10th', '11th', '12th'];
 export default function DemographicsPage() {
   useAutoLoadData();
   const { interns } = useAppStore();
+  const gradeRef = useRef<HTMLDivElement>(null);
+  const schoolRef = useRef<HTMLDivElement>(null);
+  const genderRef = useRef<HTMLDivElement>(null);
+  const raceRef = useRef<HTMLDivElement>(null);
+  const ellRef = useRef<HTMLDivElement>(null);
+  const interestRef = useRef<HTMLDivElement>(null);
+  const itRef = useRef<HTMLDivElement>(null);
+  const programRef = useRef<HTMLDivElement>(null);
+
   const [statusFilter, setStatusFilter] = useState<InternStatus | 'all'>('all');
 
   const active = useMemo(() => {
