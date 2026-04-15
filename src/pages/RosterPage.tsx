@@ -36,6 +36,16 @@ export default function RosterPage() {
   const activeInterns = useMemo(() => interns.filter(i => i.isNewest), [interns]);
   const assignedIds = useMemo(() => new Set(assignments.map(a => a.internId)), [assignments]);
 
+  const isHealthcareInterested = useCallback((i: typeof interns[0]) => {
+    const keywords = ['healthcare', 'medical', 'nursing', 'crystal reed', 'cleveland clinic', 'biomedical', 'health'];
+    const check = (s: string) => keywords.some(k => s.toLowerCase().includes(k));
+    return i.itInterests.some(check) ||
+      check(i.healthcare || '') ||
+      check(i.clevelandClinic || '') ||
+      check(i.biomedical || '') ||
+      check(i.specificInterests || '');
+  }, []);
+
   const filtered = useMemo(() => {
     let list = activeInterns;
     if (search) {
