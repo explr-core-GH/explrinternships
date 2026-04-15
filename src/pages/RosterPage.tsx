@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { isEligibleForPreApprenticeship } from '@/lib/preApprenticeship';
-import { Search, Copy, Download, CheckSquare, Square, Mail, List, School, Award } from 'lucide-react';
+import { Search, Copy, Download, CheckSquare, Square, Mail, List, School, Award, HeartPulse } from 'lucide-react';
 import { useAppStore } from '@/store/useAppStore';
 import { useAutoLoadData } from '@/hooks/useAutoLoadData';
 import InternCard from '@/components/InternCard';
@@ -27,6 +27,7 @@ export default function RosterPage() {
   const [assignFilter, setAssignFilter] = useState<'all' | 'assigned' | 'unassigned'>('all');
   const [ellFilter, setEllFilter] = useState(false);
   const [preAppFilter, setPreAppFilter] = useState(false);
+  const [healthcareFilter, setHealthcareFilter] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkMode, setBulkMode] = useState(false);
   const [viewMode, setViewMode] = useState<'list' | 'school'>('list');
@@ -56,6 +57,7 @@ export default function RosterPage() {
     if (assignFilter === 'unassigned') list = list.filter(i => !assignedIds.has(i.id));
     if (ellFilter) list = list.filter(i => i.isEll);
     if (preAppFilter) list = list.filter(i => isEligibleForPreApprenticeship(i.dob));
+    if (healthcareFilter) list = list.filter(i => i.itInterests.some(interest => interest.toLowerCase().includes('healthcare') || interest.toLowerCase().includes('crystal reed')));
 
     // Sort: status priority, then last name
     const statusOrder: Record<InternStatus, number> = {
@@ -67,7 +69,7 @@ export default function RosterPage() {
       if (sa !== sb) return sa - sb;
       return a.lastName.localeCompare(b.lastName);
     });
-  }, [activeInterns, search, gradeFilter, statusFilter, showDupesOnly, assignFilter, assignedIds, ellFilter, preAppFilter]);
+  }, [activeInterns, search, gradeFilter, statusFilter, showDupesOnly, assignFilter, assignedIds, ellFilter, preAppFilter, healthcareFilter]);
 
   const grades = useMemo(() => {
     const set = new Set(activeInterns.map(i => i.grade));
@@ -260,6 +262,13 @@ export default function RosterPage() {
         >
           <Award className="h-3.5 w-3.5" />
           PreApp ({activeInterns.filter(i => isEligibleForPreApprenticeship(i.dob)).length})
+        </button>
+        <button
+          onClick={() => setHealthcareFilter(!healthcareFilter)}
+          className={`h-9 px-3 rounded-md border text-xs font-medium flex items-center gap-1.5 transition-colors ${healthcareFilter ? 'bg-red-500/10 border-red-500/30 text-red-600' : 'bg-card text-muted-foreground hover:text-foreground'}`}
+        >
+          <HeartPulse className="h-3.5 w-3.5" />
+          Healthcare ({activeInterns.filter(i => i.itInterests.some(interest => interest.toLowerCase().includes('healthcare') || interest.toLowerCase().includes('crystal reed'))).length})
         </button>
       </div>
 
