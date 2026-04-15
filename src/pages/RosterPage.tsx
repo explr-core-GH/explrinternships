@@ -25,6 +25,8 @@ export default function RosterPage() {
   const [statusFilter, setStatusFilter] = useState<InternStatus | 'all'>('all');
   const [showDupesOnly, setShowDupesOnly] = useState(false);
   const [assignFilter, setAssignFilter] = useState<'all' | 'assigned' | 'unassigned'>('all');
+  const [ellFilter, setEllFilter] = useState(false);
+  const [preAppFilter, setPreAppFilter] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkMode, setBulkMode] = useState(false);
   const [viewMode, setViewMode] = useState<'list' | 'school'>('list');
