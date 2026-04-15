@@ -57,6 +57,7 @@ export default function RosterPage() {
     if (assignFilter === 'unassigned') list = list.filter(i => !assignedIds.has(i.id));
     if (ellFilter) list = list.filter(i => i.isEll);
     if (preAppFilter) list = list.filter(i => isEligibleForPreApprenticeship(i.dob));
+    if (healthcareFilter) list = list.filter(i => i.itInterests.some(interest => interest.toLowerCase().includes('healthcare') || interest.toLowerCase().includes('crystal reed')));
 
     // Sort: status priority, then last name
     const statusOrder: Record<InternStatus, number> = {
