@@ -2,6 +2,7 @@ import * as XLSX from 'xlsx';
 import type { Intern, Worksite, Assignment, SchoolContact, InternStatus } from '@/types/intern';
 import { STATUS_CONFIG, CONTACT_ROLE_LABELS, INTEREST_LABELS, type InterestField } from '@/types/intern';
 import { normalizeSchoolName } from '@/lib/schoolNameNormalizer';
+import { isEligibleForPreApprenticeship } from '@/lib/preApprenticeship';
 
 interface PotentialMatch {
   uploadedName: string;
@@ -272,6 +273,9 @@ export function exportEmailReadyByStatus(
         const phone = i.phone || '';
         const grade = i.grade || '';
         let line = `  ${idx + 1}. ${i.firstName} ${i.lastName} — Email: ${email}, Phone: ${phone}, Grade: ${grade}`;
+        if (isEligibleForPreApprenticeship(i.dob)) {
+          line += ` ⭐ PreApp Eligible`;
+        }
         if (status === 'in_progress_you' && (i.intakeDate || i.intakeTime || i.intakeLocation)) {
           const parts = [i.intakeDate, i.intakeTime, i.intakeLocation].filter(Boolean);
           line += `\n     📅 Appointment: ${parts.join(' | ')}`;
@@ -349,9 +353,15 @@ function internToRow(
     'Email': intern.studentEmail || intern.emailSubmission,
     'Phone': intern.phone,
     'Parent Phone': intern.parentPhone,
+    'Parent/Guardian Phone': intern.parentGuardianPhone || '',
+    'Parent/Guardian Email': intern.parentGuardianEmail || '',
     'DOB': intern.dob,
     'School': school,
     'Grade': intern.grade,
+    'Gender': intern.gender || '',
+    'Race/Ethnicity': intern.raceEthnicity || '',
+    'ELL': intern.isEll ? 'Yes' : 'No',
+    'Eligible for PreApprenticeship': isEligibleForPreApprenticeship(intern.dob) ? 'Yes' : 'No',
     'Programs': intern.programs.join('; '),
     'IT Interests': intern.itInterests.join('; '),
     'Intake Date': intern.intakeDate,
