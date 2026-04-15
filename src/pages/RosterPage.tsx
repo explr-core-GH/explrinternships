@@ -325,13 +325,19 @@ export default function RosterPage() {
           <Award className="h-3.5 w-3.5" />
           PreApp ({activeInterns.filter(i => isEligibleForPreApprenticeship(i.dob)).length})
         </button>
-        <button
-          onClick={() => setHealthcareFilter(!healthcareFilter)}
-          className={`h-9 px-3 rounded-md border text-xs font-medium flex items-center gap-1.5 transition-colors ${healthcareFilter ? 'bg-red-500/10 border-red-500/30 text-red-600' : 'bg-card text-muted-foreground hover:text-foreground'}`}
-        >
-          <HeartPulse className="h-3.5 w-3.5" />
-          Healthcare ({activeInterns.filter(i => isHealthcareInterested(i)).length})
-        </button>
+        {(Object.keys(INTEREST_LABELS) as InterestField[]).map(field => {
+          const active = activeInterestFilters.has(field);
+          return (
+            <button
+              key={field}
+              onClick={() => toggleInterestFilter(field)}
+              className={`h-9 px-3 rounded-md border text-xs font-medium flex items-center gap-1.5 transition-colors ${active ? 'bg-primary/10 border-primary/30 text-primary' : 'bg-card text-muted-foreground hover:text-foreground'}`}
+            >
+              {INTEREST_ICON_MAP[field]}
+              {INTEREST_LABELS[field]} ({interestCounts[field] || 0})
+            </button>
+          );
+        })}
       </div>
 
       {/* Select all in bulk mode */}
