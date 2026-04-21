@@ -4,8 +4,11 @@ import { useAutoLoadData } from '@/hooks/useAutoLoadData';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
-import { Users, Building2, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Users, Building2, CheckCircle2, AlertCircle, FileSpreadsheet, FileText } from 'lucide-react';
 import { INTERN_STATUSES, STATUS_CONFIG, type InternStatus } from '@/types/intern';
+import { exportProgressMonitoringExcel, exportProgressMonitoringPDF } from '@/lib/exportProgressMonitoring';
+import { toast } from 'sonner';
 
 export default function DashboardPage() {
   useAutoLoadData();
@@ -50,9 +53,35 @@ export default function DashboardPage() {
 
   return (
     <div className="max-w-5xl mx-auto animate-fade-in space-y-6">
-      <div>
-        <h2 className="text-xl font-bold text-foreground">Dashboard</h2>
-        <p className="text-xs text-muted-foreground">Overview of internship placement progress</p>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h2 className="text-xl font-bold text-foreground">Dashboard</h2>
+          <p className="text-xs text-muted-foreground">Overview of internship placement progress</p>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              try { exportProgressMonitoringExcel(interns); toast.success('Spreadsheet downloaded'); }
+              catch (e) { console.error(e); toast.error('Failed to export spreadsheet'); }
+            }}
+          >
+            <FileSpreadsheet className="h-4 w-4 mr-1.5" />
+            Progress Monitoring (Spreadsheet)
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              try { exportProgressMonitoringPDF(interns); toast.success('PDF downloaded'); }
+              catch (e) { console.error(e); toast.error('Failed to export PDF'); }
+            }}
+          >
+            <FileText className="h-4 w-4 mr-1.5" />
+            Progress Monitoring (PDF)
+          </Button>
+        </div>
       </div>
 
       {/* KPI cards */}
