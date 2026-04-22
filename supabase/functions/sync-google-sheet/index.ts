@@ -175,6 +175,16 @@ serve(async (req) => {
         return null;
       }
 
+      // Skip rows where first or last name is junk (single letter, all whitespace, or all punctuation)
+      const isRealName = (n: string) => {
+        const cleaned = n.trim().replace(/[^a-zA-Z]/g, '');
+        return cleaned.length >= 2;
+      };
+      if (!isRealName(firstName) || !isRealName(lastName)) {
+        console.log(`Skipping junk-name row: "${firstName} ${lastName}"`);
+        return null;
+      }
+
       return {
         first_name: firstName,
         last_name: lastName,

@@ -1,0 +1,1 @@
+DELETE FROM public.interns WHERE LOWER(TRIM(first_name)) = 's' AND LOWER(TRIM(last_name)) = 's';
