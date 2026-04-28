@@ -38,11 +38,12 @@ async function applyAppointmentToIntern(
     intake_time: appointment.time || null,
     intake_location: appointment.location || null,
   };
-  // Intake uploads also bump the status to "Upcoming Appointment".
-  // Orientation uploads only overwrite the date/time/location on the card,
-  // leaving the student's current status untouched.
+  // Intake uploads bump the status to "Upcoming Appointment".
+  // Orientation uploads move the student to "Ready to Place".
   if (mode === 'intake') {
     updateFields.status = 'in_progress_you';
+  } else if (mode === 'orientation') {
+    updateFields.status = 'ready_to_place';
   }
 
   if (appointment.email && !existingEmail) {
