@@ -108,18 +108,19 @@ function statusLabel(status: InternStatus | 'all'): string {
   return status === 'all' ? 'All Statuses' : STATUS_CONFIG[status].label;
 }
 
-function fileName(prefix: string, status: InternStatus | 'all', ext: string): string {
+function fileName(prefix: string, status: InternStatus | 'all', ext: string, suffix?: string): string {
   const tag = status === 'all' ? 'all' : status;
-  return `${prefix}-${tag}-${new Date().toISOString().slice(0, 10)}.${ext}`;
+  const suf = suffix ? `-${suffix}` : '';
+  return `${prefix}-${tag}${suf}-${new Date().toISOString().slice(0, 10)}.${ext}`;
 }
 
 // ── Excel Export ──────────────────────────────────────────────
 
-export function exportDemographicsExcel(interns: Intern[], status: InternStatus | 'all') {
-  const filtered = interns.filter(i => i.isNewest && (status === 'all' || i.status === status));
+export function exportDemographicsExcel(interns: Intern[], status: InternStatus | 'all', cmsdOnly = false) {
+  const filtered = interns.filter(i => i.isNewest && (status === 'all' || i.status === status) && (!cmsdOnly || i.isCmsd));
   const stats = computeStats(filtered);
   const wb = XLSX.utils.book_new();
-  const label = statusLabel(status);
+  const label = `${statusLabel(status)}${cmsdOnly ? ' · CMSD Only' : ''}`;
 
   // Summary sheet
   const summaryRows = [
@@ -181,15 +182,15 @@ export function exportDemographicsExcel(interns: Intern[], status: InternStatus 
     XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(progRows), 'Programs');
   }
 
-  XLSX.writeFile(wb, fileName('demographics', status, 'xlsx'));
+  XLSX.writeFile(wb, fileName('demographics', status, 'xlsx', cmsdOnly ? 'cmsd' : undefined));
 }
 
 // ── PDF Export ────────────────────────────────────────────────
 
-export function exportDemographicsPDF(interns: Intern[], status: InternStatus | 'all') {
-  const filtered = interns.filter(i => i.isNewest && (status === 'all' || i.status === status));
+export function exportDemographicsPDF(interns: Intern[], status: InternStatus | 'all', cmsdOnly = false) {
+  const filtered = interns.filter(i => i.isNewest && (status === 'all' || i.status === status) && (!cmsdOnly || i.isCmsd));
   const stats = computeStats(filtered);
-  const label = statusLabel(status);
+  const label = `${statusLabel(status)}${cmsdOnly ? ' · CMSD Only' : ''}`;
 
   const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'letter' });
   const pageW = doc.internal.pageSize.getWidth();
@@ -367,5 +368,5 @@ export function exportDemographicsPDF(interns: Intern[], status: InternStatus | 
     });
   }
 
-  doc.save(fileName('demographics', status, 'pdf'));
+  doc.save(fileName('demographics', status, 'pdf', cmsdOnly ? 'cmsd' : undefined));
 }
