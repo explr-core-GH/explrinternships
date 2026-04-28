@@ -196,6 +196,19 @@ export default function DemographicsPage() {
             <FileText className="h-3.5 w-3.5" />
             PDF (Ready to Place)
           </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="gap-1.5"
+            onClick={() => {
+              exportDemographicsPDF(interns, 'all', true);
+              toast.success('CMSD Only PDF exported');
+            }}
+            disabled={interns.filter(i => i.isNewest && i.isCmsd).length === 0}
+          >
+            <FileText className="h-3.5 w-3.5" />
+            PDF (CMSD Only)
+          </Button>
         </div>
       </div>
 
