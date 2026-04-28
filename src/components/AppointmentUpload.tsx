@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { Upload, CalendarClock, CheckCircle2, AlertTriangle } from 'lucide-react';
+import { Upload, CalendarClock, CalendarCheck2, CheckCircle2, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAppStore } from '@/store/useAppStore';
 import { toast } from 'sonner';
@@ -21,13 +21,29 @@ interface AppointmentUploadResults {
   unmatched: string[];
 }
 
-async function applyAppointmentToIntern(appointment: ParsedAppointment, internId: string, existingEmail?: string) {
+type AppointmentMode = 'intake' | 'orientation';
+
+interface AppointmentUploadProps {
+  mode?: AppointmentMode;
+}
+
+async function applyAppointmentToIntern(
+  appointment: ParsedAppointment,
+  internId: string,
+  existingEmail: string | undefined,
+  mode: AppointmentMode,
+) {
   const updateFields: Record<string, string | null> = {
     intake_date: appointment.date || null,
     intake_time: appointment.time || null,
     intake_location: appointment.location || null,
-    status: 'in_progress_you',
   };
+  // Intake uploads also bump the status to "Upcoming Appointment".
+  // Orientation uploads only overwrite the date/time/location on the card,
+  // leaving the student's current status untouched.
+  if (mode === 'intake') {
+    updateFields.status = 'in_progress_you';
+  }
 
   if (appointment.email && !existingEmail) {
     updateFields.student_email = appointment.email;
@@ -36,12 +52,20 @@ async function applyAppointmentToIntern(appointment: ParsedAppointment, internId
   await supabase.from('interns').update(updateFields as any).eq('id', internId);
 }
 
-export default function AppointmentUpload() {
+export default function AppointmentUpload({ mode = 'intake' }: AppointmentUploadProps = {}) {
   const { interns, fetchInterns } = useAppStore();
   const [results, setResults] = useState<AppointmentUploadResults | null>(null);
   const [reviewItems, setReviewItems] = useState<AppointmentReviewItem[]>([]);
   const [uploading, setUploading] = useState(false);
   const [applyingReview, setApplyingReview] = useState(false);
+
+  const isOrientation = mode === 'orientation';
+  const Icon = isOrientation ? CalendarCheck2 : CalendarClock;
+  const heading = isOrientation ? 'Upload Orientation Appointments' : 'Upload Intake Appointments';
+  const description = isOrientation
+    ? 'Upload an Excel file with orientation dates, times, and locations. The orientation will REPLACE the appointment shown on each matched student\u2019s roster card.'
+    : 'Upload an Excel file with full names, birthdates, emails, appointment dates/times, and addresses. Exact matches are applied automatically, and uncertain matches go to manual review.';
+  const buttonLabel = isOrientation ? 'Choose Orientation File' : 'Choose Appointment File';
 
   const handleApplyApproved = useCallback(async () => {
     const approvedItems = reviewItems.filter((item) => item.approved === true);
@@ -54,7 +78,12 @@ export default function AppointmentUpload() {
     try {
       for (const item of approvedItems) {
         const existingIntern = interns.find((intern) => intern.id === item.suggestion.internId);
-        await applyAppointmentToIntern(item.appointment, item.suggestion.internId, existingIntern?.studentEmail || existingIntern?.emailSubmission);
+        await applyAppointmentToIntern(
+          item.appointment,
+          item.suggestion.internId,
+          existingIntern?.studentEmail || existingIntern?.emailSubmission,
+          mode,
+        );
       }
 
       await fetchInterns();
@@ -70,7 +99,7 @@ export default function AppointmentUpload() {
       toast.error(`Failed to apply approved matches: ${error.message || 'Unknown error'}`);
     }
     setApplyingReview(false);
-  }, [fetchInterns, interns, reviewItems]);
+  }, [fetchInterns, interns, reviewItems, mode]);
 
   const handleFile = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -100,7 +129,12 @@ export default function AppointmentUpload() {
         const autoMatch = findAutoAppointmentMatch(appointment, activeInterns);
 
         if (autoMatch) {
-          await applyAppointmentToIntern(appointment, autoMatch.id, autoMatch.studentEmail || autoMatch.emailSubmission);
+          await applyAppointmentToIntern(
+            appointment,
+            autoMatch.id,
+            autoMatch.studentEmail || autoMatch.emailSubmission,
+            mode,
+          );
           matched += 1;
           continue;
         }
@@ -138,24 +172,22 @@ export default function AppointmentUpload() {
 
     setUploading(false);
     event.target.value = '';
-  }, [fetchInterns]);
+  }, [fetchInterns, mode]);
 
   return (
     <div className="space-y-3">
       <div className="flex items-center gap-2">
-        <CalendarClock className="h-4 w-4 text-primary" />
-        <h3 className="text-sm font-medium text-foreground">Upload Intake Appointments</h3>
+        <Icon className="h-4 w-4 text-primary" />
+        <h3 className="text-sm font-medium text-foreground">{heading}</h3>
       </div>
-      <p className="text-xs text-muted-foreground">
-        Upload an Excel file with full names, birthdates, emails, appointment dates/times, and addresses. Exact matches are applied automatically, and uncertain matches go to manual review.
-      </p>
+      <p className="text-xs text-muted-foreground">{description}</p>
 
       <label className="block">
         <input type="file" accept=".xlsx,.xls,.csv" onChange={handleFile} className="hidden" disabled={uploading || applyingReview} />
         <Button variant="outline" size="sm" className="gap-1.5 cursor-pointer" asChild disabled={uploading || applyingReview}>
           <span>
             <Upload className="h-3.5 w-3.5" />
-            {uploading ? 'Processing...' : 'Choose Appointment File'}
+            {uploading ? 'Processing...' : buttonLabel}
           </span>
         </Button>
       </label>
