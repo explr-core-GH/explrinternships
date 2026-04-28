@@ -104,20 +104,27 @@ function computeStats(interns: Intern[]): DemoStats {
   };
 }
 
-function statusLabel(status: InternStatus | 'all'): string {
+function statusLabel(status: InternStatus | 'all' | InternStatus[]): string {
+  if (Array.isArray(status)) return status.map(s => STATUS_CONFIG[s].label).join(' + ');
   return status === 'all' ? 'All Statuses' : STATUS_CONFIG[status].label;
 }
 
-function fileName(prefix: string, status: InternStatus | 'all', ext: string, suffix?: string): string {
-  const tag = status === 'all' ? 'all' : status;
+function fileName(prefix: string, status: InternStatus | 'all' | InternStatus[], ext: string, suffix?: string): string {
+  const tag = Array.isArray(status) ? status.join('+') : (status === 'all' ? 'all' : status);
   const suf = suffix ? `-${suffix}` : '';
   return `${prefix}-${tag}${suf}-${new Date().toISOString().slice(0, 10)}.${ext}`;
 }
 
+function matchesStatus(s: InternStatus, filter: InternStatus | 'all' | InternStatus[]): boolean {
+  if (filter === 'all') return true;
+  if (Array.isArray(filter)) return filter.includes(s);
+  return s === filter;
+}
+
 // ── Excel Export ──────────────────────────────────────────────
 
-export function exportDemographicsExcel(interns: Intern[], status: InternStatus | 'all', cmsdOnly = false) {
-  const filtered = interns.filter(i => i.isNewest && (status === 'all' || i.status === status) && (!cmsdOnly || i.isCmsd));
+export function exportDemographicsExcel(interns: Intern[], status: InternStatus | 'all' | InternStatus[], cmsdOnly = false) {
+  const filtered = interns.filter(i => i.isNewest && matchesStatus(i.status, status) && (!cmsdOnly || i.isCmsd));
   const stats = computeStats(filtered);
   const wb = XLSX.utils.book_new();
   const label = `${statusLabel(status)}${cmsdOnly ? ' · CMSD Only' : ''}`;
@@ -187,8 +194,8 @@ export function exportDemographicsExcel(interns: Intern[], status: InternStatus 
 
 // ── PDF Export ────────────────────────────────────────────────
 
-export function exportDemographicsPDF(interns: Intern[], status: InternStatus | 'all', cmsdOnly = false) {
-  const filtered = interns.filter(i => i.isNewest && (status === 'all' || i.status === status) && (!cmsdOnly || i.isCmsd));
+export function exportDemographicsPDF(interns: Intern[], status: InternStatus | 'all' | InternStatus[], cmsdOnly = false) {
+  const filtered = interns.filter(i => i.isNewest && matchesStatus(i.status, status) && (!cmsdOnly || i.isCmsd));
   const stats = computeStats(filtered);
   const label = `${statusLabel(status)}${cmsdOnly ? ' · CMSD Only' : ''}`;
 
