@@ -7,6 +7,7 @@ import { supabase } from '@/integrations/supabase/client';
 import AppointmentMatchReview from '@/components/AppointmentMatchReview';
 import {
   buildAppointmentLabel,
+  dedupeAppointments,
   findAutoAppointmentMatch,
   findBestAppointmentSuggestion,
   isUsefulAppointmentSuggestion,
@@ -83,7 +84,7 @@ export default function AppointmentUpload() {
       await fetchInterns();
       const activeInterns = useAppStore.getState().interns.filter((intern) => intern.isNewest);
       const data = await file.arrayBuffer();
-      const appointments = parseAppointmentFile(data);
+      const appointments = dedupeAppointments(parseAppointmentFile(data));
 
       if (appointments.length === 0) {
         toast.error('No appointment data found. Make sure the file has columns for name, birthdate, date, and time.');
