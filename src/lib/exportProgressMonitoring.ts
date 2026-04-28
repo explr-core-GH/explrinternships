@@ -109,6 +109,11 @@ export function exportProgressMonitoringExcel(interns: Intern[]) {
   summary.push([], ['ELL Status', 'Count', '%']);
   summary.push(['ELL', s.ellYes, s.total ? `${Math.round(s.ellYes / s.total * 100)}%` : '0%']);
   summary.push(['Non-ELL', s.ellNo, s.total ? `${Math.round(s.ellNo / s.total * 100)}%` : '0%']);
+  // Replace any "Boys"/"Girls" labels with Males/Females in the existing rows above
+  for (const row of summary) {
+    if (row[0] === 'Boys') row[0] = 'Males';
+    if (row[0] === 'Girls') row[0] = 'Females';
+  }
   XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(summary), 'Summary');
 
   // Race / Ethnicity
