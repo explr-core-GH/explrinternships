@@ -138,11 +138,6 @@ export function exportProgressMonitoringExcel(interns: Intern[]) {
   );
   XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(raceRows), 'Race Ethnicity');
 
-  // Schools
-  const schoolRows: (string | number)[][] = [['School', 'Count']];
-  Object.entries(s.schools).sort((a, b) => b[1] - a[1]).forEach(([sc, c]) => schoolRows.push([sc, c]));
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(schoolRows), 'Schools');
-
   // Age
   const ageRows: (string | number)[][] = [['Age', 'Count']];
   Object.entries(s.ages).sort((a, b) => Number(a[0]) - Number(b[0])).forEach(([a, c]) => ageRows.push([a, c]));
@@ -455,14 +450,6 @@ export function exportProgressMonitoringPDF(interns: Intern[]) {
     doc.setFontSize(9); doc.setTextColor(...TEXT_MUTED);
     doc.text('No date-of-birth data available.', margin, y); y += 6;
   }
-
-  // Schools
-  sectionHeader(`Schools (${Object.keys(s.schools).length})`);
-  const schoolEntries = Object.entries(s.schools).sort((a, b) => b[1] - a[1]);
-  const schoolTotal = schoolEntries.reduce((sum, [, c]) => sum + c, 0);
-  schoolEntries.forEach(([sc, c]) => {
-    drawBarRow(sc, c, schoolTotal, PRIMARY, 75);
-  });
 
   // ELL Status
   sectionHeader('ELL Status');
