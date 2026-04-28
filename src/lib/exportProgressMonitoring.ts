@@ -25,6 +25,9 @@ interface PMStats {
   grades: Record<string, number>;
   ages: Record<string, number>;
   ageAvg: number | null;
+  ellYes: number;
+  ellNo: number;
+  statuses: Record<string, number>;
 }
 
 function isMale(g: string) { return /^(m|male|boy|man)$/i.test(g.trim()); }
@@ -35,8 +38,10 @@ function computeStats(interns: Intern[]): PMStats {
   const schools: Record<string, number> = {};
   const grades: Record<string, number> = {};
   const ages: Record<string, number> = {};
+  const statuses: Record<string, number> = {};
   let boys = 0, girls = 0, other = 0;
   let ageSum = 0, ageCount = 0;
+  let ellYes = 0, ellNo = 0;
 
   for (const i of interns) {
     const g = (i.gender || '').trim();
@@ -63,6 +68,11 @@ function computeStats(interns: Intern[]): PMStats {
       ageSum += age;
       ageCount++;
     }
+
+    if (i.isEll) ellYes++; else ellNo++;
+
+    const st = i.status || 'pending';
+    statuses[st] = (statuses[st] || 0) + 1;
   }
 
   return {
@@ -70,11 +80,12 @@ function computeStats(interns: Intern[]): PMStats {
     boys, girls, otherGender: other,
     races, schools, grades, ages,
     ageAvg: ageCount ? ageSum / ageCount : null,
+    ellYes, ellNo, statuses,
   };
 }
 
 function eligible(interns: Intern[]): Intern[] {
-  return interns.filter(i => i.isNewest && i.status !== 'selected_different_partner' && i.status !== 'removed');
+  return interns.filter(i => i.isNewest && i.status === 'ready_to_place');
 }
 
 function dateTag() { return new Date().toISOString().slice(0, 10); }
