@@ -337,6 +337,13 @@ export default function RosterPage() {
           🟢 ELL ({activeInterns.filter(i => i.isEll).length})
         </button>
         <button
+          onClick={() => setCmsdFilter(!cmsdFilter)}
+          className={`h-9 px-3 rounded-md border text-xs font-medium flex items-center gap-1.5 transition-colors ${cmsdFilter ? 'bg-primary/10 border-primary/30 text-primary' : 'bg-card text-muted-foreground hover:text-foreground'}`}
+        >
+          <School className="h-3.5 w-3.5" />
+          CMSD ({activeInterns.filter(i => i.isCmsd).length})
+        </button>
+        <button
           onClick={() => setPreAppFilter(!preAppFilter)}
           className={`h-9 px-3 rounded-md border text-xs font-medium flex items-center gap-1.5 transition-colors ${preAppFilter ? 'bg-amber-500/10 border-amber-500/30 text-amber-600' : 'bg-card text-muted-foreground hover:text-foreground'}`}
         >
