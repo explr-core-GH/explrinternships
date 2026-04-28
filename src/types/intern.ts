@@ -55,6 +55,7 @@ export interface Intern {
   parentGuardianEmail: string;
   parentGuardianPhone: string;
   isEll: boolean;
+  isCmsd: boolean;
 }
 
 export interface Worksite {
