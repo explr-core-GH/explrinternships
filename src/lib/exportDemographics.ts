@@ -194,8 +194,8 @@ export function exportDemographicsExcel(interns: Intern[], status: InternStatus 
 
 // ── PDF Export ────────────────────────────────────────────────
 
-export function exportDemographicsPDF(interns: Intern[], status: InternStatus | 'all', cmsdOnly = false) {
-  const filtered = interns.filter(i => i.isNewest && (status === 'all' || i.status === status) && (!cmsdOnly || i.isCmsd));
+export function exportDemographicsPDF(interns: Intern[], status: InternStatus | 'all' | InternStatus[], cmsdOnly = false) {
+  const filtered = interns.filter(i => i.isNewest && matchesStatus(i.status, status) && (!cmsdOnly || i.isCmsd));
   const stats = computeStats(filtered);
   const label = `${statusLabel(status)}${cmsdOnly ? ' · CMSD Only' : ''}`;
 
