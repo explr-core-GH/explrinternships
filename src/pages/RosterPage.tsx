@@ -26,6 +26,7 @@ export default function RosterPage() {
   const [showDupesOnly, setShowDupesOnly] = useState(false);
   const [assignFilter, setAssignFilter] = useState<'all' | 'assigned' | 'unassigned'>('all');
   const [ellFilter, setEllFilter] = useState(false);
+  const [cmsdFilter, setCmsdFilter] = useState(false);
   const [preAppFilter, setPreAppFilter] = useState(false);
   const [activeInterestFilters, setActiveInterestFilters] = useState<Set<InterestField>>(new Set());
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -118,6 +119,7 @@ export default function RosterPage() {
         i.studentEmail.toLowerCase().includes(q) ||
         i.itInterests.some(interest => interest.toLowerCase().includes(q)) ||
         (q === 'ell' && i.isEll) ||
+        (q === 'cmsd' && i.isCmsd) ||
         (q === 'preapp' && isEligibleForPreApprenticeship(i.dob)) ||
         (q === 'pre-apprenticeship' && isEligibleForPreApprenticeship(i.dob))
       );
@@ -128,6 +130,7 @@ export default function RosterPage() {
     if (assignFilter === 'assigned') list = list.filter(i => assignedIds.has(i.id));
     if (assignFilter === 'unassigned') list = list.filter(i => !assignedIds.has(i.id));
     if (ellFilter) list = list.filter(i => i.isEll);
+    if (cmsdFilter) list = list.filter(i => i.isCmsd);
     if (preAppFilter) list = list.filter(i => isEligibleForPreApprenticeship(i.dob));
     // Apply all active interest filters (AND logic)
     activeInterestFilters.forEach(field => {
