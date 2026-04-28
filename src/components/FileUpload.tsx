@@ -240,12 +240,24 @@ export default function FileUpload({ onComplete }: FileUploadProps) {
   const applyApprovedMatches = async () => {
     setProcessing(true);
     const approved = potentialMatches.filter(m => m.approved === true);
-    
+
+    // Dedupe by internId so multiple uploaded rows pointing at the same
+    // roster intern don't inflate the count or trigger redundant updates.
+    const uniqueApprovedInternIds = new Set<string>();
     for (const match of approved) {
+      if (!match.internId || uniqueApprovedInternIds.has(match.internId)) continue;
+      uniqueApprovedInternIds.add(match.internId);
       await updateIntern(match.internId, { status: targetStatus });
     }
 
-    const totalUpdated = exactMatches + approved.length;
+    // In normal mode, ≥70% matches were already auto-applied during parsing
+    // (counted in `exactMatches`) and are NOT in `potentialMatches`, so add them.
+    // In showAllMatches mode, ≥70% rows were pushed into `potentialMatches`
+    // pre-approved instead of being auto-applied — so they're already counted
+    // in `uniqueApprovedInternIds` and we must NOT add `exactMatches` again.
+    const totalUpdated = showAllMatches
+      ? uniqueApprovedInternIds.size
+      : exactMatches + uniqueApprovedInternIds.size;
     const rejected = potentialMatches.filter(m => m.approved === false);
     const allNoMatches = [...noMatches, ...rejected.map(r => r.uploadedName)];
 
