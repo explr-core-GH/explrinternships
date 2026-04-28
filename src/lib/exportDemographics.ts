@@ -7,7 +7,11 @@ import { isEligibleForPreApprenticeship } from '@/lib/preApprenticeship';
 // Collapse any "Summer Internship in 20XX" variant into a single bucket.
 export function normalizeProgramLabel(p: string): string {
   const s = p.toLowerCase();
-  if (s.includes('summer internship') && /20\d{2}/.test(s)) {
+  // Match any prior-year internship variant: "Summer Internship 2023",
+  // "I participated in a Summer Internship in 2024 25", "Internship 2025", etc.
+  const hasInternship = s.includes('internship');
+  const hasYear = /(20\d{2}|['’]?\d{2}\b)/.test(s);
+  if (hasInternship && hasYear) {
     return 'Participated in Internships in a Previous Year';
   }
   return p;
