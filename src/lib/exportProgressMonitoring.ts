@@ -248,16 +248,25 @@ export function exportProgressMonitoringPDF(interns: Intern[]) {
   y += 10;
   doc.setFontSize(13);
   doc.setTextColor(60, 60, 60);
-  doc.text('Progress Monitoring Report', margin, y);
+  doc.text('Progress Monitoring — Ready to Place', margin, y);
   y += 6;
   doc.setFontSize(8);
   doc.setFont('helvetica', 'normal');
   doc.setTextColor(120, 120, 120);
-  doc.text(`Generated ${new Date().toLocaleString()} · ${s.total} active interns`, margin, y);
+  doc.text(`Generated ${new Date().toLocaleString()} · ${s.total} interns ready to place`, margin, y);
   y += 4;
   doc.setDrawColor(210, 210, 210);
   doc.line(margin, y, pageW - margin, y);
   y += 4;
+
+  if (s.total === 0) {
+    sectionHeader('No Data');
+    doc.setFontSize(10);
+    doc.setTextColor(80, 80, 80);
+    doc.text('No students currently have status "Ready to Place".', margin + 2, y);
+    doc.save(`progress-monitoring-${dateTag()}.pdf`);
+    return;
+  }
 
   // Gender — donut + legend
   sectionHeader('Gender Distribution');
@@ -362,6 +371,11 @@ export function exportProgressMonitoringPDF(interns: Intern[]) {
   schoolEntries.forEach(([sc, c], idx) => {
     drawBarRow(sc, c, schoolTotal, PALETTE[idx % PALETTE.length], 75);
   });
+
+  // ELL Status
+  sectionHeader('ELL Status');
+  drawBarRow('ELL', s.ellYes, s.total, [16, 185, 129], 45);
+  drawBarRow('Non-ELL', s.ellNo, s.total, [156, 163, 175], 45);
 
   // Footer page numbers
   const pageCount = doc.getNumberOfPages();
