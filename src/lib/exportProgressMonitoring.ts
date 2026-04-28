@@ -25,6 +25,9 @@ interface PMStats {
   grades: Record<string, number>;
   ages: Record<string, number>;
   ageAvg: number | null;
+  ellYes: number;
+  ellNo: number;
+  statuses: Record<string, number>;
 }
 
 function isMale(g: string) { return /^(m|male|boy|man)$/i.test(g.trim()); }
@@ -35,8 +38,10 @@ function computeStats(interns: Intern[]): PMStats {
   const schools: Record<string, number> = {};
   const grades: Record<string, number> = {};
   const ages: Record<string, number> = {};
+  const statuses: Record<string, number> = {};
   let boys = 0, girls = 0, other = 0;
   let ageSum = 0, ageCount = 0;
+  let ellYes = 0, ellNo = 0;
 
   for (const i of interns) {
     const g = (i.gender || '').trim();
@@ -63,6 +68,11 @@ function computeStats(interns: Intern[]): PMStats {
       ageSum += age;
       ageCount++;
     }
+
+    if (i.isEll) ellYes++; else ellNo++;
+
+    const st = i.status || 'pending';
+    statuses[st] = (statuses[st] || 0) + 1;
   }
 
   return {
@@ -70,11 +80,12 @@ function computeStats(interns: Intern[]): PMStats {
     boys, girls, otherGender: other,
     races, schools, grades, ages,
     ageAvg: ageCount ? ageSum / ageCount : null,
+    ellYes, ellNo, statuses,
   };
 }
 
 function eligible(interns: Intern[]): Intern[] {
-  return interns.filter(i => i.isNewest && i.status !== 'selected_different_partner' && i.status !== 'removed');
+  return interns.filter(i => i.isNewest && i.status === 'ready_to_place');
 }
 
 function dateTag() { return new Date().toISOString().slice(0, 10); }
@@ -86,15 +97,18 @@ export function exportProgressMonitoringExcel(interns: Intern[]) {
   const wb = XLSX.utils.book_new();
 
   const summary: (string | number)[][] = [
-    ['EXPLR Internships — Progress Monitoring'],
+    ['EXPLR Internships — Progress Monitoring (Ready to Place)'],
     ['Generated', new Date().toLocaleString()],
-    ['Total Interns', s.total],
+    ['Total Ready to Place Interns', s.total],
     [],
     ['Gender', 'Count', '%'],
     ['Boys', s.boys, s.total ? `${Math.round(s.boys / s.total * 100)}%` : '0%'],
     ['Girls', s.girls, s.total ? `${Math.round(s.girls / s.total * 100)}%` : '0%'],
   ];
   if (s.otherGender) summary.push(['Other / Not Specified', s.otherGender, `${Math.round(s.otherGender / s.total * 100)}%`]);
+  summary.push([], ['ELL Status', 'Count', '%']);
+  summary.push(['ELL', s.ellYes, s.total ? `${Math.round(s.ellYes / s.total * 100)}%` : '0%']);
+  summary.push(['Non-ELL', s.ellNo, s.total ? `${Math.round(s.ellNo / s.total * 100)}%` : '0%']);
   XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(summary), 'Summary');
 
   // Race / Ethnicity
@@ -234,16 +248,25 @@ export function exportProgressMonitoringPDF(interns: Intern[]) {
   y += 10;
   doc.setFontSize(13);
   doc.setTextColor(60, 60, 60);
-  doc.text('Progress Monitoring Report', margin, y);
+  doc.text('Progress Monitoring — Ready to Place', margin, y);
   y += 6;
   doc.setFontSize(8);
   doc.setFont('helvetica', 'normal');
   doc.setTextColor(120, 120, 120);
-  doc.text(`Generated ${new Date().toLocaleString()} · ${s.total} active interns`, margin, y);
+  doc.text(`Generated ${new Date().toLocaleString()} · ${s.total} interns ready to place`, margin, y);
   y += 4;
   doc.setDrawColor(210, 210, 210);
   doc.line(margin, y, pageW - margin, y);
   y += 4;
+
+  if (s.total === 0) {
+    sectionHeader('No Data');
+    doc.setFontSize(10);
+    doc.setTextColor(80, 80, 80);
+    doc.text('No students currently have status "Ready to Place".', margin + 2, y);
+    doc.save(`progress-monitoring-${dateTag()}.pdf`);
+    return;
+  }
 
   // Gender — donut + legend
   sectionHeader('Gender Distribution');
@@ -348,6 +371,11 @@ export function exportProgressMonitoringPDF(interns: Intern[]) {
   schoolEntries.forEach(([sc, c], idx) => {
     drawBarRow(sc, c, schoolTotal, PALETTE[idx % PALETTE.length], 75);
   });
+
+  // ELL Status
+  sectionHeader('ELL Status');
+  drawBarRow('ELL', s.ellYes, s.total, [16, 185, 129], 45);
+  drawBarRow('Non-ELL', s.ellNo, s.total, [156, 163, 175], 45);
 
   // Footer page numbers
   const pageCount = doc.getNumberOfPages();
