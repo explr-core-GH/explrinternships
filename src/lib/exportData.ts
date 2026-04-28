@@ -362,6 +362,7 @@ function internToRow(
     'Gender': intern.gender || '',
     'Race/Ethnicity': intern.raceEthnicity || '',
     'ELL': intern.isEll ? 'Yes' : 'No',
+    'CMSD': intern.isCmsd ? 'Yes' : 'No',
     'Eligible for PreApprenticeship': isEligibleForPreApprenticeship(intern.dob) ? 'Yes' : 'No',
     'Programs': intern.programs.join('; '),
     'IT Interests': intern.itInterests.join('; '),
