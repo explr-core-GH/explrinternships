@@ -97,15 +97,18 @@ export function exportProgressMonitoringExcel(interns: Intern[]) {
   const wb = XLSX.utils.book_new();
 
   const summary: (string | number)[][] = [
-    ['EXPLR Internships — Progress Monitoring'],
+    ['EXPLR Internships — Progress Monitoring (Ready to Place)'],
     ['Generated', new Date().toLocaleString()],
-    ['Total Interns', s.total],
+    ['Total Ready to Place Interns', s.total],
     [],
     ['Gender', 'Count', '%'],
     ['Boys', s.boys, s.total ? `${Math.round(s.boys / s.total * 100)}%` : '0%'],
     ['Girls', s.girls, s.total ? `${Math.round(s.girls / s.total * 100)}%` : '0%'],
   ];
   if (s.otherGender) summary.push(['Other / Not Specified', s.otherGender, `${Math.round(s.otherGender / s.total * 100)}%`]);
+  summary.push([], ['ELL Status', 'Count', '%']);
+  summary.push(['ELL', s.ellYes, s.total ? `${Math.round(s.ellYes / s.total * 100)}%` : '0%']);
+  summary.push(['Non-ELL', s.ellNo, s.total ? `${Math.round(s.ellNo / s.total * 100)}%` : '0%']);
   XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(summary), 'Summary');
 
   // Race / Ethnicity
