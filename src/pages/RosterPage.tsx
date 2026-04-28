@@ -135,7 +135,7 @@ export default function RosterPage() {
     });
 
     const statusOrder: Record<InternStatus, number> = {
-      removed: 9, selected_different_partner: 8, intake_issue: 7, intake_complete: 6, in_progress_you: 5, not_matched: 4, pending: 3, ready_to_place: 2, matched: 1, assigned: 0,
+      removed: 9, selected_different_partner: 8, intake_issue: 7, in_progress_you: 5, not_matched: 4, pending: 3, ready_to_place: 2, matched: 1, assigned: 0,
     };
     return list.sort((a, b) => {
       const sa = statusOrder[a.status] ?? 2;

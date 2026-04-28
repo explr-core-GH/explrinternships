@@ -1,0 +1,1 @@
+UPDATE public.interns SET status = 'ready_to_place' WHERE status = 'intake_complete';
