@@ -88,18 +88,26 @@ function eligible(interns: Intern[]): Intern[] {
   return interns.filter(i => i.isNewest && i.status === 'ready_to_place');
 }
 
+function eligibleForSpreadsheet(interns: Intern[]): Intern[] {
+  return interns.filter(
+    i => i.isNewest && (i.status === 'ready_to_place' || i.status === 'in_progress_you'),
+  );
+}
+
 function dateTag() { return new Date().toISOString().slice(0, 10); }
 
 // ── Excel ──────────────────────────────────────────────────────
 export function exportProgressMonitoringExcel(interns: Intern[]) {
-  const filtered = eligible(interns);
+  const filtered = eligibleForSpreadsheet(interns);
   const s = computeStats(filtered);
   const wb = XLSX.utils.book_new();
 
   const summary: (string | number)[][] = [
-    ['EXPLR Internships — Progress Monitoring (Ready to Place)'],
+    ['EXPLR Internships — Progress Monitoring (Ready to Place + Upcoming Appointments)'],
     ['Generated', new Date().toLocaleString()],
-    ['Total Ready to Place Interns', s.total],
+    ['Total Interns', s.total],
+    ['  • Ready to Place', s.statuses['ready_to_place'] || 0],
+    ['  • Upcoming Appointment', s.statuses['in_progress_you'] || 0],
     [],
     ['Gender', 'Count', '%'],
     ['Boys', s.boys, s.total ? `${Math.round(s.boys / s.total * 100)}%` : '0%'],
