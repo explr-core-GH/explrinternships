@@ -50,6 +50,7 @@ function dbToIntern(row: DbIntern): Intern {
     parentGuardianEmail: (row as any).parent_guardian_email || '',
     parentGuardianPhone: (row as any).parent_guardian_phone || '',
     isEll: (row as any).is_ell || false,
+    isCmsd: (row as any).is_cmsd || false,
   };
 }
 
