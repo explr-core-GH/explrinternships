@@ -5,6 +5,7 @@ import { useAppStore } from '@/store/useAppStore';
 import { useAutoLoadData } from '@/hooks/useAutoLoadData';
 import { INTEREST_LABELS, type InterestField, INTERN_STATUSES, STATUS_CONFIG, type InternStatus } from '@/types/intern';
 import { exportDemographicsExcel, exportDemographicsPDF } from '@/lib/exportDemographics';
+import { normalizeProgramLabel } from '@/lib/exportDemographics';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import {
@@ -82,8 +83,13 @@ export default function DemographicsPage() {
           races[rp] = (races[rp] || 0) + 1;
         }
       }
+      const seenPrograms = new Set<string>();
       for (const p of intern.programs) {
-        if (p !== 'Not Applicable/None') programs[p] = (programs[p] || 0) + 1;
+        if (p === 'Not Applicable/None') continue;
+        const label = normalizeProgramLabel(p);
+        if (seenPrograms.has(label)) continue;
+        seenPrograms.add(label);
+        programs[label] = (programs[label] || 0) + 1;
       }
       for (const f of interestFields) {
         const v = intern[f];

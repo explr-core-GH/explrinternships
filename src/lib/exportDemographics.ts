@@ -4,6 +4,15 @@ import type { Intern } from '@/types/intern';
 import { INTEREST_LABELS, STATUS_CONFIG, type InterestField, type InternStatus } from '@/types/intern';
 import { isEligibleForPreApprenticeship } from '@/lib/preApprenticeship';
 
+// Collapse any "Summer Internship in 20XX" variant into a single bucket.
+export function normalizeProgramLabel(p: string): string {
+  const s = p.toLowerCase();
+  if (s.includes('summer internship') && /20\d{2}/.test(s)) {
+    return 'Participated in Internships in a Previous Year';
+  }
+  return p;
+}
+
 const INTEREST_FIELDS: InterestField[] = [
   'constructionMgmt', 'biomedical', 'envJustice',
   'envClimate', 'envFieldScience', 'magnetManufacturing',
@@ -51,8 +60,13 @@ function computeStats(interns: Intern[]): DemoStats {
         races[rp] = (races[rp] || 0) + 1;
       }
     }
+    const seen = new Set<string>();
     for (const p of intern.programs) {
-      if (p !== 'Not Applicable/None') programs[p] = (programs[p] || 0) + 1;
+      if (p === 'Not Applicable/None') continue;
+      const label = normalizeProgramLabel(p);
+      if (seen.has(label)) continue;
+      seen.add(label);
+      programs[label] = (programs[label] || 0) + 1;
     }
     for (const f of INTEREST_FIELDS) {
       const v = intern[f];
