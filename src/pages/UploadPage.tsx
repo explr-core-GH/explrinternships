@@ -82,6 +82,10 @@ export default function UploadPage() {
       </div>
 
       <div className="border-t pt-6">
+        <AppointmentUpload mode="orientation" />
+      </div>
+
+      <div className="border-t pt-6">
         <GenderUpload />
       </div>
 
