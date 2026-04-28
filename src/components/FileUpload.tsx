@@ -240,24 +240,12 @@ export default function FileUpload({ onComplete }: FileUploadProps) {
   const applyApprovedMatches = async () => {
     setProcessing(true);
     const approved = potentialMatches.filter(m => m.approved === true);
-
-    // Dedupe by internId so multiple uploaded rows pointing at the same
-    // roster intern don't inflate the count or trigger redundant updates.
-    const uniqueApprovedInternIds = new Set<string>();
+    
     for (const match of approved) {
-      if (!match.internId || uniqueApprovedInternIds.has(match.internId)) continue;
-      uniqueApprovedInternIds.add(match.internId);
       await updateIntern(match.internId, { status: targetStatus });
     }
 
-    // In normal mode, ≥70% matches were already auto-applied during parsing
-    // (counted in `exactMatches`) and are NOT in `potentialMatches`, so add them.
-    // In showAllMatches mode, ≥70% rows were pushed into `potentialMatches`
-    // pre-approved instead of being auto-applied — so they're already counted
-    // in `uniqueApprovedInternIds` and we must NOT add `exactMatches` again.
-    const totalUpdated = showAllMatches
-      ? uniqueApprovedInternIds.size
-      : exactMatches + uniqueApprovedInternIds.size;
+    const totalUpdated = exactMatches + approved.length;
     const rejected = potentialMatches.filter(m => m.approved === false);
     const allNoMatches = [...noMatches, ...rejected.map(r => r.uploadedName)];
 
@@ -298,7 +286,6 @@ export default function FileUpload({ onComplete }: FileUploadProps) {
             <h3 className="font-semibold text-foreground">Match Review</h3>
             <p className="text-sm text-muted-foreground">
               {!showAllMatches && exactMatches > 0 && `${exactMatches} matches ≥70% applied automatically. `}
-              {showAllMatches && exactMatches > 0 && `${exactMatches} match${exactMatches === 1 ? '' : 'es'} ≥70% pre-approved. `}
               Review {potentialMatches.length} match{potentialMatches.length !== 1 ? 'es' : ''} below.
               {showAllMatches && <span className="text-primary"> (Showing all matches including low confidence)</span>}
             </p>
