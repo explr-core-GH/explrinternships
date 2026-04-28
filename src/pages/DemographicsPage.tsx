@@ -285,7 +285,7 @@ export default function DemographicsPage() {
             {stats.cmsdCount > 0 && (
               <div ref={cmsdRef} className="rounded-lg border bg-card p-4 shadow-card">
                 <div className="flex items-center justify-between mb-3">
-                  <h3 className="text-sm font-semibold text-card-foreground">CMSD School Attendance</h3>
+                  <h3 className="text-sm font-semibold text-card-foreground">Percentage of CMSD Students</h3>
                   <button onClick={() => cmsdRef.current && downloadPng(cmsdRef.current, 'cmsd-breakdown')} className="text-muted-foreground hover:text-foreground"><Download className="h-3.5 w-3.5" /></button>
                 </div>
                 <PieChart data={[['CMSD', stats.cmsdCount], ['Non-CMSD', stats.nonCmsdCount]]} />
