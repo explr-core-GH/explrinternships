@@ -233,6 +233,14 @@ export default function InternCard({ intern, worksites, bulkMode, selected, onTo
           <div className="flex items-center gap-2">
             <h3 className="font-semibold text-card-foreground truncate">{intern.firstName} {intern.lastName}</h3>
             {intern.isEll && <span title="English Language Learner (ELL)">🟢</span>}
+            {intern.isCmsd && (
+              <span
+                title="CMSD (Cleveland Metropolitan School District)"
+                className="inline-flex items-center px-1.5 py-0.5 rounded-full bg-primary/10 text-primary text-[10px] font-semibold shrink-0"
+              >
+                CMSD
+              </span>
+            )}
             {hasCrystalReed && <span title="Healthcare (Crystal Reed)"><HeartPulse className="h-4 w-4 text-destructive shrink-0" /></span>}
             {preAppEligible && (
               <span title="Eligible for Pre-Apprenticeship (16+ by June 5)" className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-warning/20 text-warning text-[10px] font-semibold shrink-0">

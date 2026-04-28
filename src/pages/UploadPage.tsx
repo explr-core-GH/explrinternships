@@ -7,6 +7,7 @@ import AppointmentUpload from '@/components/AppointmentUpload';
 import GenderUpload from '@/components/GenderUpload';
 import IntakeUpload from '@/components/IntakeUpload';
 import EllUpload from '@/components/EllUpload';
+import CmsdUpload from '@/components/CmsdUpload';
 import { useAppStore } from '@/store/useAppStore';
 import { useAutoLoadData } from '@/hooks/useAutoLoadData';
 import { Button } from '@/components/ui/button';
@@ -95,6 +96,10 @@ export default function UploadPage() {
 
       <div className="border-t pt-6">
         <EllUpload />
+      </div>
+
+      <div className="border-t pt-6">
+        <CmsdUpload />
       </div>
 
       {interns.length > 0 && (

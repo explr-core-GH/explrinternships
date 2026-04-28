@@ -274,6 +274,7 @@ export function parseExcelFile(data: ArrayBuffer): Intern[] {
       parentGuardianEmail: '',
       parentGuardianPhone: '',
       isEll: false,
+      isCmsd: false,
     };
     
     interns.push(intern);

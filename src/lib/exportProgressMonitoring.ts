@@ -27,6 +27,8 @@ interface PMStats {
   ageAvg: number | null;
   ellYes: number;
   ellNo: number;
+  cmsdYes: number;
+  cmsdNo: number;
   statuses: Record<string, number>;
 }
 
@@ -42,6 +44,7 @@ function computeStats(interns: Intern[]): PMStats {
   let boys = 0, girls = 0, other = 0;
   let ageSum = 0, ageCount = 0;
   let ellYes = 0, ellNo = 0;
+  let cmsdYes = 0, cmsdNo = 0;
 
   for (const i of interns) {
     const g = (i.gender || '').trim();
@@ -70,6 +73,7 @@ function computeStats(interns: Intern[]): PMStats {
     }
 
     if (i.isEll) ellYes++; else ellNo++;
+    if (i.isCmsd) cmsdYes++; else cmsdNo++;
 
     const st = i.status || 'pending';
     statuses[st] = (statuses[st] || 0) + 1;
@@ -80,7 +84,7 @@ function computeStats(interns: Intern[]): PMStats {
     boys, girls, otherGender: other,
     races, schools, grades, ages,
     ageAvg: ageCount ? ageSum / ageCount : null,
-    ellYes, ellNo, statuses,
+    ellYes, ellNo, cmsdYes, cmsdNo, statuses,
   };
 }
 
@@ -117,6 +121,9 @@ export function exportProgressMonitoringExcel(interns: Intern[]) {
   summary.push([], ['ELL Status', 'Count', '%']);
   summary.push(['ELL', s.ellYes, s.total ? `${Math.round(s.ellYes / s.total * 100)}%` : '0%']);
   summary.push(['Non-ELL', s.ellNo, s.total ? `${Math.round(s.ellNo / s.total * 100)}%` : '0%']);
+  summary.push([], ['CMSD Status', 'Count', '%']);
+  summary.push(['CMSD', s.cmsdYes, s.total ? `${Math.round(s.cmsdYes / s.total * 100)}%` : '0%']);
+  summary.push(['Non-CMSD', s.cmsdNo, s.total ? `${Math.round(s.cmsdNo / s.total * 100)}%` : '0%']);
   // Replace any "Boys"/"Girls" labels with Males/Females in the existing rows above
   for (const row of summary) {
     if (row[0] === 'Boys') row[0] = 'Males';
@@ -461,6 +468,11 @@ export function exportProgressMonitoringPDF(interns: Intern[]) {
   sectionHeader('ELL Status');
   drawBarRow('ELL', s.ellYes, s.total, ACCENT, 45);
   drawBarRow('Non-ELL', s.ellNo, s.total, [160, 168, 178], 45);
+
+  // CMSD Status
+  sectionHeader('CMSD Status');
+  drawBarRow('CMSD', s.cmsdYes, s.total, ACCENT, 45);
+  drawBarRow('Non-CMSD', s.cmsdNo, s.total, [160, 168, 178], 45);
 
   // Footer page numbers
   const pageCount = doc.getNumberOfPages();

@@ -23,6 +23,8 @@ interface DemoStats {
   itInterests: [string, number][];
   duplicates: number;
   preAppCount: number;
+  ellCount: number;
+  cmsdCount: number;
 }
 
 function computeStats(interns: Intern[]): DemoStats {
@@ -64,6 +66,8 @@ function computeStats(interns: Intern[]): DemoStats {
   }
 
   const preAppCount = interns.filter(i => isEligibleForPreApprenticeship(i.dob)).length;
+  const ellCount = interns.filter(i => i.isEll).length;
+  const cmsdCount = interns.filter(i => i.isCmsd).length;
 
   return {
     total: interns.length,
@@ -76,6 +80,8 @@ function computeStats(interns: Intern[]): DemoStats {
     itInterests: Object.entries(itCounts).sort((a, b) => b[1] - a[1]),
     duplicates: interns.filter(i => i.isDuplicate).length,
     preAppCount,
+    ellCount,
+    cmsdCount,
   };
 }
 
@@ -108,6 +114,8 @@ export function exportDemographicsExcel(interns: Intern[], status: InternStatus 
     ['Grade Levels', Object.keys(stats.grades).length],
     ['Duplicates', stats.duplicates],
     ['Eligible for PreApprenticeship', stats.preAppCount],
+    ['ELL Students', stats.ellCount],
+    ['CMSD Students', stats.cmsdCount],
   ];
   const summaryWs = XLSX.utils.aoa_to_sheet(summaryRows);
   XLSX.utils.book_append_sheet(wb, summaryWs, 'Summary');
@@ -234,6 +242,8 @@ export function exportDemographicsPDF(interns: Intern[], status: InternStatus | 
   drawRow('Grade Levels', String(Object.keys(stats.grades).length));
   drawRow('Duplicates', String(stats.duplicates));
   drawRow('Eligible for PreApprenticeship', String(stats.preAppCount));
+  drawRow('ELL Students', String(stats.ellCount));
+  drawRow('CMSD Students', String(stats.cmsdCount));
 
   // Grades
   const sortedGrades = GRADE_ORDER.filter(g => stats.grades[g]).map(g => ({ grade: g, count: stats.grades[g] }));
