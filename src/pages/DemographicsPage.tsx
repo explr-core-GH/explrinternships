@@ -43,6 +43,7 @@ export default function DemographicsPage() {
   const genderRef = useRef<HTMLDivElement>(null);
   const raceRef = useRef<HTMLDivElement>(null);
   const ellRef = useRef<HTMLDivElement>(null);
+  const cmsdRef = useRef<HTMLDivElement>(null);
   const interestRef = useRef<HTMLDivElement>(null);
   const itRef = useRef<HTMLDivElement>(null);
   const programRef = useRef<HTMLDivElement>(null);
@@ -94,8 +95,10 @@ export default function DemographicsPage() {
 
     const ellCount = active.filter(i => i.isEll).length;
     const nonEllCount = active.length - ellCount;
+    const cmsdCount = active.filter(i => i.isCmsd).length;
+    const nonCmsdCount = active.length - cmsdCount;
 
-    return { grades, schools, programs, genders, races, interestCounts, ellCount, nonEllCount };
+    return { grades, schools, programs, genders, races, interestCounts, ellCount, nonEllCount, cmsdCount, nonCmsdCount };
   }, [active]);
 
   const sortedGrades = useMemo(() => {
@@ -276,6 +279,16 @@ export default function DemographicsPage() {
                   <button onClick={() => ellRef.current && downloadPng(ellRef.current, 'ell-breakdown')} className="text-muted-foreground hover:text-foreground"><Download className="h-3.5 w-3.5" /></button>
                 </div>
                 <PieChart data={[['ELL', stats.ellCount], ['Non-ELL', stats.nonEllCount]]} />
+              </div>
+            )}
+
+            {stats.cmsdCount > 0 && (
+              <div ref={cmsdRef} className="rounded-lg border bg-card p-4 shadow-card">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-sm font-semibold text-card-foreground">CMSD School Attendance</h3>
+                  <button onClick={() => cmsdRef.current && downloadPng(cmsdRef.current, 'cmsd-breakdown')} className="text-muted-foreground hover:text-foreground"><Download className="h-3.5 w-3.5" /></button>
+                </div>
+                <PieChart data={[['CMSD', stats.cmsdCount], ['Non-CMSD', stats.nonCmsdCount]]} />
               </div>
             )}
 
