@@ -109,6 +109,11 @@ export function exportProgressMonitoringExcel(interns: Intern[]) {
   summary.push([], ['ELL Status', 'Count', '%']);
   summary.push(['ELL', s.ellYes, s.total ? `${Math.round(s.ellYes / s.total * 100)}%` : '0%']);
   summary.push(['Non-ELL', s.ellNo, s.total ? `${Math.round(s.ellNo / s.total * 100)}%` : '0%']);
+  // Replace any "Boys"/"Girls" labels with Males/Females in the existing rows above
+  for (const row of summary) {
+    if (row[0] === 'Boys') row[0] = 'Males';
+    if (row[0] === 'Girls') row[0] = 'Females';
+  }
   XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(summary), 'Summary');
 
   // Race / Ethnicity
@@ -144,11 +149,25 @@ export function exportProgressMonitoringExcel(interns: Intern[]) {
 }
 
 // ── PDF ────────────────────────────────────────────────────────
-const PRIMARY: [number, number, number] = [22, 135, 120];
+// Refined, professional palette: deep navy primary, teal accent, neutral grays
+const PRIMARY: [number, number, number] = [15, 36, 64];      // deep navy
+const ACCENT: [number, number, number] = [22, 135, 120];     // teal
+const TEXT_DARK: [number, number, number] = [25, 32, 45];
+const TEXT_MUTED: [number, number, number] = [110, 118, 130];
+const RULE: [number, number, number] = [220, 224, 230];
+const TRACK: [number, number, number] = [238, 240, 244];
+// Restrained categorical palette tuned for print
 const PALETTE: [number, number, number][] = [
-  [22, 135, 120], [59, 130, 246], [234, 88, 12], [168, 85, 247],
-  [236, 72, 153], [16, 185, 129], [245, 158, 11], [99, 102, 241],
-  [239, 68, 68], [14, 165, 233], [132, 204, 22], [217, 70, 239],
+  [15, 76, 117],   // navy-blue
+  [22, 135, 120],  // teal
+  [199, 124, 36],  // amber
+  [120, 78, 168],  // purple
+  [180, 70, 110],  // rose
+  [60, 130, 90],   // green
+  [80, 100, 140],  // slate
+  [205, 92, 76],   // brick
+  [70, 140, 170],  // sky
+  [150, 130, 60],  // olive
 ];
 
 export function exportProgressMonitoringPDF(interns: Intern[]) {
@@ -158,24 +177,29 @@ export function exportProgressMonitoringPDF(interns: Intern[]) {
   const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'letter' });
   const pageW = doc.internal.pageSize.getWidth();
   const pageH = doc.internal.pageSize.getHeight();
-  const margin = 15;
+  const margin = 18;
   const contentW = pageW - margin * 2;
   let y = margin;
 
   const checkPage = (need: number) => {
-    if (y + need > pageH - margin) { doc.addPage(); y = margin; }
+    if (y + need > pageH - margin - 8) { doc.addPage(); y = margin; }
   };
 
   const sectionHeader = (title: string) => {
-    checkPage(16);
-    y += 4;
-    doc.setFillColor(...PRIMARY);
-    doc.roundedRect(margin, y, contentW, 8, 1, 1, 'F');
-    doc.setTextColor(255, 255, 255);
-    doc.setFontSize(11);
+    checkPage(18);
+    y += 6;
+    // Thin accent bar + uppercase label — editorial / report style
+    doc.setFillColor(...ACCENT);
+    doc.rect(margin, y, 2, 5.5, 'F');
+    doc.setTextColor(...PRIMARY);
+    doc.setFontSize(10.5);
     doc.setFont('helvetica', 'bold');
-    doc.text(title, margin + 3, y + 5.7);
-    doc.setTextColor(30, 30, 30);
+    doc.text(title.toUpperCase(), margin + 5, y + 4.2);
+    // hairline rule under the title
+    doc.setDrawColor(...RULE);
+    doc.setLineWidth(0.2);
+    doc.line(margin, y + 7.5, pageW - margin, y + 7.5);
+    doc.setTextColor(...TEXT_DARK);
     y += 12;
   };
 
@@ -184,20 +208,21 @@ export function exportProgressMonitoringPDF(interns: Intern[]) {
     const pct = total ? Math.round(count / total * 100) : 0;
     doc.setFontSize(9);
     doc.setFont('helvetica', 'normal');
-    doc.setTextColor(40, 40, 40);
+    doc.setTextColor(...TEXT_DARK);
     const lbl = label.length > 32 ? label.substring(0, 29) + '…' : label;
-    doc.text(lbl, margin + 2, y);
+    doc.text(lbl, margin, y);
     const barX = margin + labelW;
-    const barW = contentW - labelW - 25;
+    const barW = contentW - labelW - 22;
     const fillW = barW * (pct / 100);
-    doc.setFillColor(235, 235, 235);
-    doc.roundedRect(barX, y - 3.5, barW, 4.5, 1, 1, 'F');
+    doc.setFillColor(...TRACK);
+    doc.rect(barX, y - 3, barW, 3.6, 'F');
     if (fillW > 0.5) {
       doc.setFillColor(...color);
-      doc.roundedRect(barX, y - 3.5, fillW, 4.5, 1, 1, 'F');
+      doc.rect(barX, y - 3, fillW, 3.6, 'F');
     }
-    doc.setFontSize(8);
-    doc.text(`${count} (${pct}%)`, pageW - margin - 2, y, { align: 'right' });
+    doc.setFontSize(8.5);
+    doc.setTextColor(...TEXT_MUTED);
+    doc.text(`${count}  ·  ${pct}%`, pageW - margin, y, { align: 'right' });
     y += 7;
   };
 
@@ -206,7 +231,7 @@ export function exportProgressMonitoringPDF(interns: Intern[]) {
     const total = segments.reduce((sum, seg) => sum + seg.value, 0);
     if (total === 0) return;
     let start = -Math.PI / 2;
-    const steps = 64;
+    const steps = 96;
     for (const seg of segments) {
       const angle = (seg.value / total) * Math.PI * 2;
       if (angle <= 0) continue;
@@ -228,86 +253,128 @@ export function exportProgressMonitoringPDF(interns: Intern[]) {
     }
     // inner white circle for donut effect
     doc.setFillColor(255, 255, 255);
-    doc.circle(cx, cy, r * 0.55, 'F');
+    doc.circle(cx, cy, r * 0.62, 'F');
     // center text
-    doc.setTextColor(30, 30, 30);
+    doc.setTextColor(...PRIMARY);
     doc.setFont('helvetica', 'bold');
-    doc.setFontSize(14);
+    doc.setFontSize(15);
     doc.text(String(total), cx, cy + 1, { align: 'center' });
     doc.setFontSize(7);
     doc.setFont('helvetica', 'normal');
-    doc.setTextColor(120, 120, 120);
-    doc.text('Total', cx, cy + 5, { align: 'center' });
+    doc.setTextColor(...TEXT_MUTED);
+    doc.text('TOTAL', cx, cy + 5, { align: 'center' });
   };
 
-  // Title
-  doc.setFontSize(18);
-  doc.setFont('helvetica', 'bold');
-  doc.setTextColor(...PRIMARY);
-  doc.text('EXPLR Internships', margin, y + 4);
-  y += 10;
-  doc.setFontSize(13);
-  doc.setTextColor(60, 60, 60);
-  doc.text('Progress Monitoring — Ready to Place', margin, y);
-  y += 6;
-  doc.setFontSize(8);
+  // ── Cover header ───────────────────────────────────────────
+  // Top accent band
+  doc.setFillColor(...PRIMARY);
+  doc.rect(0, 0, pageW, 4, 'F');
+  doc.setFillColor(...ACCENT);
+  doc.rect(0, 4, pageW, 1, 'F');
+
+  y = margin + 4;
   doc.setFont('helvetica', 'normal');
-  doc.setTextColor(120, 120, 120);
-  doc.text(`Generated ${new Date().toLocaleString()} · ${s.total} interns ready to place`, margin, y);
-  y += 4;
-  doc.setDrawColor(210, 210, 210);
+  doc.setFontSize(8);
+  doc.setTextColor(...TEXT_MUTED);
+  doc.text('EXPLR INTERNSHIPS  ·  PROGRESS MONITORING', margin, y);
+  doc.text(new Date().toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' }),
+           pageW - margin, y, { align: 'right' });
+  y += 8;
+
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(22);
+  doc.setTextColor(...PRIMARY);
+  doc.text('Progress Monitoring Report', margin, y);
+  y += 7;
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(11);
+  doc.setTextColor(...TEXT_MUTED);
+  doc.text('Demographic snapshot of interns ready to be placed.', margin, y);
+  y += 6;
+  doc.setDrawColor(...RULE);
+  doc.setLineWidth(0.3);
   doc.line(margin, y, pageW - margin, y);
   y += 4;
 
   if (s.total === 0) {
     sectionHeader('No Data');
     doc.setFontSize(10);
-    doc.setTextColor(80, 80, 80);
-    doc.text('No students currently have status "Ready to Place".', margin + 2, y);
+    doc.setTextColor(...TEXT_MUTED);
+    doc.text('No students currently have status "Ready to Place".', margin, y);
     doc.save(`progress-monitoring-${dateTag()}.pdf`);
     return;
   }
 
-  // Gender — donut + legend
+  // ── KPI Strip ──────────────────────────────────────────────
+  const kpiH = 18;
+  const kpiGap = 4;
+  const kpis: { label: string; value: string }[] = [
+    { label: 'Ready to Place', value: String(s.total) },
+    { label: 'Schools', value: String(Object.keys(s.schools).length) },
+    { label: 'Avg. Age', value: s.ageAvg !== null ? s.ageAvg.toFixed(1) : '—' },
+    { label: 'ELL', value: s.total ? `${Math.round(s.ellYes / s.total * 100)}%` : '—' },
+  ];
+  const kpiW = (contentW - kpiGap * (kpis.length - 1)) / kpis.length;
+  kpis.forEach((kpi, i) => {
+    const kx = margin + i * (kpiW + kpiGap);
+    doc.setFillColor(250, 251, 253);
+    doc.setDrawColor(...RULE);
+    doc.setLineWidth(0.2);
+    doc.roundedRect(kx, y, kpiW, kpiH, 1, 1, 'FD');
+    doc.setFillColor(...ACCENT);
+    doc.rect(kx, y, 1.2, kpiH, 'F');
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(15);
+    doc.setTextColor(...PRIMARY);
+    doc.text(kpi.value, kx + 4, y + 9);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(7.5);
+    doc.setTextColor(...TEXT_MUTED);
+    doc.text(kpi.label.toUpperCase(), kx + 4, y + 14);
+  });
+  y += kpiH + 4;
+
+  // ── Gender — donut + legend ────────────────────────────────
   sectionHeader('Gender Distribution');
   const donutY = y + 22;
-  const donutCX = margin + 28;
+  const donutCX = margin + 26;
   drawDonut(donutCX, donutY, 22, [
-    { value: s.boys, color: [59, 130, 246] },
-    { value: s.girls, color: [236, 72, 153] },
-    { value: s.otherGender, color: [156, 163, 175] },
+    { value: s.boys, color: PALETTE[0] },
+    { value: s.girls, color: PALETTE[3] },
+    { value: s.otherGender, color: [160, 168, 178] },
   ]);
   // Legend right of donut
-  let legY = y + 4;
-  const legX = donutCX + 32;
+  let legY = y + 6;
+  const legX = donutCX + 34;
   const legendItem = (label: string, count: number, color: [number, number, number]) => {
     const pct = s.total ? Math.round(count / s.total * 100) : 0;
     doc.setFillColor(...color);
-    doc.roundedRect(legX, legY - 3, 4, 4, 0.5, 0.5, 'F');
+    doc.rect(legX, legY - 3, 3, 3, 'F');
     doc.setFontSize(10);
     doc.setFont('helvetica', 'bold');
-    doc.setTextColor(30, 30, 30);
-    doc.text(label, legX + 7, legY);
+    doc.setTextColor(...PRIMARY);
+    doc.text(label, legX + 6, legY);
     doc.setFont('helvetica', 'normal');
-    doc.setTextColor(80, 80, 80);
-    doc.text(`${count}  (${pct}%)`, legX + 7, legY + 5);
-    legY += 12;
+    doc.setFontSize(9);
+    doc.setTextColor(...TEXT_MUTED);
+    doc.text(`${count}   ${pct}%`, legX + 6, legY + 4.5);
+    legY += 11;
   };
-  legendItem('Boys', s.boys, [59, 130, 246]);
-  legendItem('Girls', s.girls, [236, 72, 153]);
-  if (s.otherGender) legendItem('Other / N/A', s.otherGender, [156, 163, 175]);
+  legendItem('Males', s.boys, PALETTE[0]);
+  legendItem('Females', s.girls, PALETTE[3]);
+  if (s.otherGender) legendItem('Other / N/A', s.otherGender, [160, 168, 178]);
   y = Math.max(y + 50, legY + 2);
 
   // Race / Ethnicity bars
   sectionHeader('Race / Ethnicity');
   const raceEntries = Object.entries(s.races).sort((a, b) => b[1] - a[1]);
   const raceTotal = raceEntries.reduce((sum, [, c]) => sum + c, 0);
-  raceEntries.forEach(([r, c], idx) => {
-    drawBarRow(r, c, raceTotal, PALETTE[idx % PALETTE.length], 60);
+  raceEntries.forEach(([r, c]) => {
+    drawBarRow(r, c, raceTotal, ACCENT, 60);
   });
   if (raceEntries.length === 0) {
-    doc.setFontSize(9); doc.setTextColor(120, 120, 120);
-    doc.text('No race / ethnicity data available.', margin + 2, y); y += 6;
+    doc.setFontSize(9); doc.setTextColor(...TEXT_MUTED);
+    doc.text('No race / ethnicity data available.', margin, y); y += 6;
   }
 
   // Grades — horizontal bars
@@ -317,74 +384,89 @@ export function exportProgressMonitoringPDF(interns: Intern[]) {
     ...Object.entries(s.grades).filter(([g]) => !GRADE_ORDER.includes(g)),
   ];
   const gradeTotal = sortedGrades.reduce((sum, [, c]) => sum + c, 0);
-  sortedGrades.forEach(([g, c], idx) => {
-    drawBarRow(g, c, gradeTotal, PALETTE[idx % PALETTE.length], 30);
+  sortedGrades.forEach(([g, c]) => {
+    drawBarRow(g, c, gradeTotal, PRIMARY, 30);
   });
 
   // Age — column chart
   sectionHeader('Age Distribution');
   const ageEntries = Object.entries(s.ages).sort((a, b) => Number(a[0]) - Number(b[0]));
   if (ageEntries.length > 0) {
-    checkPage(50);
+    checkPage(54);
     const chartX = margin + 5;
     const chartW = contentW - 10;
-    const chartH = 38;
+    const chartH = 40;
     const chartY = y;
     const maxV = Math.max(...ageEntries.map(([, c]) => c));
     const colW = chartW / ageEntries.length;
+    // gridlines (4 horizontal)
+    doc.setDrawColor(...RULE);
+    doc.setLineWidth(0.15);
+    for (let g = 0; g <= 4; g++) {
+      const gy = chartY + (chartH - 8) * (g / 4) + 2;
+      doc.line(chartX, gy, chartX + chartW, gy);
+    }
     // baseline
-    doc.setDrawColor(200, 200, 200);
-    doc.line(chartX, chartY + chartH, chartX + chartW, chartY + chartH);
+    doc.setDrawColor(...PRIMARY);
+    doc.setLineWidth(0.4);
+    doc.line(chartX, chartY + chartH - 6, chartX + chartW, chartY + chartH - 6);
     ageEntries.forEach(([age, c], i) => {
-      const h = maxV ? (c / maxV) * (chartH - 8) : 0;
-      const bx = chartX + colW * i + colW * 0.15;
-      const bw = colW * 0.7;
+      const h = maxV ? (c / maxV) * (chartH - 10) : 0;
+      const bx = chartX + colW * i + colW * 0.18;
+      const bw = colW * 0.64;
       const by = chartY + chartH - h;
-      doc.setFillColor(...PALETTE[i % PALETTE.length]);
-      doc.roundedRect(bx, by, bw, h, 0.8, 0.8, 'F');
+      doc.setFillColor(...ACCENT);
+      doc.rect(bx, by - 6, bw, h, 'F');
       // value
-      doc.setFontSize(7);
-      doc.setTextColor(40, 40, 40);
-      doc.text(String(c), bx + bw / 2, by - 1, { align: 'center' });
+      doc.setFontSize(7.5);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(...PRIMARY);
+      doc.text(String(c), bx + bw / 2, by - 7, { align: 'center' });
       // label
       doc.setFontSize(8);
-      doc.setTextColor(80, 80, 80);
-      doc.text(age, bx + bw / 2, chartY + chartH + 4, { align: 'center' });
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(...TEXT_MUTED);
+      doc.text(age, bx + bw / 2, chartY + chartH + 2, { align: 'center' });
     });
-    y += chartH + 8;
+    y += chartH + 6;
     if (s.ageAvg !== null) {
       doc.setFontSize(9);
       doc.setFont('helvetica', 'italic');
-      doc.setTextColor(80, 80, 80);
-      doc.text(`Average age: ${s.ageAvg.toFixed(1)} years`, margin + 2, y);
+      doc.setTextColor(...TEXT_MUTED);
+      doc.text(`Average age: ${s.ageAvg.toFixed(1)} years`, margin, y);
       y += 6;
     }
   } else {
-    doc.setFontSize(9); doc.setTextColor(120, 120, 120);
-    doc.text('No date-of-birth data available.', margin + 2, y); y += 6;
+    doc.setFontSize(9); doc.setTextColor(...TEXT_MUTED);
+    doc.text('No date-of-birth data available.', margin, y); y += 6;
   }
 
   // Schools
   sectionHeader(`Schools (${Object.keys(s.schools).length})`);
   const schoolEntries = Object.entries(s.schools).sort((a, b) => b[1] - a[1]);
   const schoolTotal = schoolEntries.reduce((sum, [, c]) => sum + c, 0);
-  schoolEntries.forEach(([sc, c], idx) => {
-    drawBarRow(sc, c, schoolTotal, PALETTE[idx % PALETTE.length], 75);
+  schoolEntries.forEach(([sc, c]) => {
+    drawBarRow(sc, c, schoolTotal, PRIMARY, 75);
   });
 
   // ELL Status
   sectionHeader('ELL Status');
-  drawBarRow('ELL', s.ellYes, s.total, [16, 185, 129], 45);
-  drawBarRow('Non-ELL', s.ellNo, s.total, [156, 163, 175], 45);
+  drawBarRow('ELL', s.ellYes, s.total, ACCENT, 45);
+  drawBarRow('Non-ELL', s.ellNo, s.total, [160, 168, 178], 45);
 
   // Footer page numbers
   const pageCount = doc.getNumberOfPages();
   for (let p = 1; p <= pageCount; p++) {
     doc.setPage(p);
-    doc.setFontSize(7);
-    doc.setTextColor(150, 150, 150);
+    // footer rule
+    doc.setDrawColor(...RULE);
+    doc.setLineWidth(0.2);
+    doc.line(margin, pageH - 10, pageW - margin, pageH - 10);
+    doc.setFontSize(7.5);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(...TEXT_MUTED);
+    doc.text('EXPLR Internships  ·  Progress Monitoring Report', margin, pageH - 6);
     doc.text(`Page ${p} of ${pageCount}`, pageW - margin, pageH - 6, { align: 'right' });
-    doc.text('EXPLR Internships — Progress Monitoring', margin, pageH - 6);
   }
 
   doc.save(`progress-monitoring-${dateTag()}.pdf`);
