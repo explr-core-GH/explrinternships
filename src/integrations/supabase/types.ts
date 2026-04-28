@@ -38,6 +38,7 @@ export type Database = {
           intake_date: string | null
           intake_location: string | null
           intake_time: string | null
+          is_cmsd: boolean | null
           is_duplicate: boolean | null
           is_ell: boolean | null
           is_newest: boolean | null
@@ -83,6 +84,7 @@ export type Database = {
           intake_date?: string | null
           intake_location?: string | null
           intake_time?: string | null
+          is_cmsd?: boolean | null
           is_duplicate?: boolean | null
           is_ell?: boolean | null
           is_newest?: boolean | null
@@ -128,6 +130,7 @@ export type Database = {
           intake_date?: string | null
           intake_location?: string | null
           intake_time?: string | null
+          is_cmsd?: boolean | null
           is_duplicate?: boolean | null
           is_ell?: boolean | null
           is_newest?: boolean | null

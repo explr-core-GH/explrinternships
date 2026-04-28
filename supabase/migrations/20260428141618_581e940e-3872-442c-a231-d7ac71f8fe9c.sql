@@ -1,0 +1,1 @@
+ALTER TABLE public.interns ADD COLUMN IF NOT EXISTS is_cmsd boolean DEFAULT false;
