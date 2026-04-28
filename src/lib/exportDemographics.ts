@@ -110,9 +110,7 @@ export function exportDemographicsExcel(interns: Intern[], status: InternStatus 
     [],
     ['Metric', 'Value'],
     ['Total Interns', stats.total],
-    ['Schools', Object.keys(stats.schools).length],
     ['Grade Levels', Object.keys(stats.grades).length],
-    ['Duplicates', stats.duplicates],
     ['Eligible for PreApprenticeship', stats.preAppCount],
     ['ELL Students', stats.ellCount],
     ['CMSD Students', stats.cmsdCount],
@@ -142,11 +140,6 @@ export function exportDemographicsExcel(interns: Intern[], status: InternStatus 
     raceRows.push([r, c, `${Math.round((c / stats.total) * 100)}%`]);
   });
   XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(raceRows), 'By Race Ethnicity');
-
-  // Schools sheet
-  const schoolRows: (string | number)[][] = [['School', 'Count']];
-  Object.entries(stats.schools).sort((a, b) => b[1] - a[1]).forEach(([s, c]) => schoolRows.push([s, c]));
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(schoolRows), 'By School');
 
   // Interest levels sheet
   const intRows: (string | number)[][] = [['Interest Area', 'Yes', 'Maybe', 'No', '% Yes']];
@@ -238,9 +231,7 @@ export function exportDemographicsPDF(interns: Intern[], status: InternStatus | 
   // Summary
   drawSectionHeader('Summary');
   drawRow('Total Interns', String(stats.total), true);
-  drawRow('Schools', String(Object.keys(stats.schools).length));
   drawRow('Grade Levels', String(Object.keys(stats.grades).length));
-  drawRow('Duplicates', String(stats.duplicates));
   drawRow('Eligible for PreApprenticeship', String(stats.preAppCount));
   drawRow('ELL Students', String(stats.ellCount));
   drawRow('CMSD Students', String(stats.cmsdCount));
@@ -306,13 +297,6 @@ export function exportDemographicsPDF(interns: Intern[], status: InternStatus | 
     if (fillW > 1) doc.roundedRect(barX, y - 3.5, fillW, 4.5, 1, 1, 'F');
     doc.text(`${count} (${pct}%)`, pageW - margin - 2, y, { align: 'right' });
     y += 7;
-  });
-
-  // Schools
-  const schoolEntries = Object.entries(stats.schools).sort((a, b) => b[1] - a[1]);
-  drawSectionHeader(`By School (${schoolEntries.length})`);
-  schoolEntries.forEach(([school, count]) => {
-    drawRow(school.length > 50 ? school.substring(0, 47) + '...' : school, String(count));
   });
 
   // Interest Levels
