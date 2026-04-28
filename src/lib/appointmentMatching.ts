@@ -248,6 +248,23 @@ export function parseAppointmentFile(data: ArrayBuffer): ParsedAppointment[] {
   return results;
 }
 
+export function dedupeAppointments(appointments: ParsedAppointment[]): ParsedAppointment[] {
+  const seen = new Set<string>();
+  const unique: ParsedAppointment[] = [];
+  for (const appointment of appointments) {
+    const nameKey = normalizeName(appointment.uploadedName || `${appointment.firstName} ${appointment.lastName}`);
+    const dobKey = normalizeDob(appointment.dob);
+    const emailKey = normalizeEmail(appointment.email);
+    const dateKey = (appointment.date || '').trim().toLowerCase();
+    const timeKey = (appointment.time || '').trim().toLowerCase();
+    const key = `${nameKey}|${dobKey}|${emailKey}|${dateKey}|${timeKey}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    unique.push(appointment);
+  }
+  return unique;
+}
+
 export function findAutoAppointmentMatch(appointment: ParsedAppointment, interns: Intern[]): Intern | null {
   const normalizedDob = normalizeDob(appointment.dob);
   const normalizedEmail = normalizeEmail(appointment.email);
