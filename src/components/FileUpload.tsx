@@ -298,6 +298,7 @@ export default function FileUpload({ onComplete }: FileUploadProps) {
             <h3 className="font-semibold text-foreground">Match Review</h3>
             <p className="text-sm text-muted-foreground">
               {!showAllMatches && exactMatches > 0 && `${exactMatches} matches ≥70% applied automatically. `}
+              {showAllMatches && exactMatches > 0 && `${exactMatches} match${exactMatches === 1 ? '' : 'es'} ≥70% pre-approved. `}
               Review {potentialMatches.length} match{potentialMatches.length !== 1 ? 'es' : ''} below.
               {showAllMatches && <span className="text-primary"> (Showing all matches including low confidence)</span>}
             </p>
