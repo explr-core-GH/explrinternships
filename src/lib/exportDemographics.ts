@@ -114,6 +114,8 @@ export function exportDemographicsExcel(interns: Intern[], status: InternStatus 
     ['Grade Levels', Object.keys(stats.grades).length],
     ['Duplicates', stats.duplicates],
     ['Eligible for PreApprenticeship', stats.preAppCount],
+    ['ELL Students', stats.ellCount],
+    ['CMSD Students', stats.cmsdCount],
   ];
   const summaryWs = XLSX.utils.aoa_to_sheet(summaryRows);
   XLSX.utils.book_append_sheet(wb, summaryWs, 'Summary');
