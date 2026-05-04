@@ -273,8 +273,10 @@ export type Database = {
           description: string | null
           filled: number | null
           id: string
+          labels: Json
           location: string | null
           name: string
+          status: string
           tags: string[] | null
           updated_at: string
         }
@@ -287,8 +289,10 @@ export type Database = {
           description?: string | null
           filled?: number | null
           id?: string
+          labels?: Json
           location?: string | null
           name: string
+          status?: string
           tags?: string[] | null
           updated_at?: string
         }
@@ -301,8 +305,10 @@ export type Database = {
           description?: string | null
           filled?: number | null
           id?: string
+          labels?: Json
           location?: string | null
           name?: string
+          status?: string
           tags?: string[] | null
           updated_at?: string
         }

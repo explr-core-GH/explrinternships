@@ -69,7 +69,38 @@ export interface Worksite {
   contactEmail: string;
   location: string;
   tags: string[];
+  status?: WorksiteStatus;
+  labels?: WorksiteLabel[];
 }
+
+export const WORKSITE_STATUSES = ['open', 'full', 'paused', 'closed'] as const;
+export type WorksiteStatus = typeof WORKSITE_STATUSES[number];
+
+export const WORKSITE_STATUS_CONFIG: Record<WorksiteStatus, { label: string; className: string }> = {
+  open:   { label: 'Open',   className: 'bg-emerald-500/15 text-emerald-700 border-emerald-500/30 dark:text-emerald-400' },
+  full:   { label: 'Full',   className: 'bg-rose-500/15 text-rose-700 border-rose-500/30 dark:text-rose-400' },
+  paused: { label: 'Paused', className: 'bg-amber-500/15 text-amber-700 border-amber-500/30 dark:text-amber-400' },
+  closed: { label: 'Closed', className: 'bg-slate-500/15 text-slate-700 border-slate-500/30 dark:text-slate-400' },
+};
+
+export interface WorksiteLabel {
+  text: string;
+  color: WorksiteLabelColor;
+}
+
+export const WORKSITE_LABEL_COLORS = ['blue','green','amber','red','purple','pink','teal','gray'] as const;
+export type WorksiteLabelColor = typeof WORKSITE_LABEL_COLORS[number];
+
+export const WORKSITE_LABEL_COLOR_CLASSES: Record<WorksiteLabelColor, string> = {
+  blue:   'bg-blue-500/15 text-blue-700 border-blue-500/30 dark:text-blue-400',
+  green:  'bg-emerald-500/15 text-emerald-700 border-emerald-500/30 dark:text-emerald-400',
+  amber:  'bg-amber-500/15 text-amber-700 border-amber-500/30 dark:text-amber-400',
+  red:    'bg-rose-500/15 text-rose-700 border-rose-500/30 dark:text-rose-400',
+  purple: 'bg-violet-500/15 text-violet-700 border-violet-500/30 dark:text-violet-400',
+  pink:   'bg-pink-500/15 text-pink-700 border-pink-500/30 dark:text-pink-400',
+  teal:   'bg-teal-500/15 text-teal-700 border-teal-500/30 dark:text-teal-400',
+  gray:   'bg-slate-500/15 text-slate-700 border-slate-500/30 dark:text-slate-400',
+};
 
 export type SchoolContactRole = 'principal' | 'guidance_counselor' | '5c';
 
