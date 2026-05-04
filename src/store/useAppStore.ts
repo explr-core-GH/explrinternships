@@ -66,6 +66,8 @@ function dbToWorksite(row: DbWorksite): Worksite {
     contactEmail: row.contact_email || '',
     location: row.location || '',
     tags: row.tags || [],
+    status: ((row as any).status || 'open') as any,
+    labels: ((row as any).labels || []) as any,
   };
 }
 
@@ -251,6 +253,7 @@ export const useAppStore = create<AppState>()((set, get) => ({
       name: ws.name, category: ws.category, description: ws.description,
       capacity: ws.capacity, filled: ws.filled, contact_name: ws.contactName,
       contact_email: ws.contactEmail, location: ws.location, tags: ws.tags,
+      status: ws.status || 'open', labels: (ws.labels || []) as any,
     }).select().single();
     if (data) {
       set(s => ({ worksites: [...s.worksites, dbToWorksite(data)] }));
