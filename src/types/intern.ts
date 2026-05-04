@@ -69,8 +69,8 @@ export interface Worksite {
   contactEmail: string;
   location: string;
   tags: string[];
-  status: WorksiteStatus;
-  labels: WorksiteLabel[];
+  status?: WorksiteStatus;
+  labels?: WorksiteLabel[];
 }
 
 export const WORKSITE_STATUSES = ['open', 'full', 'paused', 'closed'] as const;
