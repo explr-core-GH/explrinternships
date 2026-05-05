@@ -42,6 +42,15 @@ export default function FileUpload({ onComplete }: FileUploadProps) {
   const [showAllMatches, setShowAllMatches] = useState(false);
   const [addedNoMatchNames, setAddedNoMatchNames] = useState<Set<string>>(new Set());
 
+  const resetReviewState = useCallback(() => {
+    setPotentialMatches([]);
+    setExactMatches(0);
+    setNoMatches([]);
+    setMissingFromSpreadsheet([]);
+    setAddedNoMatchNames(new Set());
+    setShowingReview(false);
+  }, []);
+
   // Simple similarity calculation
   const calculateSimilarity = (str1: string, str2: string): number => {
     const normalize = (s: string) => s.toLowerCase().trim();
@@ -106,12 +115,7 @@ export default function FileUpload({ onComplete }: FileUploadProps) {
     try {
       setProcessing(true);
       // Reset all per-upload review state so a second upload starts clean
-      setPotentialMatches([]);
-      setExactMatches(0);
-      setNoMatches([]);
-      setMissingFromSpreadsheet([]);
-      setAddedNoMatchNames(new Set());
-      setShowingReview(false);
+      resetReviewState();
       const buffer = await file.arrayBuffer();
       const parsed = parseExcelFile(buffer);
 
@@ -232,7 +236,7 @@ export default function FileUpload({ onComplete }: FileUploadProps) {
       toast.error('Failed to parse Excel file');
       setProcessing(false);
     }
-  }, [uploadExcelInterns, onComplete, mode, targetStatus, interns, updateIntern, showAllMatches]);
+  }, [uploadExcelInterns, onComplete, mode, targetStatus, interns, updateIntern, showAllMatches, resetReviewState]);
 
   const handleApprove = (index: number) => {
     setPotentialMatches(prev => prev.map((match, i) => 
@@ -301,30 +305,32 @@ export default function FileUpload({ onComplete }: FileUploadProps) {
   const applyApprovedMatches = async () => {
     setProcessing(true);
     const approved = potentialMatches.filter(m => m.approved === true);
+    const addedFromPotentials = potentialMatches.filter(m => m.addedAsNew).length;
+    const addedFromNoMatches = noMatches.filter(name => addedNoMatchNames.has(name)).length;
     
     for (const match of approved) {
       await updateIntern(match.internId, { status: targetStatus });
     }
 
     const totalUpdated = exactMatches + approved.length;
-    const rejected = potentialMatches.filter(m => m.approved === false);
-    const allNoMatches = [...noMatches, ...rejected.map(r => r.uploadedName)];
+    const totalAdded = addedFromPotentials + addedFromNoMatches;
+    const rejected = potentialMatches.filter(m => m.approved === false && !m.addedAsNew);
+    const remainingNoMatches = noMatches.filter(name => !addedNoMatchNames.has(name));
+    const allNoMatches = [...remainingNoMatches, ...rejected.map(r => r.uploadedName)];
 
     if (totalUpdated > 0) {
       toast.success(`Updated ${totalUpdated} intern(s) to "${STATUS_CONFIG[targetStatus].label}"`);
+    }
+    if (totalAdded > 0) {
+      toast.success(`Added ${totalAdded} new student${totalAdded !== 1 ? 's' : ''}`);
     }
     if (allNoMatches.length > 0) {
       toast.warning(`${allNoMatches.length} name(s) not matched`);
     }
 
     // Reset state
-    setShowingReview(false);
-    setPotentialMatches([]);
-    setExactMatches(0);
-    setNoMatches([]);
-    setMissingFromSpreadsheet([]);
+    resetReviewState();
     setProcessing(false);
-    setAddedNoMatchNames(new Set());
     onComplete?.();
   };
 
@@ -338,6 +344,10 @@ export default function FileUpload({ onComplete }: FileUploadProps) {
     const file = e.dataTransfer.files[0];
     if (file) handleFile(file);
   }, [handleFile]);
+
+  const approvedCount = potentialMatches.filter(m => m.approved === true).length;
+  const addedCount = potentialMatches.filter(m => m.addedAsNew).length + noMatches.filter(name => addedNoMatchNames.has(name)).length;
+  const canCompleteReview = exactMatches > 0 || approvedCount > 0 || addedCount > 0;
 
   if (showingReview) {
     return (
@@ -499,11 +509,11 @@ export default function FileUpload({ onComplete }: FileUploadProps) {
         <div className="flex gap-2 pt-4">
           <Button
             onClick={applyApprovedMatches}
-            disabled={processing || !potentialMatches.some(m => m.approved === true)}
+            disabled={processing || !canCompleteReview}
             className="flex-1"
           >
             {processing ? <RefreshCw className="h-4 w-4 animate-spin mr-2" /> : null}
-            Apply {potentialMatches.filter(m => m.approved === true).length} Approved Matches
+            {approvedCount > 0 ? `Apply ${approvedCount} Approved Matches` : 'Finish Review'}
           </Button>
           <Button
             variant="outline"
@@ -515,13 +525,7 @@ export default function FileUpload({ onComplete }: FileUploadProps) {
           </Button>
           <Button
             variant="outline"
-            onClick={() => {
-              setShowingReview(false);
-              setPotentialMatches([]);
-              setExactMatches(0);
-              setNoMatches([]);
-              setMissingFromSpreadsheet([]);
-            }}
+            onClick={resetReviewState}
           >
             Cancel
           </Button>
