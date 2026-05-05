@@ -1,5 +1,5 @@
 import { useCallback, useRef, useState } from 'react';
-import { Upload, FileSpreadsheet, RefreshCw, Check, X, Users, Download } from 'lucide-react';
+import { Upload, FileSpreadsheet, RefreshCw, Check, X, Users, Download, UserPlus } from 'lucide-react';
 import { parseExcelFile } from '@/lib/parseExcel';
 import { useAppStore } from '@/store/useAppStore';
 import { toast } from 'sonner';
@@ -21,6 +21,7 @@ interface PotentialMatch {
   internName: string;
   similarity: number;
   approved?: boolean;
+  addedAsNew?: boolean;
 }
 
 interface FileUploadProps {
@@ -29,7 +30,7 @@ interface FileUploadProps {
 
 export default function FileUpload({ onComplete }: FileUploadProps) {
   const inputRef = useRef<HTMLInputElement>(null);
-  const { uploadExcelInterns, interns, updateIntern } = useAppStore();
+  const { uploadExcelInterns, interns, updateIntern, addIntern } = useAppStore();
   const [mode, setMode] = useState<UploadMode>('new_interns');
   const [targetStatus, setTargetStatus] = useState<InternStatus>('matched');
   const [processing, setProcessing] = useState(false);
@@ -39,6 +40,7 @@ export default function FileUpload({ onComplete }: FileUploadProps) {
   const [noMatches, setNoMatches] = useState<string[]>([]);
   const [missingFromSpreadsheet, setMissingFromSpreadsheet] = useState<string[]>([]);
   const [showAllMatches, setShowAllMatches] = useState(false);
+  const [addedNoMatchNames, setAddedNoMatchNames] = useState<Set<string>>(new Set());
 
   // Simple similarity calculation
   const calculateSimilarity = (str1: string, str2: string): number => {
@@ -237,6 +239,58 @@ export default function FileUpload({ onComplete }: FileUploadProps) {
     ));
   };
 
+  const handleAddAsNew = async (index: number) => {
+    const match = potentialMatches[index];
+    if (!match || match.addedAsNew) return;
+    const created = await addIntern({
+      firstName: match.uploadedFirstName,
+      lastName: match.uploadedLastName,
+      status: targetStatus,
+    });
+    if (created) {
+      setPotentialMatches(prev => prev.map((m, i) =>
+        i === index ? { ...m, addedAsNew: true, approved: false } : m
+      ));
+      toast.success(`Added ${match.uploadedName} as new student (${STATUS_CONFIG[targetStatus].label})`);
+    } else {
+      toast.error(`Failed to add ${match.uploadedName}`);
+    }
+  };
+
+  const handleAddNoMatchName = async (fullName: string) => {
+    if (addedNoMatchNames.has(fullName)) return;
+    const parts = fullName.trim().split(/\s+/);
+    const firstName = parts[0] || '';
+    const lastName = parts.slice(1).join(' ') || '';
+    const created = await addIntern({ firstName, lastName, status: targetStatus });
+    if (created) {
+      setAddedNoMatchNames(prev => new Set(prev).add(fullName));
+      toast.success(`Added ${fullName} as new student`);
+    } else {
+      toast.error(`Failed to add ${fullName}`);
+    }
+  };
+
+  const handleAddAllUnmatched = async () => {
+    setProcessing(true);
+    let added = 0;
+    for (const name of noMatches) {
+      if (addedNoMatchNames.has(name)) continue;
+      const parts = name.trim().split(/\s+/);
+      const created = await addIntern({
+        firstName: parts[0] || '',
+        lastName: parts.slice(1).join(' ') || '',
+        status: targetStatus,
+      });
+      if (created) {
+        added++;
+        setAddedNoMatchNames(prev => new Set(prev).add(name));
+      }
+    }
+    setProcessing(false);
+    toast.success(`Added ${added} new student${added !== 1 ? 's' : ''}`);
+  };
+
   const applyApprovedMatches = async () => {
     setProcessing(true);
     const approved = potentialMatches.filter(m => m.approved === true);
@@ -329,6 +383,7 @@ export default function FileUpload({ onComplete }: FileUploadProps) {
                           variant={match.approved === true ? "default" : "outline"}
                           onClick={() => handleApprove(index)}
                           className="h-8"
+                          disabled={match.addedAsNew}
                         >
                           <Check className="h-3 w-3" />
                           Yes
@@ -338,9 +393,21 @@ export default function FileUpload({ onComplete }: FileUploadProps) {
                           variant={match.approved === false ? "destructive" : "outline"}
                           onClick={() => handleReject(index)}
                           className="h-8"
+                          disabled={match.addedAsNew}
                         >
                           <X className="h-3 w-3" />
                           No
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant={match.addedAsNew ? "secondary" : "outline"}
+                          onClick={() => handleAddAsNew(index)}
+                          disabled={match.addedAsNew}
+                          className="h-8"
+                          title="Add this name as a new student"
+                        >
+                          <UserPlus className="h-3 w-3" />
+                          {match.addedAsNew ? 'Added' : 'Add new'}
                         </Button>
                       </div>
                     </TableCell>
@@ -359,19 +426,48 @@ export default function FileUpload({ onComplete }: FileUploadProps) {
                 <TabsTrigger value="missing-from-sheet">Missing from Spreadsheet ({missingFromSpreadsheet.length})</TabsTrigger>
               </TabsList>
               <TabsContent value="not-in-roster" className="p-3">
-                <p className="text-sm font-medium text-muted-foreground mb-2">
-                  Names from spreadsheet with no close matches in roster:
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  {noMatches.length > 0 ? (
-                    <>
-                      {noMatches.slice(0, 10).join(', ')}
-                      {noMatches.length > 10 ? ` +${noMatches.length - 10} more` : ''}
-                    </>
-                  ) : (
-                    'All names from spreadsheet were matched!'
+                <div className="flex items-center justify-between mb-2">
+                  <p className="text-sm font-medium text-muted-foreground">
+                    Names from spreadsheet with no close matches in roster:
+                  </p>
+                  {noMatches.length > 0 && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={handleAddAllUnmatched}
+                      disabled={processing || noMatches.every(n => addedNoMatchNames.has(n))}
+                      className="h-7 gap-1.5"
+                    >
+                      <UserPlus className="h-3 w-3" />
+                      Add all as new students
+                    </Button>
                   )}
-                </p>
+                </div>
+                {noMatches.length > 0 ? (
+                  <div className="flex flex-wrap gap-1.5">
+                    {noMatches.map((name) => {
+                      const added = addedNoMatchNames.has(name);
+                      return (
+                        <button
+                          key={name}
+                          onClick={() => handleAddNoMatchName(name)}
+                          disabled={added}
+                          className={`inline-flex items-center gap-1 px-2 py-1 rounded text-xs border transition-colors ${
+                            added
+                              ? 'bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-300 cursor-default'
+                              : 'bg-card hover:bg-accent border-border'
+                          }`}
+                          title={added ? 'Added as new student' : 'Click to add as new student'}
+                        >
+                          {added ? <Check className="h-3 w-3" /> : <UserPlus className="h-3 w-3" />}
+                          {name}
+                        </button>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <p className="text-xs text-muted-foreground">All names from spreadsheet were matched!</p>
+                )}
               </TabsContent>
               <TabsContent value="missing-from-sheet" className="p-3">
                 <p className="text-sm font-medium text-muted-foreground mb-2">
