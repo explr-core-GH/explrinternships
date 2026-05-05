@@ -105,6 +105,13 @@ export default function FileUpload({ onComplete }: FileUploadProps) {
   const handleFile = useCallback(async (file: File) => {
     try {
       setProcessing(true);
+      // Reset all per-upload review state so a second upload starts clean
+      setPotentialMatches([]);
+      setExactMatches(0);
+      setNoMatches([]);
+      setMissingFromSpreadsheet([]);
+      setAddedNoMatchNames(new Set());
+      setShowingReview(false);
       const buffer = await file.arrayBuffer();
       const parsed = parseExcelFile(buffer);
 
@@ -317,6 +324,7 @@ export default function FileUpload({ onComplete }: FileUploadProps) {
     setNoMatches([]);
     setMissingFromSpreadsheet([]);
     setProcessing(false);
+    setAddedNoMatchNames(new Set());
     onComplete?.();
   };
 
