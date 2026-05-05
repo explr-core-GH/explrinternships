@@ -273,6 +273,7 @@ export type Database = {
           description: string | null
           filled: number | null
           id: string
+          interest_field_keys: string[]
           labels: Json
           location: string | null
           name: string
@@ -289,6 +290,7 @@ export type Database = {
           description?: string | null
           filled?: number | null
           id?: string
+          interest_field_keys?: string[]
           labels?: Json
           location?: string | null
           name: string
@@ -305,6 +307,7 @@ export type Database = {
           description?: string | null
           filled?: number | null
           id?: string
+          interest_field_keys?: string[]
           labels?: Json
           location?: string | null
           name?: string
