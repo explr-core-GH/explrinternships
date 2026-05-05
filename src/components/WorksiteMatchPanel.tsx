@@ -9,7 +9,7 @@ import { toast } from 'sonner';
 import { useAppStore } from '@/store/useAppStore';
 import { rankInternsForWorksite } from '@/lib/worksiteMatcher';
 import type { Worksite, Intern } from '@/types/intern';
-import { STATUS_CONFIG } from '@/types/intern';
+import { STATUS_CONFIG, STATUS_ORDER } from '@/types/intern';
 import { cn } from '@/lib/utils';
 
 interface WorksiteMatchPanelProps {
@@ -48,6 +48,7 @@ export default function WorksiteMatchPanel({ worksite, open, onOpenChange }: Wor
   const [ellOnly, setEllOnly] = useState(false);
   const [cmsdOnly, setCmsdOnly] = useState(false);
   const [autoSetStatus, setAutoSetStatus] = useState(true);
+  const [statusFilter, setStatusFilter] = useState<Set<string>>(new Set());
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [busy, setBusy] = useState(false);
 
@@ -70,6 +71,7 @@ export default function WorksiteMatchPanel({ worksite, open, onOpenChange }: Wor
       if (gradeFilter !== 'all' && m.intern.grade !== gradeFilter) return false;
       if (ellOnly && !m.intern.isEll) return false;
       if (cmsdOnly && !m.intern.isCmsd) return false;
+      if (statusFilter.size > 0 && !statusFilter.has(m.intern.status)) return false;
       if (search) {
         const q = search.toLowerCase();
         const i = m.intern;
@@ -78,7 +80,7 @@ export default function WorksiteMatchPanel({ worksite, open, onOpenChange }: Wor
       }
       return true;
     });
-  }, [worksite, interns, assignments, excludeAssignedAnywhere, hideZero, gradeFilter, ellOnly, cmsdOnly, search]);
+  }, [worksite, interns, assignments, excludeAssignedAnywhere, hideZero, gradeFilter, ellOnly, cmsdOnly, statusFilter, search]);
 
   const remainingSlots = worksite ? Math.max(0, worksite.capacity - worksite.filled) : 0;
   const wouldOverfill = selected.size > remainingSlots;
@@ -201,6 +203,39 @@ export default function WorksiteMatchPanel({ worksite, open, onOpenChange }: Wor
             <FilterPill active={autoSetStatus} onClick={() => setAutoSetStatus(v => !v)}>
               Auto-set status → Assigned
             </FilterPill>
+          </div>
+          <div className="flex gap-1.5 flex-wrap items-center">
+            <span className="text-[10px] text-muted-foreground uppercase tracking-wide">Status:</span>
+            {statusFilter.size > 0 && (
+              <button
+                onClick={() => setStatusFilter(new Set())}
+                className="text-[10px] text-muted-foreground hover:text-foreground underline"
+              >
+                clear
+              </button>
+            )}
+            {STATUS_ORDER.map(s => {
+              const cfg = STATUS_CONFIG[s];
+              const active = statusFilter.has(s);
+              return (
+                <button
+                  key={s}
+                  onClick={() => setStatusFilter(prev => {
+                    const n = new Set(prev);
+                    n.has(s) ? n.delete(s) : n.add(s);
+                    return n;
+                  })}
+                  className={cn(
+                    'h-6 px-2 rounded-full text-[10px] font-medium border transition-colors',
+                    active
+                      ? cn(cfg.bgClass, cfg.textClass, cfg.borderClass)
+                      : 'bg-card text-muted-foreground hover:text-foreground border-input',
+                  )}
+                >
+                  {cfg.label}
+                </button>
+              );
+            })}
           </div>
         </div>
 
