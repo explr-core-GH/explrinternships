@@ -40,6 +40,9 @@ export interface Intern {
   educationInternship: string;
   healthcare: string;
   videoGames: string;
+  journalism: string;
+  bikeProgram: string;
+  itCertification: string;
   csCourseTaken: string;
   specificInterests: string;
   additionalQuestions: string;
@@ -97,7 +100,10 @@ export type DirectInterestFieldKey =
   | 'clevelandClinic'
   | 'educationInternship'
   | 'healthcare'
-  | 'videoGames';
+  | 'videoGames'
+  | 'journalism'
+  | 'bikeProgram'
+  | 'itCertification';
 
 /**
  * User-friendly labels for the picker in the worksite form. Order here
@@ -116,6 +122,9 @@ export const WORKSITE_INTEREST_FIELD_OPTIONS: { key: DirectInterestFieldKey; lab
   { key: 'envFieldScience',     label: 'Field Science & Data Analytics' },
   { key: 'educationInternship', label: 'STEM Education / Teaching' },
   { key: 'videoGames',          label: 'Game & App Design' },
+  { key: 'journalism',          label: 'Journalism' },
+  { key: 'bikeProgram',         label: 'Bike Program' },
+  { key: 'itCertification',     label: 'IT Certification' },
 ];
 
 export const DIRECT_INTEREST_FIELD_LABELS: Record<DirectInterestFieldKey, string> =
