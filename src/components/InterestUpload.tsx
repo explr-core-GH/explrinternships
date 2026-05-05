@@ -27,14 +27,14 @@ const QUESTION_TO_FIELD: { match: string; column: string; label: string }[] = [
   { match: 'environmental justice',      column: 'env_justice',          label: 'Environmental Justice' },
   { match: 'environmental science',      column: 'env_field_science',    label: 'Environmental Science' },
   { match: 'construction management',    column: 'construction_mgmt',    label: 'Construction Management' },
+  { match: 'journalism',                 column: 'journalism',           label: 'Journalism' },
+  { match: 'riding bikes',               column: 'bike_program',         label: 'Bike Program' },
+  { match: 'industry certification',     column: 'it_certification',     label: 'IT Certification' },
 ];
 
 /** Question fragments that should be captured as text notes (no column). */
 const QUESTION_TO_NOTE: { match: string; label: string }[] = [
   { match: 'fixing and troubleshooting', label: 'IT Hardware/Troubleshooting' },
-  { match: 'journalism',                 label: 'Journalism' },
-  { match: 'riding bikes',               label: 'Bikes / Outdoors' },
-  { match: 'industry certification',     label: 'IT Certification' },
 ];
 
 const RANKING_FRAGMENT = 'rank these';
