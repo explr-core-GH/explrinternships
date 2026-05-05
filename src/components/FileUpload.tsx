@@ -218,7 +218,7 @@ export default function FileUpload({ onComplete }: FileUploadProps) {
         setMissingFromSpreadsheet(missingRosterNames);
         setProcessing(false);
         
-        if (potentialMatchList.length > 0 || showAllMatches) {
+        if (potentialMatchList.length > 0 || noMatchList.length > 0 || showAllMatches) {
           setShowingReview(true);
         } else {
           // No manual review needed
@@ -358,7 +358,11 @@ export default function FileUpload({ onComplete }: FileUploadProps) {
             <h3 className="font-semibold text-foreground">Match Review</h3>
             <p className="text-sm text-muted-foreground">
               {!showAllMatches && exactMatches > 0 && `${exactMatches} matches ≥70% applied automatically. `}
-              Review {potentialMatches.length} match{potentialMatches.length !== 1 ? 'es' : ''} below.
+              {potentialMatches.length > 0
+                ? `Review ${potentialMatches.length} match${potentialMatches.length !== 1 ? 'es' : ''} below.`
+                : noMatches.length > 0
+                  ? `Review ${noMatches.length} unmatched name${noMatches.length !== 1 ? 's' : ''} below.`
+                  : 'Review the upload results below.'}
               {showAllMatches && <span className="text-primary"> (Showing all matches including low confidence)</span>}
             </p>
           </div>
