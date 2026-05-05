@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Plus, Trash2, Building2, Users, MapPin, Download, Pencil, Tag, X } from 'lucide-react';
+import { Plus, Trash2, Building2, Users, MapPin, Download, Pencil, Tag, X, Sparkles, Target } from 'lucide-react';
 import { useAppStore } from '@/store/useAppStore';
 import {
   WORKSITE_CATEGORIES,
@@ -7,10 +7,13 @@ import {
   WORKSITE_STATUS_CONFIG,
   WORKSITE_LABEL_COLORS,
   WORKSITE_LABEL_COLOR_CLASSES,
+  WORKSITE_INTEREST_FIELD_OPTIONS,
+  DIRECT_INTEREST_FIELD_LABELS,
   type Worksite,
   type WorksiteStatus,
   type WorksiteLabel,
   type WorksiteLabelColor,
+  type DirectInterestFieldKey,
 } from '@/types/intern';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -22,11 +25,13 @@ import {
 import { toast } from 'sonner';
 import { exportWorksiteCSV } from '@/lib/exportData';
 import { cn } from '@/lib/utils';
+import WorksiteMatchPanel from '@/components/WorksiteMatchPanel';
 
 type FormShape = {
   name: string; category: string; description: string; capacity: number;
   contactName: string; contactEmail: string; location: string; tags: string;
   status: WorksiteStatus; labels: WorksiteLabel[];
+  interestFieldKeys: DirectInterestFieldKey[];
 };
 
 function LabelEditor({ labels, onChange }: { labels: WorksiteLabel[]; onChange: (l: WorksiteLabel[]) => void }) {
@@ -68,6 +73,44 @@ function LabelEditor({ labels, onChange }: { labels: WorksiteLabel[]; onChange: 
   );
 }
 
+/**
+ * Multi-select picker for the Yes/Maybe/No interest fields on the
+ * intern record that should score this worksite. Toggling a chip adds
+ * or removes the key from worksite.interestFieldKeys. Drives the
+ * Match Students panel — admins can repoint a worksite (e.g. IERS ->
+ * NASA) by editing this without touching code.
+ */
+function InterestFieldPicker({
+  selected, onChange,
+}: { selected: DirectInterestFieldKey[]; onChange: (next: DirectInterestFieldKey[]) => void }) {
+  const toggle = (key: DirectInterestFieldKey) => {
+    if (selected.includes(key)) onChange(selected.filter(k => k !== key));
+    else onChange([...selected, key]);
+  };
+  return (
+    <div className="flex flex-wrap gap-1.5">
+      {WORKSITE_INTEREST_FIELD_OPTIONS.map(opt => {
+        const active = selected.includes(opt.key);
+        return (
+          <button
+            type="button"
+            key={opt.key}
+            onClick={() => toggle(opt.key)}
+            className={cn(
+              'h-7 px-2.5 rounded-full text-[11px] font-medium border transition-colors',
+              active
+                ? 'bg-primary/10 border-primary/40 text-primary'
+                : 'bg-card text-muted-foreground border-input hover:text-foreground',
+            )}
+          >
+            {opt.label}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
 function WorksiteForm({ initial, onSubmit, submitLabel }: {
   initial: FormShape;
   onSubmit: (form: FormShape) => void;
@@ -98,6 +141,20 @@ function WorksiteForm({ initial, onSubmit, submitLabel }: {
       <Input placeholder="Contact name" value={form.contactName} onChange={e => setForm({ ...form, contactName: e.target.value })} />
       <Input placeholder="Contact email" value={form.contactEmail} onChange={e => setForm({ ...form, contactEmail: e.target.value })} />
       <Input placeholder="Tags (comma separated)" value={form.tags} onChange={e => setForm({ ...form, tags: e.target.value })} />
+
+      <div>
+        <label className="text-xs text-muted-foreground mb-1 flex items-center gap-1">
+          <Target className="h-3 w-3" /> Interest Fields (matched from interest form)
+        </label>
+        <p className="text-[10px] text-muted-foreground mb-1.5">
+          Pick the form questions whose &quot;Yes&quot; or &quot;Maybe&quot; should rank a student high for this worksite.
+        </p>
+        <InterestFieldPicker
+          selected={form.interestFieldKeys}
+          onChange={(next) => setForm({ ...form, interestFieldKeys: next })}
+        />
+      </div>
+
       <div>
         <label className="text-xs text-muted-foreground mb-1 block flex items-center gap-1"><Tag className="h-3 w-3" /> Colored Labels</label>
         <LabelEditor labels={form.labels} onChange={(l) => setForm({ ...form, labels: l })} />
@@ -118,7 +175,7 @@ function AddWorksiteDialog({ onAdd }: { onAdd: (ws: Omit<Worksite, 'id'>) => voi
       <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader><DialogTitle>Add Worksite</DialogTitle></DialogHeader>
         <WorksiteForm
-          initial={{ name: '', category: WORKSITE_CATEGORIES[0], description: '', capacity: 6, contactName: '', contactEmail: '', location: '', tags: '', status: 'open', labels: [] }}
+          initial={{ name: '', category: WORKSITE_CATEGORIES[0], description: '', capacity: 6, contactName: '', contactEmail: '', location: '', tags: '', status: 'open', labels: [], interestFieldKeys: [] }}
           submitLabel="Add Worksite"
           onSubmit={(form) => {
             onAdd({
@@ -127,6 +184,7 @@ function AddWorksiteDialog({ onAdd }: { onAdd: (ws: Omit<Worksite, 'id'>) => voi
               contactEmail: form.contactEmail.trim(), location: form.location.trim(),
               tags: form.tags.split(',').map(t => t.trim()).filter(Boolean),
               status: form.status, labels: form.labels,
+              interestFieldKeys: form.interestFieldKeys,
             });
             setOpen(false);
             toast.success('Worksite added');
@@ -155,6 +213,7 @@ function EditWorksiteDialog({ ws, onSave }: { ws: Worksite; onSave: (id: string,
             capacity: ws.capacity, contactName: ws.contactName, contactEmail: ws.contactEmail,
             location: ws.location, tags: ws.tags.join(', '),
             status: ws.status || 'open', labels: ws.labels || [],
+            interestFieldKeys: ws.interestFieldKeys || [],
           }}
           submitLabel="Save Changes"
           onSubmit={(form) => {
@@ -164,6 +223,7 @@ function EditWorksiteDialog({ ws, onSave }: { ws: Worksite; onSave: (id: string,
               contactEmail: form.contactEmail.trim(), location: form.location.trim(),
               tags: form.tags.split(',').map(t => t.trim()).filter(Boolean),
               status: form.status, labels: form.labels,
+              interestFieldKeys: form.interestFieldKeys,
             });
             setOpen(false);
             toast.success('Worksite updated');
@@ -176,6 +236,7 @@ function EditWorksiteDialog({ ws, onSave }: { ws: Worksite; onSave: (id: string,
 
 export default function WorksitesPage() {
   const { worksites, interns, assignments, addWorksite, removeWorksite, updateWorksite } = useAppStore();
+  const [matchTarget, setMatchTarget] = useState<Worksite | null>(null);
 
   const totalCapacity = worksites.reduce((sum, w) => sum + w.capacity, 0);
   const totalFilled = worksites.reduce((sum, w) => sum + w.filled, 0);
@@ -213,6 +274,7 @@ export default function WorksitesPage() {
           const status = ws.status || 'open';
           const statusCfg = WORKSITE_STATUS_CONFIG[status];
           const labels = ws.labels || [];
+          const interestKeys = ws.interestFieldKeys || [];
 
           return (
             <div key={ws.id} className="rounded-lg border bg-card p-4 shadow-card">
@@ -278,10 +340,47 @@ export default function WorksitesPage() {
                   {ws.tags.map(t => <span key={t} className="text-[10px] bg-muted text-muted-foreground px-1.5 py-0.5 rounded">{t}</span>)}
                 </div>
               )}
+
+              {/* Interest fields this worksite is matched on */}
+              {interestKeys.length > 0 && (
+                <div className="mt-2">
+                  <p className="text-[10px] text-muted-foreground uppercase font-semibold mb-1 flex items-center gap-1">
+                    <Target className="h-2.5 w-2.5" />
+                    Matched on
+                  </p>
+                  <div className="flex flex-wrap gap-1">
+                    {interestKeys.map(k => (
+                      <span key={k} className="text-[10px] bg-primary/5 text-primary border border-primary/20 px-1.5 py-0.5 rounded">
+                        {DIRECT_INTEREST_FIELD_LABELS[k] || k}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Match Students action */}
+              <div className="mt-3 pt-3 border-t border-border">
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  className="w-full h-8 gap-1.5 text-xs"
+                  onClick={() => setMatchTarget(ws)}
+                  disabled={status === 'closed'}
+                >
+                  <Sparkles className="h-3.5 w-3.5" />
+                  Match Students {!isFull && `(${ws.capacity - ws.filled} open)`}
+                </Button>
+              </div>
             </div>
           );
         })}
       </div>
+
+      <WorksiteMatchPanel
+        worksite={matchTarget}
+        open={matchTarget !== null}
+        onOpenChange={(o) => { if (!o) setMatchTarget(null); }}
+      />
     </div>
   );
 }

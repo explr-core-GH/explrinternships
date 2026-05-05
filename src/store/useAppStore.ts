@@ -68,6 +68,7 @@ function dbToWorksite(row: DbWorksite): Worksite {
     tags: row.tags || [],
     status: ((row as any).status || 'open') as any,
     labels: ((row as any).labels || []) as any,
+    interestFieldKeys: ((row as any).interest_field_keys || []) as any,
   };
 }
 
@@ -139,6 +140,7 @@ export const useAppStore = create<AppState>()((set, get) => ({
         name: ws.name, category: ws.category, description: ws.description,
         capacity: ws.capacity, filled: ws.filled, contact_name: ws.contactName,
         contact_email: ws.contactEmail, location: ws.location, tags: ws.tags,
+        interest_field_keys: (ws.interestFieldKeys || []) as any,
       }));
       await supabase.from('worksites').insert(inserts);
       const { data: seeded } = await supabase.from('worksites').select('*').order('name');
@@ -254,6 +256,7 @@ export const useAppStore = create<AppState>()((set, get) => ({
       capacity: ws.capacity, filled: ws.filled, contact_name: ws.contactName,
       contact_email: ws.contactEmail, location: ws.location, tags: ws.tags,
       status: ws.status || 'open', labels: (ws.labels || []) as any,
+      interest_field_keys: (ws.interestFieldKeys || []) as any,
     }).select().single();
     if (data) {
       set(s => ({ worksites: [...s.worksites, dbToWorksite(data)] }));
@@ -296,6 +299,7 @@ export const useAppStore = create<AppState>()((set, get) => ({
     const dbUpdates: Record<string, any> = {};
     const fieldMap: Record<string, string> = {
       contactName: 'contact_name', contactEmail: 'contact_email',
+      interestFieldKeys: 'interest_field_keys',
     };
     for (const [key, val] of Object.entries(updates)) {
       const dbKey = fieldMap[key] || key;

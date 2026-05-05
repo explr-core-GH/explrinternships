@@ -71,7 +71,55 @@ export interface Worksite {
   tags: string[];
   status?: WorksiteStatus;
   labels?: WorksiteLabel[];
+  /**
+   * Yes/Maybe/No fields on the Intern record this worksite scores against.
+   * E.g. ['healthcare','clevelandClinic'] means a "Yes" on either form
+   * field gives a strong-interest score for this worksite. Empty array
+   * means no direct-interest signal (matcher still uses tags, IT
+   * interests, programs, etc.).
+   */
+  interestFieldKeys?: DirectInterestFieldKey[];
 }
+
+/**
+ * The interest fields on Intern that are stored as Yes/Maybe/No strings
+ * (one column per field on the DB). These are the keys that a worksite's
+ * interestFieldKeys can reference.
+ */
+export type DirectInterestFieldKey =
+  | 'constructionMgmt'
+  | 'biomedical'
+  | 'envJustice'
+  | 'envClimate'
+  | 'envFieldScience'
+  | 'magnetManufacturing'
+  | 'iersCenter'
+  | 'clevelandClinic'
+  | 'educationInternship'
+  | 'healthcare'
+  | 'videoGames';
+
+/**
+ * User-friendly labels for the picker in the worksite form. Order here
+ * is the order they appear in the UI. Edit a label here when an interest
+ * field's meaning changes (e.g. iersCenter -> "NASA Internship").
+ */
+export const WORKSITE_INTEREST_FIELD_OPTIONS: { key: DirectInterestFieldKey; label: string }[] = [
+  { key: 'healthcare',          label: 'Healthcare' },
+  { key: 'clevelandClinic',     label: 'Cleveland Clinic / IBM' },
+  { key: 'biomedical',          label: 'Biomedical Science & Engineering' },
+  { key: 'constructionMgmt',    label: 'Construction Management' },
+  { key: 'magnetManufacturing', label: 'MAGNET / Manufacturing' },
+  { key: 'iersCenter',          label: 'CSU IERS Center' },
+  { key: 'envJustice',          label: 'Environmental Justice' },
+  { key: 'envClimate',          label: 'Climate Adaptation & Resilience' },
+  { key: 'envFieldScience',     label: 'Field Science & Data Analytics' },
+  { key: 'educationInternship', label: 'STEM Education / Teaching' },
+  { key: 'videoGames',          label: 'Game & App Design' },
+];
+
+export const DIRECT_INTEREST_FIELD_LABELS: Record<DirectInterestFieldKey, string> =
+  Object.fromEntries(WORKSITE_INTEREST_FIELD_OPTIONS.map(o => [o.key, o.label])) as Record<DirectInterestFieldKey, string>;
 
 export const WORKSITE_STATUSES = ['open', 'full', 'paused', 'closed'] as const;
 export type WorksiteStatus = typeof WORKSITE_STATUSES[number];
@@ -200,6 +248,7 @@ export const DEFAULT_WORKSITES: Worksite[] = [
     contactEmail: '',
     location: 'Cleveland, OH',
     tags: ['healthcare', 'technology', 'IBM', 'research'],
+    interestFieldKeys: ['clevelandClinic', 'healthcare'],
   },
   {
     id: 'ws-2',
@@ -212,6 +261,7 @@ export const DEFAULT_WORKSITES: Worksite[] = [
     contactEmail: '',
     location: 'Cleveland, OH',
     tags: ['construction', 'management', 'hands-on'],
+    interestFieldKeys: ['constructionMgmt'],
   },
   {
     id: 'ws-3',
@@ -224,6 +274,7 @@ export const DEFAULT_WORKSITES: Worksite[] = [
     contactEmail: '',
     location: 'Cleveland, OH',
     tags: ['biomedical', 'science', 'engineering', 'research'],
+    interestFieldKeys: ['biomedical'],
   },
   {
     id: 'ws-4',
@@ -236,6 +287,7 @@ export const DEFAULT_WORKSITES: Worksite[] = [
     contactEmail: '',
     location: 'Cleveland, OH',
     tags: ['environment', 'justice', 'sustainability'],
+    interestFieldKeys: ['envJustice'],
   },
   {
     id: 'ws-5',
@@ -248,6 +300,7 @@ export const DEFAULT_WORKSITES: Worksite[] = [
     contactEmail: '',
     location: 'Cleveland, OH',
     tags: ['climate', 'environment', 'sustainability', 'resilience'],
+    interestFieldKeys: ['envClimate'],
   },
   {
     id: 'ws-6',
@@ -260,6 +313,7 @@ export const DEFAULT_WORKSITES: Worksite[] = [
     contactEmail: '',
     location: 'Cleveland, OH',
     tags: ['field-science', 'data', 'analytics', 'environment'],
+    interestFieldKeys: ['envFieldScience'],
   },
   {
     id: 'ws-7',
@@ -272,6 +326,7 @@ export const DEFAULT_WORKSITES: Worksite[] = [
     contactEmail: '',
     location: 'Cleveland State University',
     tags: ['energy', 'sustainability', 'research', 'university'],
+    interestFieldKeys: ['iersCenter'],
   },
   {
     id: 'ws-8',
@@ -284,6 +339,7 @@ export const DEFAULT_WORKSITES: Worksite[] = [
     contactEmail: '',
     location: 'Cleveland, OH',
     tags: ['manufacturing', 'hands-on', 'academy'],
+    interestFieldKeys: ['magnetManufacturing'],
   },
   {
     id: 'ws-9',
@@ -296,6 +352,7 @@ export const DEFAULT_WORKSITES: Worksite[] = [
     contactEmail: '',
     location: 'Cleveland, OH',
     tags: ['education', 'teaching', 'STEM', 'mentorship', 'camp'],
+    interestFieldKeys: ['educationInternship'],
   },
   {
     id: 'ws-10',
@@ -308,6 +365,7 @@ export const DEFAULT_WORKSITES: Worksite[] = [
     contactEmail: '',
     location: 'Cleveland, OH',
     tags: ['healthcare', 'medical', 'nursing'],
+    interestFieldKeys: ['healthcare'],
   },
   {
     id: 'ws-11',
@@ -320,5 +378,6 @@ export const DEFAULT_WORKSITES: Worksite[] = [
     contactEmail: '',
     location: 'Cleveland, OH',
     tags: ['games', 'design', 'apps', 'creative', 'technology'],
+    interestFieldKeys: ['videoGames'],
   },
 ];
