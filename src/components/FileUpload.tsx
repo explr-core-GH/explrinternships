@@ -324,6 +324,7 @@ export default function FileUpload({ onComplete }: FileUploadProps) {
     setNoMatches([]);
     setMissingFromSpreadsheet([]);
     setProcessing(false);
+    setAddedNoMatchNames(new Set());
     onComplete?.();
   };
 
