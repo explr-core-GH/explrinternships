@@ -220,23 +220,20 @@ export default function FileUpload({ onComplete }: FileUploadProps) {
               exactMatchCount++;
             }
           } else {
-            // Normal mode with thresholds
-            const potentials = findPotentialMatches(firstName, lastName, activeInterns, false);
-            
-            if (potentials.length > 0) {
-              const bestMatch = potentials[0];
-              
-              if (bestMatch.similarity >= 0.7) {
-                matchedInternIds.add(bestMatch.internId);
-                await updateIntern(bestMatch.internId, { status: targetStatus });
-                exactMatchCount++;
-              } else if (bestMatch.similarity >= 0.6) {
-                matchedInternIds.add(bestMatch.internId);
-                potentialMatchList.push(bestMatch);
-              } else {
-                noMatchList.push(`${firstName} ${lastName}`);
-              }
+            // Normal mode: auto-apply >=0.7, otherwise show best candidate
+            // (even low confidence) so the user can approve OR add as new.
+            const potentials = findPotentialMatches(firstName, lastName, activeInterns, true);
+            const bestMatch = potentials[0];
+
+            if (bestMatch && bestMatch.similarity >= 0.7) {
+              matchedInternIds.add(bestMatch.internId);
+              await updateIntern(bestMatch.internId, { status: targetStatus });
+              exactMatchCount++;
+            } else if (bestMatch) {
+              matchedInternIds.add(bestMatch.internId);
+              potentialMatchList.push(bestMatch);
             } else {
+              // No roster at all — fall back to unmatched list
               noMatchList.push(`${firstName} ${lastName}`);
             }
           }
