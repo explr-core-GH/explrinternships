@@ -345,6 +345,21 @@ export const useAppStore = create<AppState>()((set, get) => ({
     }));
   },
 
+  addIntern: async ({ firstName, lastName, status = 'pending' }) => {
+    const { data, error } = await supabase.from('interns').insert({
+      first_name: firstName,
+      last_name: lastName,
+      status,
+      is_newest: true,
+      is_duplicate: false,
+      source_sheet_url: 'manual-add',
+    } as any).select().single();
+    if (error || !data) return null;
+    const newIntern = dbToIntern(data as DbIntern);
+    set(s => ({ interns: [...s.interns, newIntern] }));
+    return newIntern;
+  },
+
   syncFromSheet: async (url) => {
     // Snapshot current interns before sync for undo
     const { data: snapshot } = await supabase.from('interns').select('*');
