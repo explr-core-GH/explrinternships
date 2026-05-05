@@ -9,7 +9,7 @@ import { toast } from 'sonner';
 import { useAppStore } from '@/store/useAppStore';
 import { rankInternsForWorksite } from '@/lib/worksiteMatcher';
 import type { Worksite, Intern } from '@/types/intern';
-import { STATUS_CONFIG, STATUS_ORDER } from '@/types/intern';
+import { STATUS_CONFIG, INTERN_STATUSES } from '@/types/intern';
 import { cn } from '@/lib/utils';
 
 interface WorksiteMatchPanelProps {
@@ -214,7 +214,7 @@ export default function WorksiteMatchPanel({ worksite, open, onOpenChange }: Wor
                 clear
               </button>
             )}
-            {STATUS_ORDER.map(s => {
+            {INTERN_STATUSES.map(s => {
               const cfg = STATUS_CONFIG[s];
               const active = statusFilter.has(s);
               return (
