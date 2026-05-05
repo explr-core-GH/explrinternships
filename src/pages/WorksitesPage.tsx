@@ -26,6 +26,7 @@ import { toast } from 'sonner';
 import { exportWorksiteCSV } from '@/lib/exportData';
 import { cn } from '@/lib/utils';
 import WorksiteMatchPanel from '@/components/WorksiteMatchPanel';
+import { useAutoLoadData } from '@/hooks/useAutoLoadData';
 
 type FormShape = {
   name: string; category: string; description: string; capacity: number;
@@ -235,7 +236,8 @@ function EditWorksiteDialog({ ws, onSave }: { ws: Worksite; onSave: (id: string,
 }
 
 export default function WorksitesPage() {
-  const { worksites, interns, assignments, addWorksite, removeWorksite, updateWorksite } = useAppStore();
+  useAutoLoadData();
+  const { worksites, interns, assignments, addWorksite, removeWorksite, updateWorksite, loading } = useAppStore();
   const [matchTarget, setMatchTarget] = useState<Worksite | null>(null);
 
   const totalCapacity = worksites.reduce((sum, w) => sum + w.capacity, 0);
@@ -250,6 +252,10 @@ export default function WorksitesPage() {
       wsInterns[a.worksiteId].push(`${intern.firstName} ${intern.lastName}`);
     }
   });
+
+  if (loading && worksites.length === 0) {
+    return <p className="text-center text-sm text-muted-foreground py-12">Loading worksites…</p>;
+  }
 
   return (
     <div className="max-w-4xl mx-auto animate-fade-in">
