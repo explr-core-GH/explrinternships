@@ -107,6 +107,7 @@ interface AppState {
   loadSyncConfig: () => Promise<void>;
   uploadExcelInterns: (interns: Intern[]) => Promise<void>;
   updateIntern: (id: string, updates: Partial<Record<string, any>>) => Promise<void>;
+  addIntern: (data: { firstName: string; lastName: string; status?: InternStatus }) => Promise<Intern | null>;
   updateWorksite: (id: string, updates: Partial<Record<string, any>>) => Promise<void>;
   refreshWorksiteCounts: () => Promise<void>;
   undoLastUpload: () => Promise<boolean>;
@@ -342,6 +343,21 @@ export const useAppStore = create<AppState>()((set, get) => ({
     set(s => ({
       interns: s.interns.map(i => i.id === id ? { ...i, ...updates } as Intern : i),
     }));
+  },
+
+  addIntern: async ({ firstName, lastName, status = 'pending' }) => {
+    const { data, error } = await supabase.from('interns').insert({
+      first_name: firstName,
+      last_name: lastName,
+      status,
+      is_newest: true,
+      is_duplicate: false,
+      source_sheet_url: 'manual-add',
+    } as any).select().single();
+    if (error || !data) return null;
+    const newIntern = dbToIntern(data as DbIntern);
+    set(s => ({ interns: [...s.interns, newIntern] }));
+    return newIntern;
   },
 
   syncFromSheet: async (url) => {
