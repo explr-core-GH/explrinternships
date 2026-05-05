@@ -40,6 +40,9 @@ export interface Intern {
   educationInternship: string;
   healthcare: string;
   videoGames: string;
+  journalism: string;
+  bikeProgram: string;
+  itCertification: string;
   csCourseTaken: string;
   specificInterests: string;
   additionalQuestions: string;
@@ -97,7 +100,10 @@ export type DirectInterestFieldKey =
   | 'clevelandClinic'
   | 'educationInternship'
   | 'healthcare'
-  | 'videoGames';
+  | 'videoGames'
+  | 'journalism'
+  | 'bikeProgram'
+  | 'itCertification';
 
 /**
  * User-friendly labels for the picker in the worksite form. Order here
@@ -116,6 +122,9 @@ export const WORKSITE_INTEREST_FIELD_OPTIONS: { key: DirectInterestFieldKey; lab
   { key: 'envFieldScience',     label: 'Field Science & Data Analytics' },
   { key: 'educationInternship', label: 'STEM Education / Teaching' },
   { key: 'videoGames',          label: 'Game & App Design' },
+  { key: 'journalism',          label: 'Journalism' },
+  { key: 'bikeProgram',         label: 'Bike Program' },
+  { key: 'itCertification',     label: 'IT Certification' },
 ];
 
 export const DIRECT_INTEREST_FIELD_LABELS: Record<DirectInterestFieldKey, string> =
@@ -191,6 +200,9 @@ export type InterestField =
   | 'educationInternship'
   | 'healthcare'
   | 'videoGames'
+  | 'journalism'
+  | 'bikeProgram'
+  | 'itCertification'
   | 'music'
   | 'art'
   | 'business'
@@ -202,6 +214,7 @@ export type InterestField =
 export const INTERN_INTEREST_FIELDS: Set<string> = new Set([
   'constructionMgmt', 'biomedical', 'envJustice', 'envClimate', 'envFieldScience',
   'magnetManufacturing', 'educationInternship', 'healthcare', 'videoGames',
+  'journalism', 'bikeProgram', 'itCertification',
 ]);
 
 export const INTEREST_LABELS: Record<InterestField, string> = {
@@ -214,6 +227,9 @@ export const INTEREST_LABELS: Record<InterestField, string> = {
   envFieldScience: 'Field Science & Data Analytics',
   educationInternship: 'Education / STEM Teaching',
   videoGames: 'Video Game / App Design',
+  journalism: 'Journalism',
+  bikeProgram: 'Bike Program',
+  itCertification: 'IT Certification',
   music: 'Music',
   art: 'Art & Creative',
   business: 'Business',

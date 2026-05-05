@@ -18,6 +18,7 @@ export type Database = {
         Row: {
           additional_questions: string | null
           admin_notes: string | null
+          bike_program: string | null
           biomedical: string | null
           cleveland_clinic: string | null
           construction_mgmt: string | null
@@ -42,7 +43,9 @@ export type Database = {
           is_duplicate: boolean | null
           is_ell: boolean | null
           is_newest: boolean | null
+          it_certification: string | null
           it_interests: string[] | null
+          journalism: string | null
           last_name: string
           magnet_manufacturing: string | null
           other_school: string | null
@@ -64,6 +67,7 @@ export type Database = {
         Insert: {
           additional_questions?: string | null
           admin_notes?: string | null
+          bike_program?: string | null
           biomedical?: string | null
           cleveland_clinic?: string | null
           construction_mgmt?: string | null
@@ -88,7 +92,9 @@ export type Database = {
           is_duplicate?: boolean | null
           is_ell?: boolean | null
           is_newest?: boolean | null
+          it_certification?: string | null
           it_interests?: string[] | null
+          journalism?: string | null
           last_name: string
           magnet_manufacturing?: string | null
           other_school?: string | null
@@ -110,6 +116,7 @@ export type Database = {
         Update: {
           additional_questions?: string | null
           admin_notes?: string | null
+          bike_program?: string | null
           biomedical?: string | null
           cleveland_clinic?: string | null
           construction_mgmt?: string | null
@@ -134,7 +141,9 @@ export type Database = {
           is_duplicate?: boolean | null
           is_ell?: boolean | null
           is_newest?: boolean | null
+          it_certification?: string | null
           it_interests?: string[] | null
+          journalism?: string | null
           last_name?: string
           magnet_manufacturing?: string | null
           other_school?: string | null

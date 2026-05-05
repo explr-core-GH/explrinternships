@@ -12,6 +12,7 @@ function mkIntern(over: Partial<Intern> = {}): Intern {
     envJustice: 'No', envClimate: 'No', envFieldScience: 'No',
     iersCenter: 'No', magnetManufacturing: 'No', educationInternship: 'No',
     healthcare: 'No', videoGames: 'No',
+    journalism: 'No', bikeProgram: 'No', itCertification: 'No',
     csCourseTaken: '', specificInterests: '', additionalQuestions: '',
     isDuplicate: false, isNewest: true, adminNotes: '',
     status: 'pending', intakeDate: '', intakeTime: '', intakeLocation: '',
