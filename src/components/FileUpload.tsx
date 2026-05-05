@@ -51,9 +51,16 @@ export default function FileUpload({ onComplete }: FileUploadProps) {
     setShowingReview(false);
   }, []);
 
+  const normalizeNamePart = (value: string): string => value
+    .toLowerCase()
+    .replace(/[’'`]/g, '')
+    .replace(/[^a-z0-9\s]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+
   // Simple similarity calculation
   const calculateSimilarity = (str1: string, str2: string): number => {
-    const normalize = (s: string) => s.toLowerCase().trim();
+    const normalize = (s: string) => normalizeNamePart(s);
     const norm1 = normalize(str1);
     const norm2 = normalize(str2);
     
@@ -66,8 +73,17 @@ export default function FileUpload({ onComplete }: FileUploadProps) {
     
     if (norm1 === norm2) return 1.0;
     
-    // Check if one contains the other (for middle names, etc.)
+    // Check if one contains the other (for middle names, extra tokens, etc.)
     if (norm1.includes(norm2) || norm2.includes(norm1)) return 0.8;
+
+    const tokens1 = new Set(norm1.split(' ').filter(Boolean));
+    const tokens2 = new Set(norm2.split(' ').filter(Boolean));
+    const overlap = [...tokens1].filter(token => tokens2.has(token)).length;
+    if (overlap > 0) {
+      const tokenScore = overlap / Math.max(tokens1.size, tokens2.size, 1);
+      if (tokenScore >= 0.5) return 0.8;
+      if (tokenScore >= 0.34) return 0.65;
+    }
     
     // Check first few characters
     const prefix1 = norm1.substring(0, 3);
@@ -75,6 +91,23 @@ export default function FileUpload({ onComplete }: FileUploadProps) {
     if (prefix1 === prefix2) return 0.6;
     
     return 0.0;
+  };
+
+  const isNearExactNameMatch = (firstName: string, lastName: string, intern: Intern): boolean => {
+    const uploadedFirst = normalizeNamePart(firstName);
+    const uploadedLast = normalizeNamePart(lastName);
+    const rosterFirst = normalizeNamePart(intern.firstName);
+    const rosterLast = normalizeNamePart(intern.lastName);
+
+    if (!uploadedFirst || !uploadedLast || !rosterFirst || !rosterLast) return false;
+    if (uploadedFirst !== rosterFirst) return false;
+    if (uploadedLast === rosterLast) return true;
+
+    const uploadedTokens = uploadedLast.split(' ').filter(Boolean);
+    const rosterTokens = rosterLast.split(' ').filter(Boolean);
+    if (uploadedTokens.length === 0 || rosterTokens.length === 0) return false;
+
+    return uploadedTokens.some(token => rosterTokens.includes(token));
   };
 
   const findPotentialMatches = (firstName: string, lastName: string, activeInterns: Intern[], showAll: boolean = false): PotentialMatch[] => {
@@ -86,7 +119,9 @@ export default function FileUpload({ onComplete }: FileUploadProps) {
     for (const intern of activeInterns) {
       const firstSim = calculateSimilarity(firstName, intern.firstName);
       const lastSim = calculateSimilarity(lastName, intern.lastName);
-      const overallSim = (firstSim * 0.4) + (lastSim * 0.6);
+      const overallSim = isNearExactNameMatch(firstName, lastName, intern)
+        ? 1
+        : (firstSim * 0.4) + (lastSim * 0.6);
       
       // Debug: Log each comparison
       if (overallSim >= 0.6 || showAll) {
