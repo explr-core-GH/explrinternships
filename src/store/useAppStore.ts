@@ -107,6 +107,7 @@ interface AppState {
   loadSyncConfig: () => Promise<void>;
   uploadExcelInterns: (interns: Intern[]) => Promise<void>;
   updateIntern: (id: string, updates: Partial<Record<string, any>>) => Promise<void>;
+  addIntern: (data: { firstName: string; lastName: string; status?: InternStatus }) => Promise<Intern | null>;
   updateWorksite: (id: string, updates: Partial<Record<string, any>>) => Promise<void>;
   refreshWorksiteCounts: () => Promise<void>;
   undoLastUpload: () => Promise<boolean>;
