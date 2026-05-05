@@ -1,6 +1,6 @@
 import { useState, useMemo, useCallback } from 'react';
 import { isEligibleForPreApprenticeship } from '@/lib/preApprenticeship';
-import { Search, Copy, Download, CheckSquare, Square, Mail, List, School, Award, HeartPulse, Hammer, Microscope, Leaf, CloudSun, FlaskConical, Wrench, GraduationCap, Gamepad2, Music, Palette, Briefcase, Scale, Dumbbell, UtensilsCrossed } from 'lucide-react';
+import { Search, Copy, Download, CheckSquare, Square, Mail, List, School, Award, HeartPulse, Hammer, Microscope, Leaf, CloudSun, FlaskConical, Wrench, GraduationCap, Gamepad2, Music, Palette, Briefcase, Scale, Dumbbell, UtensilsCrossed, Newspaper, Bike, BadgeCheck } from 'lucide-react';
 import { useAppStore } from '@/store/useAppStore';
 import { useAutoLoadData } from '@/hooks/useAutoLoadData';
 import InternCard from '@/components/InternCard';
@@ -47,6 +47,9 @@ export default function RosterPage() {
     magnetManufacturing: <Wrench className="h-3.5 w-3.5" />,
     educationInternship: <GraduationCap className="h-3.5 w-3.5" />,
     videoGames: <Gamepad2 className="h-3.5 w-3.5" />,
+    journalism: <Newspaper className="h-3.5 w-3.5" />,
+    bikeProgram: <Bike className="h-3.5 w-3.5" />,
+    itCertification: <BadgeCheck className="h-3.5 w-3.5" />,
     music: <Music className="h-3.5 w-3.5" />,
     art: <Palette className="h-3.5 w-3.5" />,
     business: <Briefcase className="h-3.5 w-3.5" />,
@@ -65,6 +68,9 @@ export default function RosterPage() {
     magnetManufacturing: ['magnet', 'manufacturing', 'machining', 'welding', 'fabricat', 'engineering', 'engineer', 'mechanical', 'electrical', 'robotics', 'iers', 'csu', 'cleveland state'],
     educationInternship: ['education', 'teaching', 'stem teaching', 'tutoring', 'mentor', 'camp counselor', 'counselor'],
     videoGames: ['video game', 'game design', 'app design', 'web design', 'website', 'coding', 'programming', 'software', 'animation', 'graphic design', 'ui design', 'ux design'],
+    journalism: ['journalism', 'journalist', 'news', 'reporter', 'writing', 'media', 'broadcast'],
+    bikeProgram: ['bike', 'bicycle', 'cycling', 'outdoor'],
+    itCertification: ['it certification', 'industry certification', 'certification', 'comptia', 'cisco'],
     music: ['music', 'musician', 'band', 'instrument', 'singing', 'song', 'audio', 'sound engineer', 'dj', 'producer', 'rap', 'hip hop'],
     art: ['art', 'drawing', 'painting', 'sculpture', 'photography', 'film', 'creative', 'fashion', 'theater', 'theatre', 'drama', 'visual art'],
     business: ['business', 'entrepreneur', 'marketing', 'finance', 'accounting', 'economics', 'management', 'real estate', 'banking'],
