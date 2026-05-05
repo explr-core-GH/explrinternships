@@ -200,6 +200,9 @@ export type InterestField =
   | 'educationInternship'
   | 'healthcare'
   | 'videoGames'
+  | 'journalism'
+  | 'bikeProgram'
+  | 'itCertification'
   | 'music'
   | 'art'
   | 'business'
@@ -211,6 +214,7 @@ export type InterestField =
 export const INTERN_INTEREST_FIELDS: Set<string> = new Set([
   'constructionMgmt', 'biomedical', 'envJustice', 'envClimate', 'envFieldScience',
   'magnetManufacturing', 'educationInternship', 'healthcare', 'videoGames',
+  'journalism', 'bikeProgram', 'itCertification',
 ]);
 
 export const INTEREST_LABELS: Record<InterestField, string> = {
@@ -223,6 +227,9 @@ export const INTEREST_LABELS: Record<InterestField, string> = {
   envFieldScience: 'Field Science & Data Analytics',
   educationInternship: 'Education / STEM Teaching',
   videoGames: 'Video Game / App Design',
+  journalism: 'Journalism',
+  bikeProgram: 'Bike Program',
+  itCertification: 'IT Certification',
   music: 'Music',
   art: 'Art & Creative',
   business: 'Business',
