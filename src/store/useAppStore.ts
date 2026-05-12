@@ -321,9 +321,21 @@ export const useAppStore = create<AppState>()((set, get) => ({
     (data || []).forEach((r: any) => {
       counts[r.worksite_id] = (counts[r.worksite_id] || 0) + 1;
     });
-    set(s => ({
-      worksites: s.worksites.map(w => ({ ...w, filled: counts[w.id] || 0 })),
-    }));
+    const worksites = get().worksites;
+    set({
+      worksites: worksites.map(w => ({ ...w, filled: counts[w.id] || 0 })),
+    });
+    // Persist new counts to DB so they survive a reload.
+    await Promise.all(
+      worksites
+        .filter(w => (w.filled || 0) !== (counts[w.id] || 0))
+        .map(w =>
+          supabase
+            .from('worksites')
+            .update({ filled: counts[w.id] || 0 } as any)
+            .eq('id', w.id),
+        ),
+    );
   },
 
   updateIntern: async (id, updates) => {
