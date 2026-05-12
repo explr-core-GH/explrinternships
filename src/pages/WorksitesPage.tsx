@@ -22,6 +22,7 @@ import { Progress } from '@/components/ui/progress';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger,
 } from '@/components/ui/dialog';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { toast } from 'sonner';
 import { exportWorksiteCSV } from '@/lib/exportData';
 import { cn } from '@/lib/utils';
@@ -237,19 +238,19 @@ function EditWorksiteDialog({ ws, onSave }: { ws: Worksite; onSave: (id: string,
 
 export default function WorksitesPage() {
   useAutoLoadData();
-  const { worksites, interns, assignments, addWorksite, removeWorksite, updateWorksite, loading } = useAppStore();
+  const { worksites, interns, assignments, addWorksite, removeWorksite, updateWorksite, unassignIntern, assignIntern, updateIntern, loading } = useAppStore();
   const [matchTarget, setMatchTarget] = useState<Worksite | null>(null);
 
   const totalCapacity = worksites.reduce((sum, w) => sum + w.capacity, 0);
   const totalFilled = worksites.reduce((sum, w) => sum + w.filled, 0);
 
   const internMap = Object.fromEntries(interns.map(i => [i.id, i]));
-  const wsInterns: Record<string, string[]> = {};
+  const wsInterns: Record<string, { id: string; name: string }[]> = {};
   assignments.forEach(a => {
     const intern = internMap[a.internId];
     if (intern) {
       if (!wsInterns[a.worksiteId]) wsInterns[a.worksiteId] = [];
-      wsInterns[a.worksiteId].push(`${intern.firstName} ${intern.lastName}`);
+      wsInterns[a.worksiteId].push({ id: intern.id, name: `${intern.firstName} ${intern.lastName}` });
     }
   });
 
@@ -328,8 +329,60 @@ export default function WorksitesPage() {
                 <div className="mt-2">
                   <p className="text-[10px] text-muted-foreground uppercase font-semibold mb-1">Assigned</p>
                   <div className="flex flex-wrap gap-1">
-                    {assigned.map(name => (
-                      <span key={name} className="text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded">{name}</span>
+                    {assigned.map(a => (
+                      <Popover key={a.id}>
+                        <PopoverTrigger asChild>
+                          <button
+                            type="button"
+                            className="text-[10px] bg-primary/10 text-primary hover:bg-primary/20 transition-colors px-1.5 py-0.5 rounded cursor-pointer"
+                          >
+                            {a.name}
+                          </button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-60 p-2" align="start">
+                          <p className="text-xs font-semibold mb-2 px-1">{a.name}</p>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="w-full justify-start h-8 text-xs"
+                            onClick={async () => {
+                              await unassignIntern(a.id);
+                              await updateIntern(a.id, { status: 'ready_to_place' });
+                              toast.success(`Unassigned ${a.name}`);
+                            }}
+                          >
+                            <X className="h-3 w-3" /> Unassign
+                          </Button>
+                          <div className="border-t my-1" />
+                          <p className="text-[10px] text-muted-foreground px-1 mb-1">Move to:</p>
+                          <div className="max-h-48 overflow-y-auto">
+                            {worksites
+                              .filter(w => w.id !== ws.id)
+                              .map(w => {
+                                const isFull = (w.filled || 0) >= w.capacity;
+                                return (
+                                  <Button
+                                    key={w.id}
+                                    size="sm"
+                                    variant="ghost"
+                                    disabled={isFull}
+                                    className="w-full justify-start h-8 text-xs"
+                                    onClick={async () => {
+                                      await assignIntern(a.id, w.id);
+                                      await updateIntern(a.id, { status: 'assigned' });
+                                      toast.success(`Moved ${a.name} to ${w.name}`);
+                                    }}
+                                  >
+                                    <span className="truncate flex-1 text-left">{w.name}</span>
+                                    <span className="text-[10px] text-muted-foreground ml-1">
+                                      {w.filled}/{w.capacity}
+                                    </span>
+                                  </Button>
+                                );
+                              })}
+                          </div>
+                        </PopoverContent>
+                      </Popover>
                     ))}
                   </div>
                 </div>
