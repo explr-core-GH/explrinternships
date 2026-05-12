@@ -310,14 +310,13 @@ export default function InterestUpload() {
         <>
           <div className="border rounded-lg bg-card">
             <ScrollArea className="h-[360px] w-full">
-              <div className="min-w-[640px]">
               <Table>
                 <TableHeader>
                   <TableRow>
                     <TableHead>Uploaded Name</TableHead>
-                    <TableHead>Best Roster Match</TableHead>
-                    <TableHead>Score</TableHead>
-                    <TableHead>Action</TableHead>
+                    <TableHead>Best Match</TableHead>
+                    <TableHead className="w-12">%</TableHead>
+                    <TableHead className="w-[120px]">Action</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -333,16 +332,15 @@ export default function InterestUpload() {
                         }`}>{Math.round(r.similarity * 100)}%</span>
                       </TableCell>
                       <TableCell>
-                        <div className="flex gap-1.5">
-                          <Button size="sm" variant={r.approved === true ? 'default' : 'outline'} onClick={() => handleApprove(idx)} disabled={r.addedAsNew || !r.internId} className="h-7 px-2">
+                        <div className="flex gap-1">
+                          <Button size="sm" title="Approve match" variant={r.approved === true ? 'default' : 'outline'} onClick={() => handleApprove(idx)} disabled={r.addedAsNew || !r.internId} className="h-7 w-7 p-0">
                             <Check className="h-3 w-3" />
                           </Button>
-                          <Button size="sm" variant={r.approved === false ? 'destructive' : 'outline'} onClick={() => handleReject(idx)} disabled={r.addedAsNew} className="h-7 px-2">
+                          <Button size="sm" title="Reject" variant={r.approved === false ? 'destructive' : 'outline'} onClick={() => handleReject(idx)} disabled={r.addedAsNew} className="h-7 w-7 p-0">
                             <X className="h-3 w-3" />
                           </Button>
-                          <Button size="sm" variant={r.addedAsNew ? 'secondary' : 'outline'} onClick={() => handleAddNew(idx)} disabled={r.addedAsNew} className="h-7 px-2 gap-1" title="Add as new student with these interests">
+                          <Button size="sm" title={r.addedAsNew ? 'Added as new student' : 'Add as new student with these interests'} variant={r.addedAsNew ? 'secondary' : 'outline'} onClick={() => handleAddNew(idx)} disabled={r.addedAsNew} className="h-7 w-7 p-0">
                             <UserPlus className="h-3 w-3" />
-                            {r.addedAsNew ? 'Added' : 'Add new'}
                           </Button>
                         </div>
                       </TableCell>
@@ -350,8 +348,6 @@ export default function InterestUpload() {
                   ))}
                 </TableBody>
               </Table>
-              </div>
-              <ScrollBar orientation="horizontal" />
             </ScrollArea>
           </div>
 
