@@ -2,7 +2,7 @@ import { useState, useCallback } from 'react';
 import { Upload, Heart, Check, X, UserPlus, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { useAppStore } from '@/store/useAppStore';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
