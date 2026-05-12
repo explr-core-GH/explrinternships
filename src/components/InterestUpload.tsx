@@ -309,7 +309,8 @@ export default function InterestUpload() {
       {reviewRows.length > 0 && (
         <>
           <div className="border rounded-lg bg-card">
-            <ScrollArea className="h-[360px]">
+            <ScrollArea className="h-[360px] w-full">
+              <div className="min-w-[640px]">
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -349,6 +350,8 @@ export default function InterestUpload() {
                   ))}
                 </TableBody>
               </Table>
+              </div>
+              <ScrollBar orientation="horizontal" />
             </ScrollArea>
           </div>
 
