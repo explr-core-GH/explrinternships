@@ -243,6 +243,8 @@ export default function WorksitesPage() {
 
   const totalCapacity = worksites.reduce((sum, w) => sum + w.capacity, 0);
   const totalFilled = worksites.reduce((sum, w) => sum + w.filled, 0);
+  const readyToPlaceCount = interns.filter(i => i.status === 'ready_to_place').length;
+  const placedCount = interns.filter(i => i.status === 'assigned' || i.status === 'in_progress_you').length;
 
   const internMap = Object.fromEntries(interns.map(i => [i.id, i]));
   const wsInterns: Record<string, { id: string; name: string }[]> = {};
@@ -270,6 +272,19 @@ export default function WorksitesPage() {
             <Download className="h-3.5 w-3.5" /> Export
           </Button>
           <AddWorksiteDialog onAdd={addWorksite} />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-3 mb-5">
+        <div className="rounded-lg border bg-card p-4 shadow-card">
+          <p className="text-[11px] uppercase tracking-wide text-muted-foreground font-semibold">Placed</p>
+          <p className="text-4xl font-bold text-primary mt-1">{placedCount}</p>
+          <p className="text-[11px] text-muted-foreground mt-1">students assigned to a worksite</p>
+        </div>
+        <div className="rounded-lg border bg-card p-4 shadow-card">
+          <p className="text-[11px] uppercase tracking-wide text-muted-foreground font-semibold">Ready to Place</p>
+          <p className="text-4xl font-bold text-amber-600 mt-1">{readyToPlaceCount}</p>
+          <p className="text-[11px] text-muted-foreground mt-1">remaining to be placed</p>
         </div>
       </div>
 
