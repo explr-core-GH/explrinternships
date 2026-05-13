@@ -28,8 +28,8 @@ export interface InternMatch {
 const IT_INTEREST_TO_CATEGORY: Record<string, string[]> = {
   'working at an it help desk': ['Technology / IT'],
   'data science': ['Technology / IT', 'Research'],
-  'building prosthetic hands': ['Engineering', 'Healthcare'],
-  'building prostethic hands': ['Engineering', 'Healthcare'], // legacy typo from existing data
+  'building prosthetic hands': ['Engineering'],
+  'building prostethic hands': ['Engineering'], // legacy typo from existing data
   'quantum computing': ['Technology / IT', 'Research'],
   'artificial intelligence': ['Technology / IT', 'Research'],
   'building a website': ['Technology / IT', 'Design / Creative'],
