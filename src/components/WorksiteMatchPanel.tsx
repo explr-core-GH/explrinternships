@@ -42,7 +42,7 @@ export default function WorksiteMatchPanel({ worksite, open, onOpenChange }: Wor
   const { interns, assignments, assignIntern, updateIntern } = useAppStore();
 
   const [search, setSearch] = useState('');
-  const [gradeFilter, setGradeFilter] = useState<string>('all');
+  const [gradeFilter, setGradeFilter] = useState<string[]>([]);
   const [hideZero, setHideZero] = useState(true);
   const [excludeAssignedAnywhere, setExcludeAssignedAnywhere] = useState(true);
   const [ellOnly, setEllOnly] = useState(false);
@@ -68,7 +68,7 @@ export default function WorksiteMatchPanel({ worksite, open, onOpenChange }: Wor
       enforceCapacity: false, // we surface capacity separately, don't penalize ranking here
     });
     return list.filter(m => {
-      if (gradeFilter !== 'all' && m.intern.grade !== gradeFilter) return false;
+      if (gradeFilter.length > 0 && !gradeFilter.includes(m.intern.grade)) return false;
       if (ellOnly && !m.intern.isEll) return false;
       if (cmsdOnly && !m.intern.isCmsd) return false;
       if (statusFilter.size > 0 && !statusFilter.has(m.intern.status)) return false;
