@@ -244,8 +244,8 @@ export default function WorksitesPage() {
 
   const totalCapacity = worksites.reduce((sum, w) => sum + w.capacity, 0);
   const totalFilled = worksites.reduce((sum, w) => sum + w.filled, 0);
+  const placedCount = new Set(assignments.map(a => a.internId)).size;
   const readyToPlaceCount = interns.filter(i => i.status === 'ready_to_place').length;
-  const placedCount = interns.filter(i => i.status === 'assigned' || i.status === 'in_progress_you').length;
 
   const internMap = Object.fromEntries(interns.map(i => [i.id, i]));
   const wsInterns: Record<string, { id: string; name: string }[]> = {};
