@@ -42,7 +42,7 @@ export default function WorksiteMatchPanel({ worksite, open, onOpenChange }: Wor
   const { interns, assignments, assignIntern, updateIntern } = useAppStore();
 
   const [search, setSearch] = useState('');
-  const [gradeFilter, setGradeFilter] = useState<string>('all');
+  const [gradeFilter, setGradeFilter] = useState<string[]>([]);
   const [hideZero, setHideZero] = useState(true);
   const [excludeAssignedAnywhere, setExcludeAssignedAnywhere] = useState(true);
   const [ellOnly, setEllOnly] = useState(false);
@@ -68,7 +68,7 @@ export default function WorksiteMatchPanel({ worksite, open, onOpenChange }: Wor
       enforceCapacity: false, // we surface capacity separately, don't penalize ranking here
     });
     return list.filter(m => {
-      if (gradeFilter !== 'all' && m.intern.grade !== gradeFilter) return false;
+      if (gradeFilter.length > 0 && !gradeFilter.includes(m.intern.grade)) return false;
       if (ellOnly && !m.intern.isEll) return false;
       if (cmsdOnly && !m.intern.isCmsd) return false;
       if (statusFilter.size > 0 && !statusFilter.has(m.intern.status)) return false;
@@ -178,14 +178,22 @@ export default function WorksiteMatchPanel({ worksite, open, onOpenChange }: Wor
                 className="pl-8 h-8 text-xs"
               />
             </div>
-            <select
-              value={gradeFilter}
-              onChange={e => setGradeFilter(e.target.value)}
-              className="h-8 rounded-md border border-input bg-background px-2 text-xs"
-            >
-              <option value="all">All grades</option>
-              {grades.map(g => <option key={g} value={g}>Grade {g}</option>)}
-            </select>
+            <div className="flex gap-1 flex-wrap items-center">
+              <FilterPill active={gradeFilter.length === 0} onClick={() => setGradeFilter([])}>
+                All grades
+              </FilterPill>
+              {grades.map(g => (
+                <FilterPill
+                  key={g}
+                  active={gradeFilter.includes(g)}
+                  onClick={() => setGradeFilter(prev =>
+                    prev.includes(g) ? prev.filter(x => x !== g) : [...prev, g]
+                  )}
+                >
+                  Gr {g}
+                </FilterPill>
+              ))}
+            </div>
           </div>
           <div className="flex gap-1.5 flex-wrap">
             <FilterPill active={hideZero} onClick={() => setHideZero(v => !v)}>
