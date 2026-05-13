@@ -240,6 +240,7 @@ export default function WorksitesPage() {
   useAutoLoadData();
   const { worksites, interns, assignments, addWorksite, removeWorksite, updateWorksite, unassignIntern, assignIntern, updateIntern, loading } = useAppStore();
   const [matchTarget, setMatchTarget] = useState<Worksite | null>(null);
+  const [rosterTarget, setRosterTarget] = useState<Worksite | null>(null);
 
   const totalCapacity = worksites.reduce((sum, w) => sum + w.capacity, 0);
   const totalFilled = worksites.reduce((sum, w) => sum + w.filled, 0);
@@ -306,7 +307,13 @@ export default function WorksitesPage() {
                     <Building2 className="h-4 w-4 text-accent-foreground" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-sm text-card-foreground">{ws.name}</h3>
+                    <button
+                      type="button"
+                      onClick={() => setRosterTarget(ws)}
+                      className="font-semibold text-sm text-card-foreground hover:text-primary hover:underline text-left"
+                    >
+                      {ws.name}
+                    </button>
                     <div className="flex items-center gap-1 mt-0.5 flex-wrap">
                       <Badge variant="outline" className="text-[10px]">{ws.category}</Badge>
                       <span className={cn('text-[10px] px-2 py-0.5 rounded-full border', statusCfg.className)}>{statusCfg.label}</span>
@@ -455,6 +462,54 @@ export default function WorksitesPage() {
         open={matchTarget !== null}
         onOpenChange={(o) => { if (!o) setMatchTarget(null); }}
       />
+
+      <Dialog open={rosterTarget !== null} onOpenChange={(o) => { if (!o) setRosterTarget(null); }}>
+        <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Building2 className="h-4 w-4" />
+              {rosterTarget?.name} Roster
+            </DialogTitle>
+          </DialogHeader>
+          {rosterTarget && (() => {
+            const roster = assignments
+              .filter(a => a.worksiteId === rosterTarget.id)
+              .map(a => internMap[a.internId])
+              .filter(Boolean);
+            if (roster.length === 0) {
+              return <p className="text-sm text-muted-foreground py-6 text-center">No students assigned yet.</p>;
+            }
+            return (
+              <div className="space-y-2">
+                <p className="text-xs text-muted-foreground">
+                  {roster.length} of {rosterTarget.capacity} spots filled
+                </p>
+                <div className="divide-y divide-border border rounded-md">
+                  {roster.map((i, idx) => (
+                    <div key={i.id} className="p-3 flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium text-foreground">
+                          {idx + 1}. {i.firstName} {i.lastName}
+                        </p>
+                        <div className="text-[11px] text-muted-foreground mt-0.5 space-y-0.5">
+                          {i.school && <div>{i.school}{i.grade ? ` · Grade ${i.grade}` : ''}</div>}
+                          {(i.studentEmail || i.emailSubmission) && (
+                            <div className="truncate">{i.studentEmail || i.emailSubmission}</div>
+                          )}
+                          {i.phone && <div>{i.phone}</div>}
+                        </div>
+                      </div>
+                      <span className={cn('text-[10px] px-2 py-0.5 rounded-full border whitespace-nowrap', WORKSITE_STATUS_CONFIG['open'].className)}>
+                        {i.status}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            );
+          })()}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
