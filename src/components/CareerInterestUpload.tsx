@@ -74,23 +74,35 @@ function parseFile(data: ArrayBuffer): ParsedRow[] {
     const rows: any[][] = XLSX.utils.sheet_to_json(sheet, { header: 1 });
     let headerIdx = -1;
     const norm = (s: any) => String(s ?? '').toLowerCase().replace(/[^a-z0-9 ]+/g, ' ').replace(/\s+/g, ' ').trim();
-    const isCareerHeader = (c: string) =>
-      c.includes('career interest') || c.includes('career interests') ||
-      c === 'interests' || c === 'interest' ||
-      c.includes('interested in') || c.includes('areas of interest') ||
-      c.includes('career') && c.includes('interest');
-    const isNameHeader = (c: string) => c === 'name' || c === 'student name' || c === 'full name' || c === 'student';
+    const compact = (s: any) => norm(s).replace(/\s+/g, '');
+    const isCareerHeader = (c: string) => {
+      const cc = compact(c);
+      return c.includes('career interest') || c.includes('career interests') ||
+        c === 'interests' || c === 'interest' ||
+        c.includes('interested in') || c.includes('areas of interest') ||
+        (c.includes('career') && c.includes('interest')) ||
+        cc === 'careerinterest' || cc === 'careerinterests' ||
+        cc === 'interest' || cc === 'interests' ||
+        cc === 'interestedin' || cc === 'areasofinterest';
+    };
+    const isNameHeader = (c: string) => {
+      const cc = compact(c);
+      return c === 'name' || c === 'student name' || c === 'full name' || c === 'student' ||
+        cc === 'name' || cc === 'studentname' || cc === 'fullname' || cc === 'student';
+    };
+    const isFirstNameHeader = (c: string) => c.includes('first name') || compact(c).includes('firstname');
+    const isLastNameHeader = (c: string) => c.includes('last name') || compact(c).includes('lastname');
     for (let i = 0; i < Math.min(rows.length, 30); i++) {
       const cells = (rows[i] || []).map(norm);
-      const hasFirstLast = cells.some(c => c.includes('first name')) && cells.some(c => c.includes('last name'));
+      const hasFirstLast = cells.some(isFirstNameHeader) && cells.some(isLastNameHeader);
       const hasName = cells.some(isNameHeader);
       const hasCareer = cells.some(isCareerHeader);
       if (hasCareer && (hasFirstLast || hasName)) { headerIdx = i; break; }
     }
     if (headerIdx < 0) continue;
     const headersN = (rows[headerIdx] || []).map(norm);
-    const firstIdx = headersN.findIndex(h => h.includes('first name'));
-    const lastIdx  = headersN.findIndex(h => h.includes('last name'));
+    const firstIdx = headersN.findIndex(isFirstNameHeader);
+    const lastIdx  = headersN.findIndex(isLastNameHeader);
     const nameIdx  = headersN.findIndex(isNameHeader);
     const careerIdx = headersN.findIndex(isCareerHeader);
     if (careerIdx < 0 || (firstIdx < 0 && nameIdx < 0)) continue;
