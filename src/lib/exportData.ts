@@ -387,6 +387,42 @@ function internToRow(
   return row;
 }
 
+export function exportWorksiteRosterExcel(
+  worksites: Worksite[],
+  assignments: Assignment[],
+  interns: Intern[]
+) {
+  const internMap = Object.fromEntries(interns.map(i => [i.id, i]));
+  const wsMap = Object.fromEntries(worksites.map(w => [w.id, w]));
+
+  // Build rows: one per assignment with worksite + student details
+  const rows = assignments
+    .map(a => {
+      const ws = wsMap[a.worksiteId];
+      const intern = internMap[a.internId];
+      if (!ws || !intern) return null;
+      return {
+        'Worksite Name': ws.name,
+        'Worksite Category': ws.category,
+        'Student First Name': intern.firstName,
+        'Student Last Name': intern.lastName,
+        'DOB': intern.dob || '',
+        'Email': intern.studentEmail || intern.emailSubmission || '',
+      };
+    })
+    .filter(Boolean) as Record<string, string>[];
+
+  if (rows.length === 0) {
+    return false;
+  }
+
+  const wb = XLSX.utils.book_new();
+  const ws = XLSX.utils.json_to_sheet(rows);
+  XLSX.utils.book_append_sheet(wb, ws, 'Worksite Rosters');
+  XLSX.writeFile(wb, `worksite-rosters-${new Date().toISOString().slice(0, 10)}.xlsx`);
+  return true;
+}
+
 export function exportFullExcelByStatus(
   interns: Intern[],
   worksites: Worksite[],

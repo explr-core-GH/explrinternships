@@ -24,7 +24,7 @@ import {
 } from '@/components/ui/dialog';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { toast } from 'sonner';
-import { exportWorksiteCSV } from '@/lib/exportData';
+import { exportWorksiteCSV, exportWorksiteRosterExcel } from '@/lib/exportData';
 import { cn } from '@/lib/utils';
 import WorksiteMatchPanel from '@/components/WorksiteMatchPanel';
 import { useAutoLoadData } from '@/hooks/useAutoLoadData';
@@ -277,6 +277,13 @@ export default function WorksitesPage() {
         <div className="flex gap-2">
           <Button variant="outline" size="sm" className="gap-1.5 text-xs" onClick={() => { exportWorksiteCSV(worksites, assignments, interns); toast.success('Downloaded'); }}>
             <Download className="h-3.5 w-3.5" /> Export
+          </Button>
+          <Button variant="outline" size="sm" className="gap-1.5 text-xs" onClick={() => {
+            const ok = exportWorksiteRosterExcel(worksites, assignments, interns);
+            if (ok) toast.success('Roster spreadsheet downloaded');
+            else toast.error('No assignments to export');
+          }}>
+            <Download className="h-3.5 w-3.5" /> Roster Export
           </Button>
           <AddWorksiteDialog onAdd={addWorksite} />
         </div>
