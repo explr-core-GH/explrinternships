@@ -278,6 +278,13 @@ export default function WorksitesPage() {
           <Button variant="outline" size="sm" className="gap-1.5 text-xs" onClick={() => { exportWorksiteCSV(worksites, assignments, interns); toast.success('Downloaded'); }}>
             <Download className="h-3.5 w-3.5" /> Export
           </Button>
+          <Button variant="outline" size="sm" className="gap-1.5 text-xs" onClick={() => {
+            const ok = exportWorksiteRosterExcel(worksites, assignments, interns);
+            if (ok) toast.success('Roster spreadsheet downloaded');
+            else toast.error('No assignments to export');
+          }}>
+            <Download className="h-3.5 w-3.5" /> Roster Export
+          </Button>
           <AddWorksiteDialog onAdd={addWorksite} />
         </div>
       </div>
