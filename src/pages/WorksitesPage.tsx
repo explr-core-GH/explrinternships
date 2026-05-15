@@ -244,7 +244,11 @@ export default function WorksitesPage() {
 
   const totalCapacity = worksites.reduce((sum, w) => sum + w.capacity, 0);
   const totalFilled = worksites.reduce((sum, w) => sum + w.filled, 0);
-  const placedCount = new Set(assignments.map(a => a.internId)).size;
+  // "Placed" = students from the ready-to-place cohort who now have a worksite.
+  // Once placed, their status moves to 'assigned' / 'in_progress_you' / 'intake_complete',
+  // so they leave 'ready_to_place'. Together these add back up to the full cohort.
+  const placedStatuses = new Set(['assigned', 'in_progress_you', 'intake_complete']);
+  const placedCount = interns.filter(i => placedStatuses.has(i.status)).length;
   const readyToPlaceCount = interns.filter(i => i.status === 'ready_to_place').length;
 
   const internMap = Object.fromEntries(interns.map(i => [i.id, i]));
