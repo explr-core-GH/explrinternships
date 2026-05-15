@@ -53,30 +53,46 @@ export function exportWorksiteCSV(
   assignments: Assignment[],
   interns: Intern[]
 ) {
-  const counts: Record<string, number> = {};
-  assignments.forEach(a => { counts[a.worksiteId] = (counts[a.worksiteId] || 0) + 1; });
-
   const internMap = Object.fromEntries(interns.map(i => [i.id, i]));
-  const wsAssignments: Record<string, string[]> = {};
+
+  const wsAssignments: Record<string, Intern[]> = {};
   assignments.forEach(a => {
     const intern = internMap[a.internId];
     if (intern) {
       if (!wsAssignments[a.worksiteId]) wsAssignments[a.worksiteId] = [];
-      wsAssignments[a.worksiteId].push(`${intern.firstName} ${intern.lastName}`);
+      wsAssignments[a.worksiteId].push(intern);
     }
   });
 
-  const headers = ['Name', 'Category', 'Location', 'Capacity', 'Filled', 'Available', 'Assigned Interns'];
-  const rows = worksites.map(w => {
-    const filled = counts[w.id] || 0;
-    return [w.name, w.category, w.location, String(w.capacity), String(filled), String(w.capacity - filled), (wsAssignments[w.id] || []).join('; ')];
-  });
+  const headers = [
+    'Worksite Name', 'Category', 'Location', 'Capacity', 'Filled', 'Available',
+    'Student First Name', 'Student Last Name', 'DOB', 'Email',
+  ];
+
+  // One row per assigned student (easier to read than packed cells)
+  const rows: string[][] = [];
+  worksites
+    .slice()
+    .sort((a, b) => a.name.localeCompare(b.name))
+    .forEach(w => {
+      const assigned = (wsAssignments[w.id] || []).slice().sort((a, b) => a.lastName.localeCompare(b.lastName));
+      const filled = assigned.length;
+      const base = [w.name, w.category, w.location, String(w.capacity), String(filled), String(w.capacity - filled)];
+      if (assigned.length === 0) {
+        rows.push([...base, '', '', '', '']);
+      } else {
+        assigned.forEach(i => {
+          rows.push([...base, i.firstName, i.lastName, i.dob || '', i.studentEmail || i.emailSubmission || '']);
+        });
+      }
+    });
 
   const csvContent = [headers, ...rows]
     .map(row => row.map(cell => `"${(cell || '').replace(/"/g, '""')}"`).join(','))
     .join('\n');
 
-  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  // UTF-8 BOM so Excel renders accented characters correctly
+  const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
   link.href = url;
