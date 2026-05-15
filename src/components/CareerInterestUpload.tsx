@@ -162,10 +162,10 @@ export default function CareerInterestUpload() {
       const review: MatchRow[] = [];
       for (const row of rows) {
         const best = findBest(row, interns);
-        if (best && best.score >= 0.95) {
+        if (best && best.score >= 0.85) {
           await applyToIntern(best.id, row);
           auto++;
-        } else if (best) {
+        } else if (best && best.score >= 0.3) {
           review.push({ parsed: row, internId: best.id, internName: best.name, similarity: best.score });
         } else {
           review.push({ parsed: row, internId: '', internName: 'No roster match', similarity: 0 });
