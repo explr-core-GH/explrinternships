@@ -74,7 +74,8 @@ export function exportWorksiteCSV(
   worksites
     .slice()
     .sort((a, b) => a.name.localeCompare(b.name))
-    .forEach(w => {
+    .forEach((w, idx) => {
+      if (idx > 0) rows.push([]); // blank separator row between worksites
       const assigned = (wsAssignments[w.id] || []).slice().sort((a, b) => a.lastName.localeCompare(b.lastName));
       const filled = assigned.length;
       const base = [w.name, w.category, w.location, String(w.capacity), String(filled), String(w.capacity - filled)];
@@ -409,31 +410,36 @@ export function exportWorksiteRosterExcel(
   interns: Intern[]
 ) {
   const internMap = Object.fromEntries(interns.map(i => [i.id, i]));
-  const wsMap = Object.fromEntries(worksites.map(w => [w.id, w]));
 
-  // Build rows: one per assignment with worksite + student details
-  const rows = assignments
-    .map(a => {
-      const ws = wsMap[a.worksiteId];
-      const intern = internMap[a.internId];
-      if (!ws || !intern) return null;
-      return {
-        'Worksite Name': ws.name,
-        'Worksite Category': ws.category,
-        'Student First Name': intern.firstName,
-        'Student Last Name': intern.lastName,
-        'DOB': intern.dob || '',
-        'Email': intern.studentEmail || intern.emailSubmission || '',
-      };
-    })
-    .filter(Boolean) as Record<string, string>[];
+  const wsAssignments: Record<string, Intern[]> = {};
+  assignments.forEach(a => {
+    const intern = internMap[a.internId];
+    if (intern) {
+      if (!wsAssignments[a.worksiteId]) wsAssignments[a.worksiteId] = [];
+      wsAssignments[a.worksiteId].push(intern);
+    }
+  });
 
-  if (rows.length === 0) {
-    return false;
-  }
+  const headers = ['Worksite Name', 'Worksite Category', 'Student First Name', 'Student Last Name', 'DOB', 'Email'];
+  const aoa: (string | number)[][] = [headers];
+
+  const sortedWs = worksites.slice().sort((a, b) => a.name.localeCompare(b.name));
+  let any = false;
+  sortedWs.forEach((w, idx) => {
+    const assigned = (wsAssignments[w.id] || []).slice().sort((a, b) => a.lastName.localeCompare(b.lastName));
+    if (assigned.length === 0) return;
+    if (any) aoa.push([]); // blank separator row
+    any = true;
+    assigned.forEach(i => {
+      aoa.push([w.name, w.category, i.firstName, i.lastName, i.dob || '', i.studentEmail || i.emailSubmission || '']);
+    });
+  });
+
+  if (!any) return false;
 
   const wb = XLSX.utils.book_new();
-  const ws = XLSX.utils.json_to_sheet(rows);
+  const ws = XLSX.utils.aoa_to_sheet(aoa);
+  ws['!cols'] = [{ wch: 28 }, { wch: 22 }, { wch: 18 }, { wch: 18 }, { wch: 12 }, { wch: 30 }];
   XLSX.utils.book_append_sheet(wb, ws, 'Worksite Rosters');
   XLSX.writeFile(wb, `worksite-rosters-${new Date().toISOString().slice(0, 10)}.xlsx`);
   return true;
