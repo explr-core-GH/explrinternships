@@ -1,5 +1,5 @@
 import { useMemo, useState, useCallback } from 'react';
-import { Users, Sparkles, CheckSquare, Square, Loader2, AlertTriangle, X, Mail, Phone, School as SchoolIcon, GraduationCap, Filter } from 'lucide-react';
+import { Users, Sparkles, CheckSquare, Square, Loader2, AlertTriangle, X, Mail, Phone, School as SchoolIcon, GraduationCap, Filter, ChevronDown, ChevronRight } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -50,6 +50,7 @@ export default function WorksiteMatchPanel({ worksite, open, onOpenChange }: Wor
   const [autoSetStatus, setAutoSetStatus] = useState(true);
   const [statusFilter, setStatusFilter] = useState<Set<string>>(new Set());
   const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [expanded, setExpanded] = useState<Set<string>>(new Set());
   const [busy, setBusy] = useState(false);
 
   const grades = useMemo(() => {
@@ -87,6 +88,14 @@ export default function WorksiteMatchPanel({ worksite, open, onOpenChange }: Wor
 
   const toggleSelect = useCallback((id: string) => {
     setSelected(prev => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  }, []);
+
+  const toggleExpand = useCallback((id: string) => {
+    setExpanded(prev => {
       const next = new Set(prev);
       next.has(id) ? next.delete(id) : next.add(id);
       return next;
@@ -298,16 +307,18 @@ export default function WorksiteMatchPanel({ worksite, open, onOpenChange }: Wor
           <ul className="space-y-1.5">
             {ranked.map(m => {
               const checked = selected.has(m.intern.id);
+              const isExpanded = expanded.has(m.intern.id);
               const statusCfg = STATUS_CONFIG[m.intern.status];
               return (
                 <li
                   key={m.intern.id}
                   className={cn(
-                    'rounded-md border bg-card p-2.5 flex items-start gap-2.5 transition-colors',
+                    'rounded-md border bg-card transition-colors',
                     checked ? 'border-primary bg-primary/5' : 'hover:bg-muted/40',
                     m.alreadyAssignedElsewhere && 'opacity-70',
                   )}
                 >
+                  <div className="p-2.5 flex items-start gap-2.5">
                   <button
                     onClick={() => toggleSelect(m.intern.id)}
                     className="mt-0.5 text-muted-foreground hover:text-primary"
@@ -315,8 +326,16 @@ export default function WorksiteMatchPanel({ worksite, open, onOpenChange }: Wor
                   >
                     {checked ? <CheckSquare className="h-4 w-4 text-primary" /> : <Square className="h-4 w-4" />}
                   </button>
-                  <div className="flex-1 min-w-0">
+                  <button
+                    onClick={() => toggleExpand(m.intern.id)}
+                    className="flex-1 min-w-0 text-left"
+                    aria-expanded={isExpanded}
+                    aria-label="Toggle details"
+                  >
                     <div className="flex items-center gap-2 flex-wrap">
+                      {isExpanded
+                        ? <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
+                        : <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />}
                       <span className="font-medium text-sm text-foreground">
                         {m.intern.firstName} {m.intern.lastName}
                       </span>
@@ -357,7 +376,7 @@ export default function WorksiteMatchPanel({ worksite, open, onOpenChange }: Wor
                         ))}
                       </div>
                     )}
-                  </div>
+                  </button>
                   <Button
                     size="sm"
                     variant="outline"
@@ -367,6 +386,8 @@ export default function WorksiteMatchPanel({ worksite, open, onOpenChange }: Wor
                   >
                     Assign
                   </Button>
+                  </div>
+                  {isExpanded && <InternDetails intern={m.intern} />}
                 </li>
               );
             })}
@@ -390,5 +411,120 @@ function FilterPill({ active, onClick, children }: { active: boolean; onClick: (
     >
       {children}
     </button>
+  );
+}
+
+function InternDetails({ intern }: { intern: Intern }) {
+  const interestFields: { label: string; value: string | undefined }[] = [
+    { label: 'Cleveland Clinic', value: intern.clevelandClinic },
+    { label: 'Construction Mgmt', value: intern.constructionMgmt },
+    { label: 'Biomedical / 3D Printing', value: intern.biomedical },
+    { label: 'Env Justice', value: intern.envJustice },
+    { label: 'Env Climate', value: intern.envClimate },
+    { label: 'Env Field Science', value: intern.envFieldScience },
+    { label: 'IERS Center', value: intern.iersCenter },
+    { label: 'Magnet Manufacturing', value: intern.magnetManufacturing },
+    { label: 'Education Internship', value: intern.educationInternship },
+    { label: 'Healthcare', value: intern.healthcare },
+    { label: 'Video Games', value: intern.videoGames },
+    { label: 'Journalism', value: intern.journalism },
+    { label: 'Bike Program', value: intern.bikeProgram },
+    { label: 'IT Certification', value: intern.itCertification },
+  ];
+  const colorFor = (v?: string) => {
+    const s = (v || '').toLowerCase();
+    if (s.startsWith('yes')) return 'text-emerald-600';
+    if (s.startsWith('maybe')) return 'text-amber-600';
+    if (s.startsWith('no')) return 'text-rose-600';
+    return 'text-muted-foreground';
+  };
+  const Field = ({ label, value }: { label: string; value?: string | boolean }) => (
+    value === undefined || value === null || value === '' ? null : (
+      <div className="flex flex-col">
+        <span className="text-[10px] uppercase tracking-wide text-muted-foreground">{label}</span>
+        <span className="text-xs text-foreground break-words">{String(value)}</span>
+      </div>
+    )
+  );
+  return (
+    <div className="border-t bg-muted/20 px-3 py-3 space-y-3">
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+        <Field label="Student Email" value={intern.studentEmail} />
+        <Field label="Submission Email" value={intern.emailSubmission} />
+        <Field label="Phone" value={intern.phone} />
+        <Field label="Parent Phone" value={intern.parentPhone} />
+        <Field label="Parent Email" value={intern.parentGuardianEmail} />
+        <Field label="Parent Phone (alt)" value={intern.parentGuardianPhone} />
+        <Field label="DOB" value={intern.dob} />
+        <Field label="Gender" value={intern.gender} />
+        <Field label="Race / Ethnicity" value={intern.raceEthnicity} />
+        <Field label="School" value={intern.school} />
+        <Field label="Other School" value={intern.otherSchool} />
+        <Field label="Grade" value={intern.grade} />
+        <Field label="ELL" value={intern.isEll ? 'Yes' : ''} />
+        <Field label="CMSD" value={intern.isCmsd ? 'Yes' : ''} />
+        <Field label="CS Course Taken" value={intern.csCourseTaken} />
+        <Field label="Intake Date" value={intern.intakeDate} />
+        <Field label="Intake Time" value={intern.intakeTime} />
+        <Field label="Intake Location" value={intern.intakeLocation} />
+        <Field label="Submitted" value={intern.timestamp} />
+      </div>
+
+      {(intern.programs?.length || intern.itInterests?.length) ? (
+        <div className="space-y-1.5">
+          {intern.programs?.length ? (
+            <div>
+              <div className="text-[10px] uppercase tracking-wide text-muted-foreground mb-1">Programs</div>
+              <div className="flex flex-wrap gap-1">
+                {intern.programs.map((p, i) => (
+                  <span key={i} className="text-[10px] px-1.5 py-0.5 rounded bg-card border">{p}</span>
+                ))}
+              </div>
+            </div>
+          ) : null}
+          {intern.itInterests?.length ? (
+            <div>
+              <div className="text-[10px] uppercase tracking-wide text-muted-foreground mb-1">IT Interests</div>
+              <div className="flex flex-wrap gap-1">
+                {intern.itInterests.map((p, i) => (
+                  <span key={i} className="text-[10px] px-1.5 py-0.5 rounded bg-card border">{p}</span>
+                ))}
+              </div>
+            </div>
+          ) : null}
+        </div>
+      ) : null}
+
+      <div>
+        <div className="text-[10px] uppercase tracking-wide text-muted-foreground mb-1">Interest Responses</div>
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-x-3 gap-y-1">
+          {interestFields.filter(f => f.value).map(f => (
+            <div key={f.label} className="flex items-center justify-between gap-2 text-xs">
+              <span className="text-muted-foreground truncate">{f.label}</span>
+              <span className={cn('font-medium', colorFor(f.value))}>{f.value}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {intern.specificInterests && (
+        <div>
+          <div className="text-[10px] uppercase tracking-wide text-muted-foreground mb-1">Specific Interests</div>
+          <p className="text-xs text-foreground whitespace-pre-wrap">{intern.specificInterests}</p>
+        </div>
+      )}
+      {intern.additionalQuestions && (
+        <div>
+          <div className="text-[10px] uppercase tracking-wide text-muted-foreground mb-1">Additional Questions</div>
+          <p className="text-xs text-foreground whitespace-pre-wrap">{intern.additionalQuestions}</p>
+        </div>
+      )}
+      {intern.adminNotes && (
+        <div>
+          <div className="text-[10px] uppercase tracking-wide text-muted-foreground mb-1">Admin Notes</div>
+          <p className="text-xs text-foreground whitespace-pre-wrap">{intern.adminNotes}</p>
+        </div>
+      )}
+    </div>
   );
 }
