@@ -74,7 +74,8 @@ export function exportWorksiteCSV(
   worksites
     .slice()
     .sort((a, b) => a.name.localeCompare(b.name))
-    .forEach(w => {
+    .forEach((w, idx) => {
+      if (idx > 0) rows.push([]); // blank separator row between worksites
       const assigned = (wsAssignments[w.id] || []).slice().sort((a, b) => a.lastName.localeCompare(b.lastName));
       const filled = assigned.length;
       const base = [w.name, w.category, w.location, String(w.capacity), String(filled), String(w.capacity - filled)];
