@@ -93,14 +93,14 @@ function parseFile(data: ArrayBuffer): ParsedRow[] {
     const isFirstNameHeader = (c: string) => c.includes('first name') || compact(c).includes('firstname');
     const isLastNameHeader = (c: string) => c.includes('last name') || compact(c).includes('lastname');
     for (let i = 0; i < Math.min(rows.length, 30); i++) {
-      const cells = (rows[i] || []).map(norm);
+      const cells = Array.from(rows[i] || [], norm);
       const hasFirstLast = cells.some(isFirstNameHeader) && cells.some(isLastNameHeader);
       const hasName = cells.some(isNameHeader);
       const hasCareer = cells.some(isCareerHeader);
       if (hasCareer && (hasFirstLast || hasName)) { headerIdx = i; break; }
     }
     if (headerIdx < 0) continue;
-    const headersN = (rows[headerIdx] || []).map(norm);
+    const headersN = Array.from(rows[headerIdx] || [], norm);
     const firstIdx = headersN.findIndex(isFirstNameHeader);
     const lastIdx  = headersN.findIndex(isLastNameHeader);
     const nameIdx  = headersN.findIndex(isNameHeader);
