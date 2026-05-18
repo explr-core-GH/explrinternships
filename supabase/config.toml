@@ -2,3 +2,6 @@ project_id = "sunzvutkerzqoqihoyoe"
 
 [functions.sync-google-sheet]
 verify_jwt = false
+
+[functions.worksites-roster-api]
+verify_jwt = false
