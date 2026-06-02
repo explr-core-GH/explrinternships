@@ -478,13 +478,6 @@ export function exportEmailReadyByWorksite(
     const emails = assigned.map(i => i.studentEmail || i.emailSubmission).filter(Boolean);
     const parentEmails = assigned.map(i => i.parentGuardianEmail).filter(Boolean);
 
-    const studentLines = assigned.map((i, idx) => {
-      const email = i.studentEmail || i.emailSubmission || '(no email)';
-      const phone = i.phone || '(no phone)';
-      const school = i.otherSchool || i.school || '';
-      return `  ${idx + 1}. ${i.firstName} ${i.lastName} — ${email} · ${phone}${school ? ` · ${school}` : ''}`;
-    });
-
     let block = '';
     block += `═══════════════════════════════════════════════════\n`;
     block += `WORKSITE: ${w.name}\n`;
@@ -498,10 +491,10 @@ export function exportEmailReadyByWorksite(
       block += `CC (parents/guardians): ${parentEmails.join('; ')}\n`;
     }
     block += `═══════════════════════════════════════════════════\n\n`;
+    block += `Subject: Your EXPLR Internship Placement\n\n`;
     block += `Hi team,\n\n`;
-    block += `You have been placed at ${w.name}${w.location ? ` (${w.location})` : ''} for your EXPLR internship. Below is the roster of students placed at this site:\n\n`;
-    block += studentLines.join('\n');
-    block += `\n\nMore details about your start date, schedule, and site contact will follow shortly. Please reply to this email with any questions.\n\n`;
+    block += `You have been placed at ${w.name}${w.location ? ` (${w.location})` : ''} for your EXPLR internship.\n\n`;
+    block += `More details about your start date, schedule, and site contact will follow shortly. Please reply to this email with any questions.\n\n`;
     block += `Thank you,\nEXPLR Internships Team\n`;
 
     blocks.push(block);
