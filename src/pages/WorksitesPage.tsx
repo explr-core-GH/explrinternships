@@ -24,7 +24,7 @@ import {
 } from '@/components/ui/dialog';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { toast } from 'sonner';
-import { exportWorksiteCSV, exportWorksiteRosterExcel } from '@/lib/exportData';
+import { exportWorksiteCSV, exportWorksiteRosterExcel, exportEmailReadyByWorksite } from '@/lib/exportData';
 import { cn } from '@/lib/utils';
 import WorksiteMatchPanel from '@/components/WorksiteMatchPanel';
 import { useAutoLoadData } from '@/hooks/useAutoLoadData';
@@ -284,6 +284,13 @@ export default function WorksitesPage() {
             else toast.error('No assignments to export');
           }}>
             <Download className="h-3.5 w-3.5" /> Roster Export
+          </Button>
+          <Button variant="outline" size="sm" className="gap-1.5 text-xs" onClick={() => {
+            const ok = exportEmailReadyByWorksite(worksites, assignments, interns);
+            if (ok) toast.success('Email-ready placements downloaded');
+            else toast.error('No assignments to export');
+          }}>
+            <Download className="h-3.5 w-3.5" /> Email Placements
           </Button>
           <AddWorksiteDialog onAdd={addWorksite} />
         </div>
