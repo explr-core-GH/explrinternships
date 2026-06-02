@@ -445,6 +445,81 @@ export function exportWorksiteRosterExcel(
   return true;
 }
 
+/**
+ * Email-ready text file: one block per worksite with student contact info
+ * pre-formatted so admins can copy/paste to notify kids of their placement.
+ */
+export function exportEmailReadyByWorksite(
+  worksites: Worksite[],
+  assignments: Assignment[],
+  interns: Intern[],
+) {
+  const internMap = Object.fromEntries(interns.map(i => [i.id, i]));
+  const byWs: Record<string, Intern[]> = {};
+  assignments.forEach(a => {
+    const intern = internMap[a.internId];
+    if (!intern) return;
+    if (!byWs[a.worksiteId]) byWs[a.worksiteId] = [];
+    byWs[a.worksiteId].push(intern);
+  });
+
+  const sortedWs = worksites
+    .filter(w => (byWs[w.id] || []).length > 0)
+    .sort((a, b) => a.name.localeCompare(b.name));
+
+  if (sortedWs.length === 0) return false;
+
+  const blocks: string[] = [];
+  let totalStudents = 0;
+
+  sortedWs.forEach(w => {
+    const assigned = (byWs[w.id] || []).slice().sort((a, b) => a.lastName.localeCompare(b.lastName));
+    totalStudents += assigned.length;
+    const emails = assigned.map(i => i.studentEmail || i.emailSubmission).filter(Boolean);
+    const parentEmails = assigned.map(i => i.parentGuardianEmail).filter(Boolean);
+
+    const studentLines = assigned.map((i, idx) => {
+      const email = i.studentEmail || i.emailSubmission || '(no email)';
+      const phone = i.phone || '(no phone)';
+      const school = i.otherSchool || i.school || '';
+      return `  ${idx + 1}. ${i.firstName} ${i.lastName} — ${email} · ${phone}${school ? ` · ${school}` : ''}`;
+    });
+
+    let block = '';
+    block += `═══════════════════════════════════════════════════\n`;
+    block += `WORKSITE: ${w.name}\n`;
+    if (w.category) block += `Category: ${w.category}\n`;
+    if (w.location) block += `Location: ${w.location}\n`;
+    if (w.contactName || w.contactEmail) {
+      block += `Site Contact: ${w.contactName || ''}${w.contactEmail ? ` <${w.contactEmail}>` : ''}\n`;
+    }
+    block += `TO (students): ${emails.length > 0 ? emails.join('; ') : '(no student emails on file)'}\n`;
+    if (parentEmails.length > 0) {
+      block += `CC (parents/guardians): ${parentEmails.join('; ')}\n`;
+    }
+    block += `═══════════════════════════════════════════════════\n\n`;
+    block += `Hi team,\n\n`;
+    block += `You have been placed at ${w.name}${w.location ? ` (${w.location})` : ''} for your EXPLR internship. Below is the roster of students placed at this site:\n\n`;
+    block += studentLines.join('\n');
+    block += `\n\nMore details about your start date, schedule, and site contact will follow shortly. Please reply to this email with any questions.\n\n`;
+    block += `Thank you,\nEXPLR Internships Team\n`;
+
+    blocks.push(block);
+  });
+
+  const header = `EXPLR Internships — Worksite Placement Notifications\nGenerated: ${new Date().toLocaleString()}\nTotal Students: ${totalStudents} across ${sortedWs.length} worksite(s)\n\n`;
+  const content = header + blocks.join('\n\n');
+
+  const blob = new Blob([content], { type: 'text/plain;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `email-worksite-placements-${new Date().toISOString().slice(0, 10)}.txt`;
+  link.click();
+  URL.revokeObjectURL(url);
+  return true;
+}
+
 export function exportFullExcelByStatus(
   interns: Intern[],
   worksites: Worksite[],
